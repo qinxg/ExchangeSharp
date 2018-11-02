@@ -60,12 +60,14 @@ namespace ExchangeSharp
         #region REST
 
         /// <summary>
+        /// 获取所有币种和相关信息。包括是否启用和手续费
         /// Gets currencies and related data such as IsEnabled and TxFee (if available)
         /// </summary>
         /// <returns>Collection of Currencies</returns>
         Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync();
 
         /// <summary>
+        /// 获取币种的存入地址和相关细节
         /// Gets the address to deposit to and applicable details.
         /// </summary>
         /// <param name="currency">Currency to get address for.</param>
@@ -74,6 +76,7 @@ namespace ExchangeSharp
         Task<ExchangeDepositDetails> GetDepositAddressAsync(string currency, bool forceRegenerate = false);
 
         /// <summary>
+        /// 获取当前币种的存入历史
         /// Gets the deposit history for a currency
         /// </summary>
         /// <param name="currency">The currency to check. May be null.</param>
@@ -81,18 +84,21 @@ namespace ExchangeSharp
         Task<IEnumerable<ExchangeTransaction>> GetDepositHistoryAsync(string currency);
 
         /// <summary>
+        /// 获取交易所所有的币对（符号）
         /// Get symbols for the exchange markets
         /// </summary>
         /// <returns>Symbols</returns>
         Task<IEnumerable<string>> GetMarketSymbolsAsync();
 
         /// <summary>
+        /// 获取交易所市场符号，包括可用的元数据，如最小交易规模和市场是否启用
         /// Get exchange market symbols including available metadata such as min trade size and whether the market is active
         /// </summary>
         /// <returns>Collection of ExchangeMarkets</returns>
         Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync();
 
         /// <summary>
+        /// 获取最后行情数据
         /// Get latest ticker
         /// </summary>
         /// <param name="marketSymbol">Symbol</param>
@@ -100,12 +106,14 @@ namespace ExchangeSharp
         Task<ExchangeTicker> GetTickerAsync(string marketSymbol);
 
         /// <summary>
+        /// 获取所有行情数据，不是所有交易所都支持
         /// Get all tickers, not all exchanges support this
         /// </summary>
         /// <returns>Key value pair of symbol and tickers array</returns>
         Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync();
 
         /// <summary>
+        /// 获取历史交易情况
         /// Get historical trades for the exchange
         /// </summary>
         /// <param name="callback">Callback for each set of trades. Return false to stop getting trades immediately.</param>
@@ -115,6 +123,7 @@ namespace ExchangeSharp
         Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string marketSymbol, DateTime? startDate = null, DateTime? endDate = null);
 
         /// <summary>
+        /// 最后交易情况
         /// Get the latest trades
         /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
@@ -122,6 +131,7 @@ namespace ExchangeSharp
         Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(string marketSymbol);
 
         /// <summary>
+        /// K线数据， 开，最高，最低，收盘
         /// Get candles (open, high, low, close)
         /// </summary>
         /// <param name="marketSymbol">Market symbol to get candles for</param>
@@ -133,18 +143,21 @@ namespace ExchangeSharp
         Task<IEnumerable<MarketCandle>> GetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
 
         /// <summary>
+        /// 获取货币数量
         /// Get total amounts, symbol / amount dictionary
         /// </summary>
         /// <returns>Dictionary of symbols and amounts</returns>
         Task<Dictionary<string, decimal>> GetAmountsAsync();
 
         /// <summary>
+        /// 可交易的货币数量
         /// Get amounts available to trade, symbol / amount dictionary
         /// </summary>
         /// <returns>Dictionary of symbols and amounts available to trade</returns>
         Task<Dictionary<string, decimal>> GetAmountsAvailableToTradeAsync();
 
         /// <summary>
+        /// 提交订单
         /// Place an order
         /// </summary>
         /// <param name="order">Order request</param>
@@ -159,6 +172,7 @@ namespace ExchangeSharp
         Task<ExchangeOrderResult[]> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
 
         /// <summary>
+        /// 获取订单详情
         /// Get details of an order
         /// </summary>
         /// <param name="orderId">order id</param>
@@ -167,6 +181,7 @@ namespace ExchangeSharp
         Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, string marketSymbol = null);
 
         /// <summary>
+        /// 获取所有未完成的订单详情
         /// Get the details of all open orders
         /// </summary>
         /// <param name="marketSymbol">Market symbol to get open orders for or null for all</param>
@@ -174,6 +189,7 @@ namespace ExchangeSharp
         Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(string marketSymbol = null);
 
         /// <summary>
+        /// 获取所有完成的订单详情
         /// Get the details of all completed orders
         /// </summary>
         /// <param name="marketSymbol">Market symbol to get completed orders for or null for all</param>
@@ -182,6 +198,7 @@ namespace ExchangeSharp
         Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null);
 
         /// <summary>
+        /// 取消订单
         /// Cancel an order, an exception is thrown if failure
         /// </summary>
         /// <param name="orderId">Order id of the order to cancel</param>
@@ -189,6 +206,7 @@ namespace ExchangeSharp
         Task CancelOrderAsync(string orderId, string marketSymbol = null);
 
         /// <summary>
+        /// 获取可用于交易的保证金金额
         /// Get margin amounts available to trade, symbol / amount dictionary
         /// </summary>
         /// <param name="includeZeroBalances">Include currencies with zero balance in return value</param>
@@ -196,6 +214,7 @@ namespace ExchangeSharp
         Task<Dictionary<string, decimal>> GetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances = false);
 
         /// <summary>
+        /// 获取未平仓的款项
         /// Get open margin position
         /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
@@ -203,6 +222,7 @@ namespace ExchangeSharp
         Task<ExchangeMarginPositionResult> GetOpenPositionAsync(string marketSymbol);
 
         /// <summary>
+        /// 平仓
         /// Close a margin position
         /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
@@ -210,6 +230,7 @@ namespace ExchangeSharp
         Task<ExchangeCloseMarginPositionResult> CloseMarginPositionAsync(string marketSymbol);
          
         /// <summary>
+        /// 手续费
         /// Get fees
         /// </summary>
         /// <returns>The customer trading fees</returns>
@@ -220,6 +241,7 @@ namespace ExchangeSharp
         #region Web Socket
 
         /// <summary>
+        /// 所有行情数据
         /// Get all tickers via web socket
         /// </summary>
         /// <param name="callback">Callback</param>
@@ -228,6 +250,7 @@ namespace ExchangeSharp
         IWebSocket GetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> callback, params string[] symbols);
 
         /// <summary>
+        /// 交易数据
         /// Get information about trades via web socket
         /// </summary>
         /// <param name="callback">Callback (symbol and trade)</param>
@@ -236,6 +259,7 @@ namespace ExchangeSharp
         IWebSocket GetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols);
 
         /// <summary>
+        /// 所有变更了状态的订单详情
         /// Get the details of all changed orders via web socket
         /// </summary>
         /// <param name="callback">Callback</param>
@@ -243,6 +267,7 @@ namespace ExchangeSharp
         IWebSocket GetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback);
 
         /// <summary>
+        /// 已完成的订单
         /// Get the details of all completed orders via web socket
         /// </summary>
         /// <param name="callback">Callback</param>
