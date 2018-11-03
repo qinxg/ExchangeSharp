@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 行情数据
     /// Details of the current price of an exchange asset
     /// </summary>
     public sealed class ExchangeTicker

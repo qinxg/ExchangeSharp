@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 指定信息汇总
     /// A summary of a specific market/asset
     /// </summary>
     public class MarketSummary

@@ -14,6 +14,9 @@ using System;
 
 namespace ExchangeSharp
 {
+    /// <summary>
+    /// Æ½²Ö½á¹û
+    /// </summary>
     public class ExchangeCloseMarginPositionResult
     {
         #region Properties

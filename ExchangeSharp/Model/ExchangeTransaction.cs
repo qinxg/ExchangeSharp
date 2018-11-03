@@ -14,7 +14,8 @@ namespace ExchangeSharp
 {
     using System;
 
-    /// <summary>An encapsulation of a deposit or withdrawal to an exchange</summary>
+    /// <summary>交易所提币或充币信息
+    /// An encapsulation of a deposit or withdrawal to an exchange</summary>
     public sealed class ExchangeTransaction
     {
         /// <summary>The address the transaction was sent to</summary>

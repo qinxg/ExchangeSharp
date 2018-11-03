@@ -14,7 +14,8 @@ namespace ExchangeSharp
 {
     using System;
 
-    /// <summary>Result of an exchange order</summary>
+    /// <summary> 订单结果
+    /// Result of an exchange order</summary>
     public sealed class ExchangeOrderResult
     {
         /// <summary>Order id</summary>

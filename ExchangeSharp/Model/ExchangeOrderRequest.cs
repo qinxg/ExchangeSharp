@@ -16,6 +16,7 @@ using System.Collections.Generic;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 订单
     /// Order request details
     /// </summary>
     [System.Serializable]

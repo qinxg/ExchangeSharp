@@ -12,7 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace ExchangeSharp
 {
-    /// <summary>Representation of a market on an exchange.</summary>
+    /// <summary> 代表交易所的一个币对
+    /// Representation of a market on an exchange.</summary>
     public sealed class ExchangeMarket
     {
         /// <summary>Id of the market (specific to the exchange), null if none</summary>

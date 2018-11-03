@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 实时交易情况
     /// A tight, lightweight trade object useful for iterating quickly in memory for trader testing
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 0)]

@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 转账状态
     /// State of transaction status
     /// </summary>
     public enum TransactionStatus

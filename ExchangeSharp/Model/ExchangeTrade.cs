@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 交易数据详情
     /// Details of an exchangetrade
     /// </summary>
     public sealed class ExchangeTrade

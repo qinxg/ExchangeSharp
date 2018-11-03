@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 交易所信息
     /// Information about an exchange
     /// </summary>
     public sealed class ExchangeInfo
@@ -54,6 +55,7 @@ namespace ExchangeSharp
         public int Id { get; set; }
 
         /// <summary>
+        /// 交易所支持的币对
         /// Market symbols of the exchange
         /// </summary>
         public IReadOnlyCollection<string> MarketSymbols { get; private set; }

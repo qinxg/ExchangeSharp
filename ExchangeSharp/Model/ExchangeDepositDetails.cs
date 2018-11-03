@@ -12,16 +12,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace ExchangeSharp
 {
-    /// <summary>Class to encapsulate details required to make a deposit.</summary>
+    /// <summary> 提币详情
+    /// Class to encapsulate details required to make a deposit.</summary>
     public sealed class ExchangeDepositDetails
     {
-        /// <summary>The name of the currency. Ex. ETH</summary>
+        /// <summary> 币种名称
+        /// The name of the currency. Ex. ETH</summary>
         public string Currency;
 
-        /// <summary>The address to deposit to</summary>
+        /// <summary> 提币地址
+        /// The address to deposit to</summary>
         public string Address;
 
-        /// <summary>The extra data that must be passed along for currencies like Ripple. Null in
+        /// <summary> 地址备注（标签）
+        /// The extra data that must be passed along for currencies like Ripple. Null in
         /// most cases</summary>
         public string AddressTag;
 

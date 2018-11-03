@@ -15,6 +15,7 @@ using System.Security;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 提币请求
     /// Encapsulation of a withdrawal request from an exchange
     /// </summary>
     public sealed class ExchangeWithdrawalRequest

@@ -12,28 +12,45 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace ExchangeSharp
 {
-    /// <summary>Result of exchange order</summary>
+    
+    /// <summary>
+    /// 订单结果
+    /// </summary>
     public enum ExchangeAPIOrderResult
     {
-        /// <summary>Order status is unknown</summary>
+        /// <summary>
+        /// 未知订单状态
+        /// </summary>
         Unknown,
 
-        /// <summary>Order has been filled completely</summary>
+        /// <summary>
+        /// 完全成交 
+        /// </summary>
         Filled,
 
-        /// <summary>Order partially filled</summary>
+        /// <summary>
+        /// 部分成交
+        /// </summary>
         FilledPartially,
 
-        /// <summary>Order is pending or open but no amount has been filled yet</summary>
+        /// <summary>
+        /// 未成交
+        /// </summary>
         Pending,
 
-        /// <summary>Error</summary>
+        /// <summary>
+        /// 错误
+        /// </summary>
         Error,
 
-        /// <summary>Order was cancelled</summary>
+        /// <summary>
+        /// 已撤销
+        /// </summary>
         Canceled,
 
-        /// <summary>Order is pending cancel</summary>
+        /// <summary>
+        /// 撤单处理中 （这个用的比较少）
+        /// </summary>
         PendingCancel,
     }
 }

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 namespace ExchangeSharp
 {
     /// <summary>
+    /// 市场k线信息
     /// Candlestick data
     /// </summary>
     public class MarketCandle

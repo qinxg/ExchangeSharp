@@ -12,6 +12,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace ExchangeSharp
 {
+    /// <summary>
+    /// 币种信息 
+    /// </summary>
     public sealed class ExchangeCurrency
     {
         /// <summary>Short name of the currency. Eg. ETH</summary>
