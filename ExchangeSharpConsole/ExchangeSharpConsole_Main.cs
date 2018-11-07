@@ -28,6 +28,16 @@ namespace ExchangeSharpConsole
     {
         public static int Main(string[] args)
         {
+
+            var huobi = ExchangeAPI.GetExchangeAPI("Huobi");
+            var ok = ExchangeAPI.GetExchangeAPI("Okex");
+
+            var okresult = ok.GetMarketSymbolsMetadataAsync().Result;
+            var hbresult = huobi.GetMarketSymbolsMetadataAsync().Result;
+
+            Console.WriteLine(hbresult);
+            Console.WriteLine(okresult);
+
             return ExchangeSharpConsoleMain.ConsoleMain(args);
         }
 

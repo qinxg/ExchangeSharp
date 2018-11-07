@@ -33,6 +33,7 @@ namespace ExchangeSharp
         public string Id { get; set; }
 
         /// <summary>
+        /// 当前交易所的对应交易对
         /// The currency pair symbol that this ticker is in reference to
         /// </summary>
         public string MarketSymbol { get; set; }

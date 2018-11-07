@@ -129,19 +129,24 @@ namespace ExchangeSharp
             :
                 "ok", "data"
             :
-                [{
-                    "base-currency": "btc",
-                    "quote-currency": "usdt",
-                    "price-precision": 2,
-                    "amount-precision": 4,
-                    "symbol-partition": "main"
-                }, {
-                    "base-currency": "bch",
-                    "quote-currency": "usdt",
-                    "price-precision": 2,
-                    "amount-precision": 4,
-                    "symbol-partition": "main"
-                }, 
+                [
+                    {
+                        "base-currency": "btc",
+                        "quote-currency": "usdt",
+                        "price-precision": 2,
+                        "amount-precision": 4,
+                        "symbol-partition": "main",
+                        "symbol": "btcusdt"
+                    }
+                    {
+                        "base-currency": "eth",
+                        "quote-currency": "usdt",
+                        "price-precision": 2,
+                        "amount-precision": 4,
+                        "symbol-partition": "main",
+                        "symbol": "ethusdt"
+                    }
+                ]
              
              */
             List<ExchangeMarket> markets = new List<ExchangeMarket>();
@@ -205,16 +210,22 @@ namespace ExchangeSharp
             return this.ParseTicker(ticker["tick"], marketSymbol, "ask", "bid", "close", "amount", "vol", "ts", TimestampType.UnixMillisecondsDouble, idKey: "id");
         }
 
-        protected async override Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
+        protected override async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
         {
             List<KeyValuePair<string, ExchangeTicker>> tickers = new List<KeyValuePair<string, ExchangeTicker>>();
             string symbol;
             JToken obj = await MakeJsonRequestAsync<JToken>("/market/tickers", BaseUrl, null);
 
-            foreach (JToken child in obj["data"])
+            foreach (JToken child in obj)
             {
                 symbol = child["symbol"].ToStringInvariant();
-                tickers.Add(new KeyValuePair<string, ExchangeTicker>(symbol, this.ParseTicker(child, symbol, null, null, "close", "amount", "vol")));
+
+                //移除研发的不严谨返回
+                if (new[] {"hb10", "huobi10"}.Contains(symbol))
+                    continue;
+
+                tickers.Add(new KeyValuePair<string, ExchangeTicker>(symbol,
+                    this.ParseTicker(child, symbol, null, null, "close", "amount", "vol")));
             }
 
             return tickers;

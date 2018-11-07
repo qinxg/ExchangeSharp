@@ -85,10 +85,7 @@ namespace ExchangeSharp
         /// <param name="obj">Object</param>
         /// <param name="defaultValue">Default value if null</param>
         /// <returns>String</returns>
-        public static string ToStringInvariant(this object obj, string defaultValue = "")
-        {
-            return Convert.ToString(obj, CultureInfo.InvariantCulture) ?? defaultValue;
-        }
+        public static string ToStringInvariant(this object obj, string defaultValue = "") => Convert.ToString(obj, CultureInfo.InvariantCulture) ?? defaultValue;
 
         /// <summary>
         /// Convert an object to string uppercase using invariant culture

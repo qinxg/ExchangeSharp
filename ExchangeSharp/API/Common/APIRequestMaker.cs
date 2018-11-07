@@ -29,12 +29,16 @@ namespace ExchangeSharp
 
         private class InternalHttpWebRequest : IHttpWebRequest
         {
-            internal readonly HttpWebRequest request;
+            internal readonly HttpWebRequest Request;
 
             public InternalHttpWebRequest(Uri fullUri)
             {
-                request = HttpWebRequest.Create(fullUri) as HttpWebRequest;
-                request.KeepAlive = false;
+                Request = WebRequest.Create(fullUri) as HttpWebRequest;
+                Request.KeepAlive = false;
+
+#if DEBUG
+                Request.Proxy = new WebProxy("127.0.0.1", 1080);
+#endif
             }
 
             public void AddHeader(string header, string value)
@@ -42,57 +46,57 @@ namespace ExchangeSharp
                 switch (header.ToStringLowerInvariant())
                 {
                     case "content-type":
-                        request.ContentType = value;
+                        Request.ContentType = value;
                         break;
 
                     case "content-length":
-                        request.ContentLength = value.ConvertInvariant<long>();
+                        Request.ContentLength = value.ConvertInvariant<long>();
                         break;
 
                     case "user-agent":
-                        request.UserAgent = value;
+                        Request.UserAgent = value;
                         break;
 
                     case "accept":
-                        request.Accept = value;
+                        Request.Accept = value;
                         break;
 
                     case "connection":
-                        request.Connection = value;
+                        Request.Connection = value;
                         break;
 
                     default:
-                        request.Headers[header] = value;
+                        Request.Headers[header] = value;
                         break;
                 }
             }
 
             public Uri RequestUri
             {
-                get { return request.RequestUri; }
+                get { return Request.RequestUri; }
             }
 
             public string Method
             {
-                get { return request.Method; }
-                set { request.Method = value; }
+                get { return Request.Method; }
+                set { Request.Method = value; }
             }
 
             public int Timeout
             {
-                get { return request.Timeout; }
-                set { request.Timeout = value; }
+                get { return Request.Timeout; }
+                set { Request.Timeout = value; }
             }
 
             public int ReadWriteTimeout
             {
-                get { return request.ReadWriteTimeout; }
-                set { request.ReadWriteTimeout = value; }
+                get { return Request.ReadWriteTimeout; }
+                set { Request.ReadWriteTimeout = value; }
             }
 
             public async Task WriteAllAsync(byte[] data, int index, int length)
             {
-                using (Stream stream = await request.GetRequestStreamAsync())
+                using (Stream stream = await Request.GetRequestStreamAsync())
                 {
                     await stream.WriteAsync(data, 0, data.Length);
                 }
@@ -170,6 +174,7 @@ namespace ExchangeSharp
             request.AddHeader("content-type", api.RequestContentType);
             request.AddHeader("user-agent", BaseAPI.RequestUserAgent);
             request.Timeout = request.ReadWriteTimeout = (int)api.RequestTimeout.TotalMilliseconds;
+            
             await api.ProcessRequestAsync(request, payload);
             HttpWebResponse response = null;
             string responseString = null;
@@ -179,7 +184,7 @@ namespace ExchangeSharp
                 try
                 {
                     RequestStateChanged?.Invoke(this, RequestMakerState.Begin, uri.AbsoluteUri);// when start make a request we send the uri, this helps developers to track the http requests.
-                    response = await request.request.GetResponseAsync() as HttpWebResponse;
+                    response = await request.Request.GetResponseAsync() as HttpWebResponse;
                     if (response == null)
                     {
                         throw new APIException("Unknown response from server");
@@ -201,8 +206,8 @@ namespace ExchangeSharp
                         // 404 maybe return empty responseString
                         if (string.IsNullOrWhiteSpace(responseString))
                         {
-                            throw new APIException(string.Format("{0} - {1}",
-                                response.StatusCode.ConvertInvariant<int>(), response.StatusCode));
+                            throw new APIException(
+                                $"{response.StatusCode.ConvertInvariant<int>()} - {response.StatusCode}");
                         }
                         throw new APIException(responseString);
                     }

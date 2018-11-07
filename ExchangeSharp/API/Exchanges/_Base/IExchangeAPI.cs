@@ -84,14 +84,14 @@ namespace ExchangeSharp
         Task<IEnumerable<ExchangeTransaction>> GetDepositHistoryAsync(string currency);
 
         /// <summary>
-        /// 获取交易所所有的币对（符号）
+        /// 获取当前交易所所有币对
         /// Get symbols for the exchange markets
         /// </summary>
         /// <returns>Symbols</returns>
         Task<IEnumerable<string>> GetMarketSymbolsAsync();
 
         /// <summary>
-        /// 获取交易所市场符号，包括可用的元数据，如最小交易规模和市场是否启用
+        /// 获取当前交易所所有币对，包括可用的元数据，如最小交易规模和市场是否启用
         /// Get exchange market symbols including available metadata such as min trade size and whether the market is active
         /// </summary>
         /// <returns>Collection of ExchangeMarkets</returns>
