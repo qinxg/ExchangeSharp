@@ -13,11 +13,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace ExchangeSharp
 {

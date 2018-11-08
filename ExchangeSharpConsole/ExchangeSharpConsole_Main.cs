@@ -90,10 +90,7 @@ namespace ExchangeSharpConsole
                 {
                     RunShowHelp(argsDictionary);
                 }
-                else if (argsDictionary.Count >= 1 && argsDictionary.ContainsKey("test"))
-                {
-                    RunPerformTests(argsDictionary);
-                }
+                
                 else if (argsDictionary.Count >= 1 && argsDictionary.ContainsKey("export"))
                 {
                     RunExportData(argsDictionary);
@@ -102,30 +99,7 @@ namespace ExchangeSharpConsole
                 {
                     RunConvertData(argsDictionary);
                 }
-                else if (argsDictionary.Count >= 1 && argsDictionary.ContainsKey("stats"))
-                {
-                    RunShowExchangeStats(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("example"))
-                {
-                    RunExample(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("keys"))
-                {
-                    RunProcessEncryptedAPIKeys(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("websocket-ticker"))
-                {
-                    RunWebSocketTickers(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("websocket-trades"))
-                {
-                    RunTradesWebSocket(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("websocket-orderbook"))
-                {
-                    RunOrderBookWebSocket(argsDictionary);
-                }
+               
                 else if (argsDictionary.ContainsKey("getExchangeNames"))
                 {
                     Console.WriteLine("Supported exchanges: {0}", string.Join(", ", ExchangeName.ExchangeNames));
@@ -141,22 +115,6 @@ namespace ExchangeSharpConsole
                 else if (argsDictionary.ContainsKey("getOrderDetails"))
                 {
                     RunGetOrderDetails(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("symbols-metadata"))
-                {
-                    RunGetSymbolsMetadata(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("symbols"))
-                {
-                    RunGetMarketSymbols(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("tickers"))
-                {
-                    RunGetTickers(argsDictionary);
-                }
-                else if (argsDictionary.ContainsKey("candles"))
-                {
-                    RunGetCandles(argsDictionary);
                 }
                 else
                 {
