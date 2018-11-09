@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;using ExchangeSharp;
+using System.Text.RegularExpressions;using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-    public static partial class ExchangeSharpConsoleMain
+    public static partial class CentipedeConsoleMain
     {
         private static void Assert(bool expression)
         {

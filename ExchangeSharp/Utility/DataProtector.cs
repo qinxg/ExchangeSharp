@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Xml;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Allows protecting data using encryption tied to the local user account

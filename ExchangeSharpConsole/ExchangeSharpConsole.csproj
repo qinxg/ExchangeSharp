@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ExchangeSharp\ExchangeSharp.csproj" />
+    <ProjectReference Include="..\ExchangeSharp\Centipede.csproj" />
   </ItemGroup>
 
 </Project>

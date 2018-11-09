@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ExchangeSharp")]
-[assembly: AssemblyDescription("ExchangeSharp is a C# API for working with various cryptocurrency exchanges. Web sockets are also supported for some exchanges.")]
+[assembly: AssemblyTitle("Centipede")]
+[assembly: AssemblyDescription("Centipede is a C# API for working with various cryptocurrency exchanges. Web sockets are also supported for some exchanges.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Digital Ruby, LLC")]
-[assembly: AssemblyProduct("ExchangeSharp")]
+[assembly: AssemblyProduct("Centipede")]
 [assembly: AssemblyCopyright("Copyright © Digital Ruby, LLC 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -33,4 +33,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("0.5.8.0")]
 [assembly: AssemblyFileVersion("0.5.8.0")]
-[assembly: InternalsVisibleTo("ExchangeSharpTests")]
+[assembly: InternalsVisibleTo("CentipedeTests")]

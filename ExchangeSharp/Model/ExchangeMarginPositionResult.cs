@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Contains information about a margin position on exchange

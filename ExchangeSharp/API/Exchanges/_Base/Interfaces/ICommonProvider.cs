@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 基础信息

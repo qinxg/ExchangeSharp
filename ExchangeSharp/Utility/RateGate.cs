@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Allows limiting operations over an interval - no more than n operations will exit in the interval specified

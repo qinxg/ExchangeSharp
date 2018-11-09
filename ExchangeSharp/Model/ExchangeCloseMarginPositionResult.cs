@@ -1,6 +1,6 @@
 using System;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Æ½²Ö½á¹û

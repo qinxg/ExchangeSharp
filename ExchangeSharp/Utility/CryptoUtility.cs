@@ -15,7 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Useful extension methods for all sorts of things. Who says a kitchen sink class is bad?

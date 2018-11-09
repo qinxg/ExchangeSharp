@@ -5,11 +5,11 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;using ExchangeSharp;
+using System.Threading.Tasks;using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-    public class WebSocket4NetClientWebSocket : ExchangeSharp.ClientWebSocket.IClientWebSocketImplementation
+    public class WebSocket4NetClientWebSocket : Centipede.ClientWebSocket.IClientWebSocketImplementation
     {
         private class QueuedWebSocketMessage
         {

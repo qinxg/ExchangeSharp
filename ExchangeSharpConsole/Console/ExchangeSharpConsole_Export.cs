@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using ExchangeSharp;
+using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-	public static partial class ExchangeSharpConsoleMain
+	public static partial class CentipedeConsoleMain
     {
         public static void RunGetHistoricalTrades(Dictionary<string, string> dict)
         {

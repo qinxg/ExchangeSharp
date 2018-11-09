@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 转账状态

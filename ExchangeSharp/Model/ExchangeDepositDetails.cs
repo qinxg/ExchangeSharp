@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary> 提币详情
     /// Class to encapsulate details required to make a deposit.</summary>

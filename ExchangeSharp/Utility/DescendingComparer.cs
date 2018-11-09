@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp
+namespace Centipede
 {
     using System;
     using System.Collections.Generic;

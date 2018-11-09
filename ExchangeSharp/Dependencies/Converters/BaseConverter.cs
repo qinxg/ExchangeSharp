@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;using Newtonsoft.Json;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public abstract class BaseConverter<T> : JsonConverter
     {

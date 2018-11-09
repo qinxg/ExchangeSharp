@@ -9,7 +9,7 @@ using NLog.Config;
 
 #endregion Imports
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Log levels
@@ -83,8 +83,8 @@ namespace ExchangeSharp
     }
 
     /// <summary>
-    /// ExchangeSharp logger. Will never throw exceptions.
-    /// Currently the ExchangeSharp logger uses NLog internally, so make sure it is setup in your app.config file or nlog.config file.
+    /// Centipede logger. Will never throw exceptions.
+    /// Currently the Centipede logger uses NLog internally, so make sure it is setup in your app.config file or nlog.config file.
     /// </summary>
     public static class Logger
     {
@@ -103,7 +103,7 @@ namespace ExchangeSharp
                     }
                     else
                     {
-                        System.IO.StringReader sr = new System.IO.StringReader(ExchangeSharpResources.NLog_config);
+                        System.IO.StringReader sr = new System.IO.StringReader(CentipedeResources.NLog_config);
                         System.Xml.XmlReader xr = System.Xml.XmlReader.Create(sr);
                         LogManager.Configuration = new XmlLoggingConfiguration(xr, Directory.GetCurrentDirectory());
                         factory = LogManager.LogFactory;
@@ -123,16 +123,16 @@ namespace ExchangeSharp
         /// </summary>
         /// <param name="logLevel">IPBan log level</param>
         /// <returns>NLog log level</returns>
-        public static NLog.LogLevel GetNLogLevel(ExchangeSharp.LogLevel logLevel)
+        public static NLog.LogLevel GetNLogLevel(Centipede.LogLevel logLevel)
         {
             switch (logLevel)
             {
-                case ExchangeSharp.LogLevel.Critical: return NLog.LogLevel.Fatal;
-                case ExchangeSharp.LogLevel.Debug: return NLog.LogLevel.Debug;
-                case ExchangeSharp.LogLevel.Error: return NLog.LogLevel.Error;
-                case ExchangeSharp.LogLevel.Information: return NLog.LogLevel.Info;
-                case ExchangeSharp.LogLevel.Trace: return NLog.LogLevel.Trace;
-                case ExchangeSharp.LogLevel.Warning: return NLog.LogLevel.Warn;
+                case Centipede.LogLevel.Critical: return NLog.LogLevel.Fatal;
+                case Centipede.LogLevel.Debug: return NLog.LogLevel.Debug;
+                case Centipede.LogLevel.Error: return NLog.LogLevel.Error;
+                case Centipede.LogLevel.Information: return NLog.LogLevel.Info;
+                case Centipede.LogLevel.Trace: return NLog.LogLevel.Trace;
+                case Centipede.LogLevel.Warning: return NLog.LogLevel.Warn;
                 default: return NLog.LogLevel.Off;
             }
         }
@@ -164,7 +164,7 @@ namespace ExchangeSharp
         /// <param name="ex">Error</param>
         public static void Error(Exception ex)
         {
-            Write(ExchangeSharp.LogLevel.Error, "Exception: " + ex.ToString());
+            Write(Centipede.LogLevel.Error, "Exception: " + ex.ToString());
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace ExchangeSharp
         /// <param name="args">Format arguments</param>
         public static void Error(string text, params object[] args)
         {
-            Write(ExchangeSharp.LogLevel.Error, text, args);
+            Write(Centipede.LogLevel.Error, text, args);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace ExchangeSharp
         /// <param name="args">Format args</param>
         public static void Error(Exception ex, string text, params object[] args)
         {
-            Write(ExchangeSharp.LogLevel.Error, string.Format(text, args) + ": " + ex.ToString());
+            Write(Centipede.LogLevel.Error, string.Format(text, args) + ": " + ex.ToString());
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace ExchangeSharp
         /// <param name="args">Format args</param>
         public static void Warn(string text, params object[] args)
         {
-            Write(ExchangeSharp.LogLevel.Warning, text, args);
+            Write(Centipede.LogLevel.Warning, text, args);
         }
         /// <summary>
         /// Log an info message
@@ -204,7 +204,7 @@ namespace ExchangeSharp
         /// <param name="args">Format args</param>
         public static void Info(string text, params object[] args)
         {
-            Write(ExchangeSharp.LogLevel.Info, text, args);
+            Write(Centipede.LogLevel.Info, text, args);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace ExchangeSharp
         /// <param name="args">Format args</param>
         public static void Debug(string text, params object[] args)
         {
-            Write(ExchangeSharp.LogLevel.Debug, text, args);
+            Write(Centipede.LogLevel.Debug, text, args);
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace ExchangeSharp
         /// <param name="level">Log level</param>
         /// <param name="text">Text with format</param>
         /// <param name="args">Format args</param>
-        public static void Write(ExchangeSharp.LogLevel level, string text, params object[] args)
+        public static void Write(Centipede.LogLevel level, string text, params object[] args)
         {
             try
             {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 交易所信息

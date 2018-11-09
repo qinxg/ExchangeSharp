@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public sealed partial class ExchangeOkexAPI : ExchangeAPI
     {

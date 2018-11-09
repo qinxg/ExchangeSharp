@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 深度信息

@@ -1,4 +1,4 @@
-﻿namespace ExchangeSharp
+﻿namespace Centipede
 {
     /// <summary>
     /// 行情集合接口

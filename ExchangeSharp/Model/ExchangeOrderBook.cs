@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// A price entry in an exchange order book

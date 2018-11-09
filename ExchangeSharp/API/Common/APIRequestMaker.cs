@@ -4,12 +4,12 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Handles all the logic for making API calls.
     /// </summary>
-    /// <seealso cref="ExchangeSharp.IAPIRequestMaker" />
+    /// <seealso cref="Centipede.IAPIRequestMaker" />
     public sealed class APIRequestMaker : IAPIRequestMaker
     {
         private readonly IAPIRequestHandler _api;

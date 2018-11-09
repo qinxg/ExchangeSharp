@@ -38,6 +38,8 @@
     <PackageProjectUrl>https://github.com/jjxtra/ExchangeSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jjxtra/ExchangeSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <AssemblyName>Centipede</AssemblyName>
+    <RootNamespace>Centipede</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

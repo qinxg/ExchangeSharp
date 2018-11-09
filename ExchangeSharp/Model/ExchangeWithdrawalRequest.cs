@@ -1,6 +1,6 @@
 ﻿using System.Security;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 提币请求

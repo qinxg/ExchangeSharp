@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public abstract class Trader
     {

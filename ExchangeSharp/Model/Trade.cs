@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 实时交易情况

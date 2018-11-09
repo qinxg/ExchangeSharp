@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary> 代表交易所的一个币对
     /// Representation of a market on an exchange.</summary>

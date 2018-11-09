@@ -9,7 +9,7 @@ using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Type of nonce styles
@@ -242,8 +242,7 @@ namespace ExchangeSharp
         {
             _requestMaker = new APIRequestMaker(this);
 
-            string className = GetType().Name;
-            var nameAttribute = (ApiNameAttribute) GetType().GetCustomAttribute(typeof(ApiNameAttribute), true);
+            var nameAttribute = (ExchangeInfoAttribute) GetType().GetCustomAttribute(typeof(ExchangeInfoAttribute), true);
 
             if (nameAttribute != null)
             {
@@ -459,7 +458,7 @@ namespace ExchangeSharp
             }
 
             string fullUrl = BaseUrlWebSocket + (url ?? string.Empty);
-            ExchangeSharp.ClientWebSocket wrapper = new ExchangeSharp.ClientWebSocket
+            Centipede.ClientWebSocket wrapper = new Centipede.ClientWebSocket
             {
                 Uri = new Uri(fullUrl),
                 OnBinaryMessage = messageCallback
@@ -610,13 +609,13 @@ namespace ExchangeSharp
     /// If there is a problem, apply this attribute to a BaseAPI subclass to populate the Name property with the attribute name.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class ApiNameAttribute : Attribute
+    public class ExchangeInfoAttribute : Attribute
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="name">Name</param>
-        public ApiNameAttribute(string name)
+        public ExchangeInfoAttribute(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

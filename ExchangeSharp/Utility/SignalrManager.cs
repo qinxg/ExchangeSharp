@@ -15,7 +15,7 @@ using Microsoft.AspNet.SignalR.Client.Http;
 using Microsoft.AspNet.SignalR.Client.Transports;
 using Microsoft.AspNet.SignalR.Client.Infrastructure;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Manages a signalr connection and web sockets
@@ -217,7 +217,7 @@ namespace ExchangeSharp
             private string connectionData;
 			TimeSpan connectInterval;
 			TimeSpan keepAlive;
-			public ExchangeSharp.ClientWebSocket WebSocket { get; private set; }
+			public Centipede.ClientWebSocket WebSocket { get; private set; }
 
             public override bool SupportsKeepAlive => true;
 
@@ -226,7 +226,7 @@ namespace ExchangeSharp
             {
 				this.connectInterval = connectInterval;
 				this.keepAlive = keepAlive;
-                WebSocket = new ExchangeSharp.ClientWebSocket();
+                WebSocket = new Centipede.ClientWebSocket();
             }
 
             ~WebsocketCustomTransport()

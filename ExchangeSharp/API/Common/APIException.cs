@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// Exception class for API calls

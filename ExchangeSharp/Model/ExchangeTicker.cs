@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;using Newtonsoft.Json;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     /// <summary>
     /// 行情数据

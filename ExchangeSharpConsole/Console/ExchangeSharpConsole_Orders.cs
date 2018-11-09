@@ -4,11 +4,11 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
-using ExchangeSharp;
+using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-    public static partial class ExchangeSharpConsoleMain
+    public static partial class CentipedeConsoleMain
     {
         public static void RunGetOrderHistory(Dictionary<string, string> dict)
         {

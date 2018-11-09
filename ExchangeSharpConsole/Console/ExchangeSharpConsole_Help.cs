@@ -2,14 +2,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-	public static partial class ExchangeSharpConsoleMain
+	public static partial class CentipedeConsoleMain
     {
         public static void RunShowHelp(Dictionary<string, string> dict)
         {
             Console.WriteLine("------------------------------------------------------------");
-            Console.WriteLine("ExchangeSharpConsole v. {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+            Console.WriteLine("CentipedeConsole v. {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("------------------------------------------------------------");
             Console.WriteLine("Command line arguments should be key=value pairs, separated by space. Please add quotes around any key=value pair with a space in it.");
             Console.WriteLine();

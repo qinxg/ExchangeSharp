@@ -1,6 +1,6 @@
 ﻿
 
-namespace ExchangeSharp.Binance
+namespace Centipede.Binance
 {
     using System.Collections.Generic;
 

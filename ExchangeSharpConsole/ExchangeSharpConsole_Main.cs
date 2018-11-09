@@ -6,11 +6,11 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;using ExchangeSharp;
+using System.Threading;using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-    public static partial class ExchangeSharpConsoleMain
+    public static partial class CentipedeConsoleMain
     {
         public static int Main(string[] args)
         {
@@ -24,7 +24,7 @@ namespace ExchangeSharpConsole
             Console.WriteLine(hbresult);
             Console.WriteLine(okresult);
 
-            return ExchangeSharpConsoleMain.ConsoleMain(args);
+            return CentipedeConsoleMain.ConsoleMain(args);
         }
 
         private static void RequireArgs(Dictionary<string, string> dict, params string[] args)
@@ -65,10 +65,10 @@ namespace ExchangeSharpConsole
         {
             try
             {
-                Logger.Info("ExchangeSharp console started.");
+                Logger.Info("Centipede console started.");
 
                 // swap out to external web socket implementation for older Windows pre 8.1
-                // ExchangeSharp.ClientWebSocket.RegisterWebSocketCreator(() => new ExchangeSharpConsole.WebSocket4NetClientWebSocket());
+                // Centipede.ClientWebSocket.RegisterWebSocketCreator(() => new CentipedeConsole.WebSocket4NetClientWebSocket());
                 // TestMethod(); return 0; // uncomment for ad-hoc code testing
 
                 Dictionary<string, string> argsDictionary = ParseCommandLine(args);
@@ -111,7 +111,7 @@ namespace ExchangeSharpConsole
             }
             finally
             {
-                Logger.Info("ExchangeSharp console finished.");
+                Logger.Info("Centipede console finished.");
             }
         }
     }

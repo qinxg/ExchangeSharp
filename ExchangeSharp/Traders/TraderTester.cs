@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public unsafe class TraderTester : IDisposable
     {

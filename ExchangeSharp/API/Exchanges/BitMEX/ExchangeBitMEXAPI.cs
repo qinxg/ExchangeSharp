@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Web;using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public sealed partial class ExchangeBitMEXAPI : ExchangeAPI
     {

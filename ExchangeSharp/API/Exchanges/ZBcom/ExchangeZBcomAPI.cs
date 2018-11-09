@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public sealed partial class ExchangeZBcomAPI : ExchangeAPI
     {

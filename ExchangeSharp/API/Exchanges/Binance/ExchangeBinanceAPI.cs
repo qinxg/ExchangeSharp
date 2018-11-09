@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using System.Web;using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace ExchangeSharp
+namespace Centipede
 {
-    using ExchangeSharp.Binance;
+    using Centipede.Binance;
 
     public sealed partial class ExchangeBinanceAPI : ExchangeAPI
     {

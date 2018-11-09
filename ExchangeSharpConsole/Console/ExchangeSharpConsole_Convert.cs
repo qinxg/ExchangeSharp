@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using ExchangeSharp;
+using Centipede;
 
-namespace ExchangeSharpConsole
+namespace CentipedeConsole
 {
-    public static partial class ExchangeSharpConsoleMain
+    public static partial class CentipedeConsoleMain
     {
         public static void RunConvertData(Dictionary<string, string> dict)
         {

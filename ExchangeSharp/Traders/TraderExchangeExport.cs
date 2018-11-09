@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExchangeSharp
+namespace Centipede
 {
     public static class TraderExchangeExport
     {
