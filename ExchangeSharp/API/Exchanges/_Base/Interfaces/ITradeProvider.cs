@@ -28,5 +28,17 @@ namespace ExchangeSharp
         /// <returns>Trades</returns>
         Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(string marketSymbol);
 
+
+        /// <summary>
+        /// 交易数据
+        /// Get information about trades via web socket
+        /// </summary>
+        /// <param name="callback">Callback (symbol and trade)</param>
+        /// <param name="marketSymbols">Market symbols</param>
+        /// <returns>Web socket, call Dispose to close</returns>
+        IWebSocket GetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback,
+            params string[] marketSymbols);
+
+
     }
 }

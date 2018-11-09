@@ -20,7 +20,8 @@ namespace ExchangeSharp
         public ExchangeInfo(IExchangeAPI api, string marketSymbol = null)
         {
             API = api;
-            MarketSymbols = api.GetMarketSymbolsAsync().Sync().ToArray();
+            //todo:注意下这里要干什么
+            //MarketSymbols = api.GetMarketSymbolsAsync().Sync().ToArray();
             TradeInfo = new ExchangeTradeInfo(this, marketSymbol);
         }
 

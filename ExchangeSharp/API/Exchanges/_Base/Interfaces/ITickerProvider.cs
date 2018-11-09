@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ExchangeSharp
@@ -22,6 +23,17 @@ namespace ExchangeSharp
         /// </summary>
         /// <returns>Key value pair of symbol and tickers array</returns>
         Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync();
+
+
+        /// <summary>
+        /// 所有行情数据
+        /// Get all tickers via web socket
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        /// <param name="symbols">Symbols. If no symbols are specified, this will get the tickers for all symbols. NOTE: Some exchanges don't allow you to specify which symbols to return.</param>
+        /// <returns>Web socket, call Dispose to close</returns>
+        IWebSocket GetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> callback,
+            params string[] symbols);
 
     }
 }

@@ -11,6 +11,7 @@ namespace ExchangeSharp
     public interface IExchangeAPI : IBaseAPI,
         ICommonProvider, IAccountProvider,
         IMarketProvider, IOrderBookProvider,
+        IOrderProvider,
         IDisposable
 
     {
@@ -48,45 +49,5 @@ namespace ExchangeSharp
         string PeriodSecondsToString(int seconds);
 
         #endregion Utility Methods
-
-        #region Web Socket
-
-        /// <summary>
-        /// 所有行情数据
-        /// Get all tickers via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <param name="symbols">Symbols. If no symbols are specified, this will get the tickers for all symbols. NOTE: Some exchanges don't allow you to specify which symbols to return.</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> callback,
-            params string[] symbols);
-
-        /// <summary>
-        /// 交易数据
-        /// Get information about trades via web socket
-        /// </summary>
-        /// <param name="callback">Callback (symbol and trade)</param>
-        /// <param name="marketSymbols">Market symbols</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback,
-            params string[] marketSymbols);
-
-        /// <summary>
-        /// 所有变更了状态的订单详情
-        /// Get the details of all changed orders via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback);
-
-        /// <summary>
-        /// 已完成的订单
-        /// Get the details of all completed orders via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback);
-
-        #endregion Web Socket
     }
 }
