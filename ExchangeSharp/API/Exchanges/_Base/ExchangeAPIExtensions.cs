@@ -19,9 +19,9 @@ namespace Centipede
         /// parameter</param>
         /// <param name="symbols">Order book symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public static IWebSocket GetFullOrderBookWebSocket(this IOrderBookProvider api, Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] symbols)
+        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] symbols)
         {
-            if (api.WebSocketOrderBookType == WebSocketOrderBookType.None)
+            if (api.WebSocketDepthType == WebSocketDepthType.None)
             {
                 throw new NotSupportedException(api.GetType().Name + " does not support web socket order books");
             }
@@ -68,9 +68,9 @@ namespace Centipede
                 // but this is not the case
 
                 bool foundFullBook = fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeOrderBook fullOrderBook);
-                switch (api.WebSocketOrderBookType)
+                switch (api.WebSocketDepthType)
                 {
-                    case WebSocketOrderBookType.DeltasOnly:
+                    case WebSocketDepthType.DeltasOnly:
                     {
                         // Fetch an initial book the first time and apply deltas on top
                         // send these exchanges scathing support tickets that they should send
@@ -95,7 +95,7 @@ namespace Centipede
                         // request the entire order book if we need it
                         if (requestFullOrderBook)
                         {
-                            fullOrderBook = await api.GetOrderBookAsync(newOrderBook.MarketSymbol, maxCount);
+                            fullOrderBook = await api.GetDepthAsync(newOrderBook.MarketSymbol, maxCount);
                             fullOrderBook.MarketSymbol = newOrderBook.MarketSymbol;
                             fullBooks[newOrderBook.MarketSymbol] = fullOrderBook;
                         }
@@ -127,7 +127,7 @@ namespace Centipede
                         }
                     } break;
 
-                    case WebSocketOrderBookType.FullBookFirstThenDeltas:
+                    case WebSocketDepthType.FullBookFirstThenDeltas:
                     {
                         // First response from exchange will be the full order book.
                         // Subsequent updates will be deltas, at least some exchanges have their heads on straight
@@ -141,7 +141,7 @@ namespace Centipede
                         }
                     } break;
 
-                    case WebSocketOrderBookType.FullBookAlways:
+                    case WebSocketDepthType.FullBookAlways:
                     {
                         // Websocket always returns full order book, WTF...?
                         fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
@@ -152,7 +152,7 @@ namespace Centipede
                 callback(fullOrderBook);
             }
 
-            IWebSocket socket = api.GetOrderBookWebSocket(async (b) =>
+            IWebSocket socket = api.GetDepthWebSocket(async (b) =>
             {
                 try
                 {
@@ -207,7 +207,7 @@ namespace Centipede
             {
                 priceThreshold = 1.0m / priceThreshold;
             }
-            ExchangeOrderBook book = await api.GetOrderBookAsync(symbol, orderBookCount);
+            ExchangeOrderBook book = await api.GetDepthAsync(symbol, orderBookCount);
             if (book == null || (isBuy && book.Asks.Count == 0) || (!isBuy && book.Bids.Count == 0))
             {
                 throw new APIException($"Error getting order book for {symbol}");

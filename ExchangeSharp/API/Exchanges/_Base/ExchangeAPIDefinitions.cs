@@ -89,6 +89,6 @@ namespace Centipede
         /// 例如：一开始是全集，后面增量、全部是增量、全部是全集 等
         /// The type of web socket order book supported
         /// </summary>
-        public WebSocketOrderBookType WebSocketOrderBookType { get; protected set; } = WebSocketOrderBookType.None;
+        public WebSocketDepthType WebSocketDepthType { get; protected set; } = WebSocketDepthType.None;
     }
 }

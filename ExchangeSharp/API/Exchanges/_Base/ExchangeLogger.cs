@@ -87,7 +87,7 @@ namespace Centipede
                 {
                     // make API calls first, if they fail we will try again later
                     Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(MarketSymbol, API.GetTickerAsync(MarketSymbol).Sync()) };
-                    OrderBook = API.GetOrderBookAsync(MarketSymbol).Sync();
+                    OrderBook = API.GetDepthAsync(MarketSymbol).Sync();
                     Trades = API.GetRecentTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
 
                     // all API calls succeeded, we can write to files

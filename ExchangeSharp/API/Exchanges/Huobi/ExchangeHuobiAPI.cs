@@ -6,18 +6,14 @@ using System.Threading.Tasks;
 
 namespace Centipede
 {
-    [ExchangeInfo("Huobi")]
+    [ExchangeMeta("Huobi")]
     public sealed partial class ExchangeHuobiAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "https://api.huobipro.com";
         public string BaseUrlV1 { get; set; } = "https://api.huobipro.com/v1";
         public override string BaseUrlWebSocket { get; set; } = "wss://api.huobipro.com/ws";
-        public string PrivateUrlV1 { get; set; } = "https://api.huobipro.com/v1";
 
-        public bool IsMargin { get; set; }
-        public string SubType { get; set; }
-
-        private long webSocketId = 0;
+        private long _webSocketId = 0;
 
         public ExchangeHuobiAPI()
         {
@@ -25,7 +21,7 @@ namespace Centipede
             NonceStyle = NonceStyle.UnixMilliseconds;
             MarketSymbolSeparator = string.Empty;
             MarketSymbolIsUppercase = false;
-            WebSocketOrderBookType = WebSocketOrderBookType.FullBookAlways;
+            WebSocketDepthType = WebSocketDepthType.FullBookAlways;
         }
 
         public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
@@ -274,7 +270,7 @@ namespace Centipede
                 }
                 foreach (string marketSymbol in marketSymbols)
                 {
-                    long id = System.Threading.Interlocked.Increment(ref webSocketId);
+                    long id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     string channel = $"market.{marketSymbol}.trade.detail";
                     await _socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
                 }
@@ -349,7 +345,7 @@ namespace Centipede
                 }
                 foreach (string symbol in marketSymbols)
                 {
-                    long id = System.Threading.Interlocked.Increment(ref webSocketId);
+                    long id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     var normalizedSymbol = NormalizeMarketSymbol(symbol);
                     string channel = $"market.{normalizedSymbol}.depth.step0";
                     await _socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
@@ -477,7 +473,7 @@ namespace Centipede
  */
             Dictionary<string, string> accounts = new Dictionary<string, string>();
             var payload = await GetNoncePayloadAsync();
-            JToken data = await MakeJsonRequestAsync<JToken>("/account/accounts", PrivateUrlV1, payload);
+            JToken data = await MakeJsonRequestAsync<JToken>("/account/accounts", BaseUrlV1, payload);
             foreach (var acc in data)
             {
                 string key = acc["type"].ToStringInvariant() + "_" + acc["subtype"].ToStringInvariant();
@@ -520,7 +516,7 @@ namespace Centipede
             var account_id = await GetAccountID();
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
-            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", PrivateUrlV1, payload);
+            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
             var list = token["list"];
             foreach (var item in list)
             {
@@ -548,7 +544,7 @@ namespace Centipede
 
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
-            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", PrivateUrlV1, payload);
+            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
             var list = token["list"];
             foreach (var item in list)
             {
@@ -597,7 +593,7 @@ namespace Centipede
             }}
              */
             var payload = await GetNoncePayloadAsync();
-            JToken data = await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}", PrivateUrlV1, payload);
+            JToken data = await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}", BaseUrlV1, payload);
             return ParseOrder(data);
         }
 
@@ -613,7 +609,7 @@ namespace Centipede
             {
                 payload.Add("start-date", afterDate.Value.ToString("yyyy-MM-dd"));
             }
-            JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", PrivateUrlV1, payload);
+            JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", BaseUrlV1, payload);
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
@@ -629,7 +625,7 @@ namespace Centipede
             var payload = await GetNoncePayloadAsync();
             payload.Add("symbol", marketSymbol);
             payload.Add("states", "pre-submitted,submitting,submitted,partial-filled");
-            JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", PrivateUrlV1, payload);
+            JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", BaseUrlV1, payload);
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
@@ -664,7 +660,7 @@ namespace Centipede
 
             order.ExtraParameters.CopyTo(payload);
 
-            JToken obj = await MakeJsonRequestAsync<JToken>("/order/orders/place", PrivateUrlV1, payload, "POST");
+            JToken obj = await MakeJsonRequestAsync<JToken>("/order/orders/place", BaseUrlV1, payload, "POST");
             order.Amount = outputQuantity;
             order.Price = outputPrice;
             return ParsePlaceOrder(obj, order);
@@ -673,7 +669,7 @@ namespace Centipede
         protected override async Task OnCancelOrderAsync(string orderId, string marketSymbol = null)
         {
             var payload = await GetNoncePayloadAsync();
-            await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", PrivateUrlV1, payload, "POST");
+            await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", BaseUrlV1, payload, "POST");
         }
 
         protected override Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency)
@@ -692,7 +688,7 @@ namespace Centipede
             payload.Add("coinName", symbol);
             payload["method"] = "POST";
             // "return":{"address": 1UHAnAWvxDB9XXETsi7z483zRRBmcUZxb3,"processed_amount": 1.00000000,"server_time": 1437146228 }
-            JToken token = await MakeJsonRequestAsync<JToken>("/", PrivateUrlV1, payload, "POST");
+            JToken token = await MakeJsonRequestAsync<JToken>("/", BaseUrlV1, payload, "POST");
             return new ExchangeDepositDetails
             {
                 Address = token["address"].ToStringInvariant(),

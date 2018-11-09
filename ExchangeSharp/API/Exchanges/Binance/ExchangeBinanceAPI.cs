@@ -57,7 +57,7 @@ namespace Centipede
             NonceStyle = NonceStyle.UnixMilliseconds;
             NonceOffset = TimeSpan.FromSeconds(10.0);
             MarketSymbolSeparator = string.Empty;
-            WebSocketOrderBookType = WebSocketOrderBookType.DeltasOnly;
+            WebSocketDepthType = WebSocketDepthType.DeltasOnly;
         }
 
         public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)

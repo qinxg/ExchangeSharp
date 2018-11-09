@@ -30,7 +30,7 @@ namespace Centipede
 
             MarketSymbolSeparator = string.Empty;
             RequestContentType = "application/json";
-            WebSocketOrderBookType = WebSocketOrderBookType.FullBookFirstThenDeltas;
+            WebSocketDepthType = WebSocketDepthType.FullBookFirstThenDeltas;
 
             RateLimit = new RateGate(300, TimeSpan.FromMinutes(5));
         }

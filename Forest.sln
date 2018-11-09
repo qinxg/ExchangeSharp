@@ -18,6 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{620F7408-EA24-4EBB-9EB6-02E91CAA1773}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "引擎 - Maggot", "引擎 - Maggot", "{E1AE32EE-BB0D-41BA-AE34-6EAD2200497C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +39,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B4ADDAEF-95BF-4FDA-8B2F-8B899EDA3F45} = {620F7408-EA24-4EBB-9EB6-02E91CAA1773}
+		{D7F9477D-8A6C-4FEE-826E-FE29C42CB5B9} = {620F7408-EA24-4EBB-9EB6-02E91CAA1773}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {46DCEF62-6B50-4260-8C47-4368B05CFAB4}

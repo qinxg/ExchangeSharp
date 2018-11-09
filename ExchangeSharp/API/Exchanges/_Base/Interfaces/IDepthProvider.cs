@@ -8,7 +8,7 @@ namespace Centipede
     /// <summary>
     /// 深度信息
     /// </summary>
-    public interface IOrderBookProvider
+    public interface IDepthProvider
     {
         /// <summary>
         /// Get pending orders. Depending on the exchange, the number of bids and asks will have different counts, typically 50-100.
@@ -16,34 +16,34 @@ namespace Centipede
         /// <param name="marketSymbol">Symbol</param>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <returns>Orders</returns>
-        Task<ExchangeOrderBook> GetOrderBookAsync(string marketSymbol, int maxCount = 100);
+        Task<ExchangeOrderBook> GetDepthAsync(string marketSymbol, int maxCount = 100);
 
         /// <summary>
         /// Get exchange order book for all symbols. Not all exchanges support this. Depending on the exchange, the number of bids and asks will have different counts, typically 50-100.
         /// </summary>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <returns>Symbol and order books pairs</returns>
-        Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetOrderBooksAsync(int maxCount = 100);
+        Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetAllDepthAsync(int maxCount = 100);
 
         /// <summary>
-        /// Get order book over web socket. This behaves differently depending on WebSocketOrderBookType.
+        /// Get order book over web socket. This behaves differently depending on WebSocketDepthType.
         /// </summary>
         /// <param name="callback">Callback with the full ExchangeOrderBook</param>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols);
+        IWebSocket GetDepthWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols);
 
         /// <summary>
         /// What type of web socket order book is provided
         /// </summary>
-        WebSocketOrderBookType WebSocketOrderBookType { get; }
+        WebSocketDepthType WebSocketDepthType { get; }
     }
 
     /// <summary>
     /// Web socket order book type
     /// </summary>
-    public enum WebSocketOrderBookType
+    public enum WebSocketDepthType
     {
         /// <summary>
         /// Web socket order book not supported

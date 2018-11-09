@@ -3,7 +3,7 @@
     /// <summary>
     /// 行情集合接口
     /// </summary>
-    public interface IMarketProvider : ITickerProvider, ITradeProvider, IKlineProvider, IOrderBookProvider
+    public interface IMarketProvider : ITickerProvider, ITradeProvider, IKlineProvider, IDepthProvider
     {
 
     }

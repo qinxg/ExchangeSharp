@@ -50,7 +50,7 @@ namespace Centipede
             var marketSymbols = await GetMarketSymbolsAsync();
             foreach (string marketSymbol in marketSymbols)
             {
-                var book = await GetOrderBookAsync(marketSymbol);
+                var book = await GetDepthAsync(marketSymbol);
                 books.Add(new KeyValuePair<string, ExchangeOrderBook>(marketSymbol, book));
             }
             return books;
@@ -194,8 +194,8 @@ namespace Centipede
                 MethodCachePolicy.Add(nameof(GetMarketSymbolsMetadataAsync), TimeSpan.FromHours(1.0));
                 MethodCachePolicy.Add(nameof(GetTickerAsync), TimeSpan.FromSeconds(10.0));
                 MethodCachePolicy.Add(nameof(GetTickersAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetOrderBookAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetOrderBooksAsync), TimeSpan.FromSeconds(10.0));
+                MethodCachePolicy.Add(nameof(GetDepthAsync), TimeSpan.FromSeconds(10.0));
+                MethodCachePolicy.Add(nameof(GetAllDepthAsync), TimeSpan.FromSeconds(10.0));
                 MethodCachePolicy.Add(nameof(GetCandlesAsync), TimeSpan.FromSeconds(10.0));
                 MethodCachePolicy.Add(nameof(GetAmountsAsync), TimeSpan.FromMinutes(1.0));
                 MethodCachePolicy.Add(nameof(GetAmountsAvailableToTradeAsync), TimeSpan.FromMinutes(1.0));
@@ -563,10 +563,10 @@ namespace Centipede
         /// <param name="marketSymbol">Symbol to get order book for</param>
         /// <param name="maxCount">Max count, not all exchanges will honor this parameter</param>
         /// <returns>Exchange order book or null if failure</returns>
-        public virtual async Task<ExchangeOrderBook> GetOrderBookAsync(string marketSymbol, int maxCount = 100)
+        public virtual async Task<ExchangeOrderBook> GetDepthAsync(string marketSymbol, int maxCount = 100)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBookAsync(marketSymbol, maxCount), nameof(GetOrderBookAsync), nameof(marketSymbol), marketSymbol, nameof(maxCount), maxCount);
+            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBookAsync(marketSymbol, maxCount), nameof(GetDepthAsync), nameof(marketSymbol), marketSymbol, nameof(maxCount), maxCount);
         }
 
         /// <summary>
@@ -574,9 +574,9 @@ namespace Centipede
         /// </summary>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <returns>Symbol and order books pairs</returns>
-        public virtual async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetOrderBooksAsync(int maxCount = 100)
+        public virtual async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetAllDepthAsync(int maxCount = 100)
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBooksAsync(maxCount), nameof(GetOrderBooksAsync), nameof(maxCount), maxCount);
+            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBooksAsync(maxCount), nameof(GetAllDepthAsync), nameof(maxCount), maxCount);
         }
 
         /// <summary>
@@ -827,13 +827,13 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Get delta order book bids and asks via web socket. Only the deltas are returned for each callback. To manage a full order book, use ExchangeAPIExtensions.GetOrderBookWebSocket.
+        /// Get delta order book bids and asks via web socket. Only the deltas are returned for each callback. To manage a full order book, use ExchangeAPIExtensions.GetDepthWebSocket.
         /// </summary>
         /// <param name="callback">Callback of symbol, order book</param>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        public virtual IWebSocket GetDepthWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
         {
             callback.ThrowIfNull(nameof(callback), "Callback must not be null");
             return OnGetOrderBookWebSocket(callback, maxCount, marketSymbols);

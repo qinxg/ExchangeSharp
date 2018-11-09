@@ -242,7 +242,7 @@ namespace Centipede
         {
             _requestMaker = new APIRequestMaker(this);
 
-            var nameAttribute = (ExchangeInfoAttribute) GetType().GetCustomAttribute(typeof(ExchangeInfoAttribute), true);
+            var nameAttribute = (ExchangeMetaAttribute) GetType().GetCustomAttribute(typeof(ExchangeMetaAttribute), true);
 
             if (nameAttribute != null)
             {
@@ -609,13 +609,13 @@ namespace Centipede
     /// If there is a problem, apply this attribute to a BaseAPI subclass to populate the Name property with the attribute name.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class ExchangeInfoAttribute : Attribute
+    public class ExchangeMetaAttribute : Attribute
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="name">Name</param>
-        public ExchangeInfoAttribute(string name)
+        public ExchangeMetaAttribute(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

@@ -23,7 +23,7 @@ namespace Centipede
             RequestContentType = "application/x-www-form-urlencoded";
             MarketSymbolSeparator = "_";
             MarketSymbolIsUppercase = false;
-            WebSocketOrderBookType = WebSocketOrderBookType.FullBookFirstThenDeltas;
+            WebSocketDepthType = WebSocketDepthType.FullBookFirstThenDeltas;
         }
 
         public override string PeriodSecondsToString(int seconds)
