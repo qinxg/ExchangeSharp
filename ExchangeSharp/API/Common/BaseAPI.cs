@@ -104,16 +104,16 @@ namespace ExchangeSharp
         /// <summary>
         /// User agent for requests
         /// </summary>
-        public const string RequestUserAgent = "ExchangeSharp (https://github.com/jjxtra/ExchangeSharp)";
+        public const string RequestUserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36";
 
-        private IAPIRequestMaker requestMaker;
+        private IAPIRequestMaker _requestMaker;
         /// <summary>
         /// API request maker
         /// </summary>
         public IAPIRequestMaker RequestMaker
         {
-            get { return requestMaker; }
-            set { requestMaker = value ?? new APIRequestMaker(this); }
+            get { return _requestMaker; }
+            set { _requestMaker = value ?? new APIRequestMaker(this); }
 
         }
         /// <summary>
@@ -247,7 +247,7 @@ namespace ExchangeSharp
         /// </summary>
         public BaseAPI()
         {
-            requestMaker = new APIRequestMaker(this);
+            _requestMaker = new APIRequestMaker(this);
 
             string className = GetType().Name;
             object[] nameAttributes = GetType().GetCustomAttributes(typeof(ApiNameAttribute), true);
@@ -424,7 +424,7 @@ namespace ExchangeSharp
         /// The encoding of payload is API dependant but is typically json.
         /// <param name="method">Request method or null for default</param>
         /// <returns>Raw response</returns>
-        public Task<string> MakeRequestAsync(string url, string baseUrl = null, Dictionary<string, object> payload = null, string method = null) => requestMaker.MakeRequestAsync(url, baseUrl: baseUrl, payload: payload, method: method);
+        public Task<string> MakeRequestAsync(string url, string baseUrl = null, Dictionary<string, object> payload = null, string method = null) => _requestMaker.MakeRequestAsync(url, baseUrl: baseUrl, payload: payload, method: method);
 
         /// <summary>
         /// Make a JSON request to an API end point
