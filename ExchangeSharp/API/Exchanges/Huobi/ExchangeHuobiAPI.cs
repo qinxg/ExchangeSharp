@@ -97,7 +97,7 @@ namespace Centipede
                     ["SignatureVersion"] = "2"
                 };
 
-                if (method == "GET")
+                if (method == "GET")  //只有get需要验证参数内的内容
                 {
                     foreach (var kv in payload)
                     {
