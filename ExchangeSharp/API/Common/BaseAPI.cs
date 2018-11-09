@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.WebSockets;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Security;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ExchangeSharp
 {
@@ -112,9 +105,8 @@ namespace ExchangeSharp
         /// </summary>
         public IAPIRequestMaker RequestMaker
         {
-            get { return _requestMaker; }
-            set { _requestMaker = value ?? new APIRequestMaker(this); }
-
+            get => _requestMaker;
+            set => _requestMaker = value ?? new APIRequestMaker(this);
         }
         /// <summary>
         /// Base URL for the API
@@ -193,23 +185,23 @@ namespace ExchangeSharp
         /// </summary>
         public Dictionary<string, TimeSpan> MethodCachePolicy { get; } = new Dictionary<string, TimeSpan>();
 
-        private ICache cache = new MemoryCache();
+        private ICache _cache = new MemoryCache();
         /// <summary>
         /// Get or set the current cache. Defaults to MemoryCache.
         /// </summary>
         public ICache Cache
         {
-            get { return cache; }
+            get => _cache;
             set
             {
                 value.ThrowIfNull(nameof(Cache));
-                cache = value;
+                _cache = value;
             }
         }
 
-        private decimal lastNonce;
+        private decimal _lastNonce;
 
-        private readonly string[] resultKeys = new string[] { "result", "data", "return", "Result", "Data", "Return" };
+        private readonly string[] _resultKeys = new string[] { "result", "data", "return", "Result", "Data", "Return" };
 
         /// <summary>
         /// Static constructor
@@ -235,7 +227,7 @@ namespace ExchangeSharp
             }
             catch
             {
-
+                // ignored
             }
 
 #pragma warning restore CS0618
@@ -245,13 +237,14 @@ namespace ExchangeSharp
         /// <summary>
         /// Constructor
         /// </summary>
-        public BaseAPI()
+        protected BaseAPI()
         {
             _requestMaker = new APIRequestMaker(this);
 
             string className = GetType().Name;
             object[] nameAttributes = GetType().GetCustomAttributes(typeof(ApiNameAttribute), true);
-            if (nameAttributes == null || nameAttributes.Length == 0)
+
+            if (nameAttributes.Length == 0)
             {
                 Name = Regex.Replace(className, "^Exchange|API$", string.Empty, RegexOptions.CultureInvariant);
             }
@@ -293,13 +286,13 @@ namespace ExchangeSharp
                             break;
 
                         case NonceStyle.TicksThenIncrement:
-                            if (lastNonce == 0m)
+                            if (_lastNonce == 0m)
                             {
                                 nonce = now.Ticks;
                             }
                             else
                             {
-                                nonce = (long)(lastNonce + 1m);
+                                nonce = (long)(_lastNonce + 1m);
                             }
                             break;
 
@@ -312,13 +305,13 @@ namespace ExchangeSharp
                             break;
 
                         case NonceStyle.UnixMillisecondsThenIncrement:
-                            if (lastNonce == 0m)
+                            if (_lastNonce == 0m)
                             {
                                 nonce = (long)now.UnixTimestampFromDateTimeMilliseconds();
                             }
                             else
                             {
-                                nonce = (long)(lastNonce + 1m);
+                                nonce = (long)(_lastNonce + 1m);
                             }
                             break;
 
@@ -369,9 +362,9 @@ namespace ExchangeSharp
 
                     // check for duplicate nonce
                     decimal convertedNonce = nonce.ConvertInvariant<decimal>();
-                    if (lastNonce != convertedNonce || NonceStyle == NonceStyle.ExpiresUnixSeconds || NonceStyle == NonceStyle.ExpiresUnixMilliseconds)
+                    if (_lastNonce != convertedNonce || NonceStyle == NonceStyle.ExpiresUnixSeconds || NonceStyle == NonceStyle.ExpiresUnixMilliseconds)
                     {
-                        lastNonce = convertedNonce;
+                        _lastNonce = convertedNonce;
                         break;
                     }
 
@@ -563,7 +556,7 @@ namespace ExchangeSharp
                 }
 
                 // find result object from result keywords
-                foreach (string key in resultKeys)
+                foreach (string key in _resultKeys)
                 {
                     JToken possibleResult = result[key];
                     if (possibleResult != null && (possibleResult.Type == JTokenType.Object || possibleResult.Type == JTokenType.Array))
