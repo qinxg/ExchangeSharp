@@ -634,6 +634,5 @@ namespace ExchangeSharp
         //    return (long)((100000000L * market.Idx) - (price / GetInstrumentTickSize(market)));
         //}
     }
-
-    public partial class ExchangeName { public const string BitMEX = "BitMEX"; }
+    
 }

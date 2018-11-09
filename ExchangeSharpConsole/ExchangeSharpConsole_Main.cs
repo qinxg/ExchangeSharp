@@ -85,11 +85,6 @@ namespace ExchangeSharpConsole
                 {
                     RunConvertData(argsDictionary);
                 }
-               
-                else if (argsDictionary.ContainsKey("getExchangeNames"))
-                {
-                    Console.WriteLine("Supported exchanges: {0}", string.Join(", ", ExchangeName.ExchangeNames));
-                }
                 else if (argsDictionary.ContainsKey("showHistoricalTrades"))
                 {
                     RunGetHistoricalTrades(argsDictionary);

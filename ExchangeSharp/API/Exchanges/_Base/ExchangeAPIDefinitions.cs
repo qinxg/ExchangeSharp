@@ -91,7 +91,4 @@ namespace ExchangeSharp
         /// </summary>
         public WebSocketOrderBookType WebSocketOrderBookType { get; protected set; } = WebSocketOrderBookType.None;
     }
-
-    // implement this and change the field name and value to the name of your exchange
-    // public partial class ExchangeName { public const string MyNewExchangeName = "MyNewExchangeName"; }
 }

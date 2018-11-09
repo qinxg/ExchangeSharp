@@ -806,6 +806,5 @@ namespace ExchangeSharp
         }
         #endregion
     }
-
-    public partial class ExchangeName { public const string Huobi = "Huobi"; }
+    
 }

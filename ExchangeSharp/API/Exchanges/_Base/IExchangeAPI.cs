@@ -15,6 +15,9 @@ namespace ExchangeSharp
         IDisposable
 
     {
+
+        //todo：这块编码转换，晚点在看怎么处理
+
         #region Utility Methods
 
         /// <summary>
