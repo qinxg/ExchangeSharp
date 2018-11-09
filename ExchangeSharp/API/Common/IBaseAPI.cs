@@ -81,7 +81,7 @@ namespace Centipede
         void LoadAPIKeysUnsecure(string publicApiKey, string privateApiKey, string passPhrase = null);
 
         /// <summary>
-        /// Generate a nonce
+        /// 产生随机数 见：https://www.cnblogs.com/bestzrz/archive/2011/09/03/2164620.html
         /// </summary>
         /// <returns>Nonce (can be string, long, double, etc., so object is used)</returns>
         Task<object> GenerateNonceAsync();

@@ -161,7 +161,9 @@ namespace Centipede
         public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(30.0);
 
         /// <summary>
-        /// Request window - most services do not use this, but Binance API is an example of one that does
+        /// Request window - recvWindow参数,币安服务端会和timestamp一起用来控制本次请求是否执行,默认5000.
+        /// 要求请求时间timestamp和币安的服务器时间, 差值不能大于recvWindow
+        /// - most services do not use this, but Binance API is an example of one that does
         /// </summary>
         public TimeSpan RequestWindow { get; set; } = TimeSpan.Zero;
 
@@ -251,13 +253,15 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Generate a nonce
+        /// 产生随机数
         /// </summary>
         /// <returns>Nonce</returns>
         public async Task<object> GenerateNonceAsync()
         {
             await new SynchronizationContextRemover();
+            
 
+            //这句话是什么意思？
             if (NonceOffset.Ticks == 0)
             {
                 await OnGetNonceOffset();
@@ -269,7 +273,7 @@ namespace Centipede
 
                 while (true)
                 {
-                    // some API (Binance) have a problem with requests being after server time, subtract of offset can help
+                    // 一些API在服务器时间之后请求会出现问题，所以需要减去对应的偏移量 some API (Binance) have a problem with requests being after server time, subtract of offset can help
                     DateTime now = CryptoUtility.UtcNow - NonceOffset;
                     switch (NonceStyle)
                     {
@@ -356,7 +360,7 @@ namespace Centipede
                             throw new InvalidOperationException("Invalid nonce style: " + NonceStyle);
                     }
 
-                    // check for duplicate nonce
+                    // 检查是否重复
                     decimal convertedNonce = nonce.ConvertInvariant<decimal>();
                     if (_lastNonce != convertedNonce || NonceStyle == NonceStyle.ExpiresUnixSeconds || NonceStyle == NonceStyle.ExpiresUnixMilliseconds)
                     {
@@ -476,7 +480,8 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Whether the API can make authenticated (private) API requests
+        /// 判断API是否是私有的（需要身份认证)
+        ///     -- 基础判断逻辑是，产没产生对应的时间戳。如果产生了，这个方法肯定是需要身份认证的。
         /// </summary>
         /// <param name="payload">Payload to potentially send</param>
         /// <returns>True if an authenticated request can be made with the payload, false otherwise</returns>
@@ -566,9 +571,9 @@ namespace Centipede
         }
 
         /// <summary>
+        /// 获取一个字典，包括nonce的key和对应的值。派生这个类应该先调用这个基类方法。然后再补充
         /// Get a dictionary with a nonce key and value of the required nonce type. Derived classes should call this base class method first.
         /// </summary>
-        /// <param name="key">Key</param>
         /// <returns>Dictionary with nonce</returns>
         protected virtual async Task<Dictionary<string, object>> GetNoncePayloadAsync()
         {
@@ -576,6 +581,8 @@ namespace Centipede
             {
                 ["nonce"] = await GenerateNonceAsync()
             };
+
+            // todo： 这部分应该在币安的接口单独实现。而不是这样做。
             if (RequestWindow.Ticks > 0)
             {
                 noncePayload["recvWindow"] = (long)RequestWindow.TotalMilliseconds;
@@ -604,6 +611,8 @@ namespace Centipede
         }
     }
 
+
+    //todo:看要不要干掉直接赋值到name更合适
     /// <summary>
     /// Normally a BaseAPI class attempts to get the Name from the class name.
     /// If there is a problem, apply this attribute to a BaseAPI subclass to populate the Name property with the attribute name.

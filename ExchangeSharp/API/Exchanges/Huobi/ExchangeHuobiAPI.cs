@@ -24,6 +24,8 @@ namespace Centipede
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
         }
 
+        #region  格式转换
+
         public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
         {
             if (marketSymbol.Length < 6)
@@ -32,9 +34,14 @@ namespace Centipede
             }
             else if (marketSymbol.Length == 6)
             {
-                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(marketSymbol.Substring(0, 3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(3, 3), GlobalMarketSymbolSeparator);
+                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(
+                    marketSymbol.Substring(0, 3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(3, 3),
+                    GlobalMarketSymbolSeparator);
             }
-            return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(marketSymbol.Substring(3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(0, 3), GlobalMarketSymbolSeparator);
+
+            return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(
+                marketSymbol.Substring(3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(0, 3),
+                GlobalMarketSymbolSeparator);
         }
 
         public override string PeriodSecondsToString(int seconds)
@@ -42,7 +49,11 @@ namespace Centipede
             return CryptoUtility.SecondsToPeriodStringLong(seconds);
         }
 
-        #region ProcessRequest 
+        #endregion
+
+
+
+        #region HTTP请求处理 
 
         protected override async Task ProcessRequestAsync(IHttpWebRequest request, Dictionary<string, object> payload)
         {
@@ -51,9 +62,9 @@ namespace Centipede
                 if (request.Method == "POST")
                 {
                     request.AddHeader("content-type", "application/json");
-                    payload.Remove("nonce");
-                    var msg = CryptoUtility.GetJsonForPayload(payload);
-                    await CryptoUtility.WriteToRequestAsync(request, msg);
+                    payload.Remove("nonce"); //移除随机数
+                    var msg = payload.GetJsonForPayload();
+                    await request.WriteToRequestAsync(msg);
                 }
             }
         }
@@ -62,10 +73,25 @@ namespace Centipede
         {
             if (CanMakeAuthenticatedRequest(payload))
             {
+                /*
+                 * 基于安全考虑，除行情API 外的 API 请求都必须进行签名运算。一个合法的请求由以下几部分组成：
+                   方法请求地址 即访问服务器地址：api.huobi.pro，api.hadax.com或者api.dm.huobi.br.com后面跟上方法名，比如api.huobi.pro/v1/order/orders。
+                   API 访问密钥（AccessKeyId） 您申请的 APIKEY 中的AccessKey。
+                   签名方法（SignatureMethod） 用户计算签名的基于哈希的协议，此处使用 HmacSHA256。
+                   签名版本（SignatureVersion） 签名协议的版本，此处使用2。
+                   时间戳（Timestamp） 您发出请求的时间 (UTC 时区) (UTC 时区) (UTC 时区) 。在查询请求中包含此值有助于防止第三方截取您的请求。如：2017-05-11T16:22:06。再次强调是 (UTC 时区) 。
+                   必选和可选参数 每个方法都有一组用于定义 API 调用的必需参数和可选参数。可以在每个方法的说明中查看这些参数及其含义。 请一定注意：对于GET请求，每个方法自带的参数都需要进行签名运算； 对于POST请求，每个方法自带的参数不进行签名认证，即POST请求中需要进行签名运算的只有AccessKeyId、SignatureMethod、SignatureVersion、Timestamp四个参数，其它参数放在body中。
+                   签名 签名计算得出的值，用于确保签名有效和未被篡改。
+                 */
+
+
                 // must sort case sensitive
                 var dict = new SortedDictionary<string, object>(StringComparer.Ordinal)
                 {
-                    ["Timestamp"] = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(payload["nonce"].ConvertInvariant<long>()).ToString("s"),
+                    ["Timestamp"] =
+                        CryptoUtility.UnixTimeStampToDateTimeMilliseconds(payload["nonce"].ConvertInvariant<long>()).ToString("s"),
+                    //这里的逻辑是生成一个随机数，然后把这个随机数转成正常的日期。然后转成UTC时间 带T的那种 。有点脱了裤子放屁的感觉。
+
                     ["AccessKeyId"] = PublicApiKey.ToUnsecureString(),
                     ["SignatureMethod"] = "HmacSHA256",
                     ["SignatureVersion"] = "2"
@@ -79,7 +105,7 @@ namespace Centipede
                     }
                 }
 
-                string msg = CryptoUtility.GetFormForPayload(dict, false, false, false);
+                string msg = dict.GetFormForPayload(false, false, false);
                 string toSign = $"{method}\n{url.Host}\n{url.Path}\n{msg}";
 
                 // calculate signature
@@ -90,6 +116,7 @@ namespace Centipede
 
                 url.Query = msg;
             }
+
             return url.Uri;
         }
 
@@ -143,18 +170,19 @@ namespace Centipede
                 var quantityStepSize = Math.Pow(10, -amountPrecision).ConvertInvariant<decimal>();
 
                 var market = new ExchangeMarket
-                             {
-                                 BaseCurrency = baseCurrency,
-                                 QuoteCurrency = quoteCurrency,
-                                 MarketSymbol = baseCurrency + quoteCurrency,
-                                 IsActive = true,
-                                 PriceStepSize = priceStepSize,
-                                 QuantityStepSize = quantityStepSize,
-                                 MinPrice = priceStepSize,
-                                 MinTradeSize = quantityStepSize,
-                             };
+                {
+                    BaseCurrency = baseCurrency,
+                    QuoteCurrency = quoteCurrency,
+                    MarketSymbol = baseCurrency + quoteCurrency,
+                    IsActive = true,
+                    PriceStepSize = priceStepSize,
+                    QuantityStepSize = quantityStepSize,
+                    MinPrice = priceStepSize,
+                    MinTradeSize = quantityStepSize,
+                };
                 markets.Add(market);
             }
+
             return markets;
         }
 
@@ -187,7 +215,8 @@ namespace Centipede
             }}
              */
             JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + marketSymbol);
-            return this.ParseTicker(ticker["tick"], marketSymbol, "ask", "bid", "close", "amount", "vol", "ts", TimestampType.UnixMillisecondsDouble, idKey: "id");
+            return this.ParseTicker(ticker["tick"], marketSymbol, "ask", "bid", "close", "amount", "vol", "ts",
+                TimestampType.UnixMillisecondsDouble, idKey: "id");
         }
 
         protected override async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
@@ -211,7 +240,8 @@ namespace Centipede
             return tickers;
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback,
+            params string[] marketSymbols)
         {
             return ConnectWebSocket(string.Empty, async (_socket, msg) =>
             {
@@ -268,16 +298,18 @@ namespace Centipede
                 {
                     marketSymbols = (await GetMarketSymbolsAsync()).ToArray();
                 }
+
                 foreach (string marketSymbol in marketSymbols)
                 {
                     long id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     string channel = $"market.{marketSymbol}.trade.detail";
-                    await _socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
+                    await _socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
                 }
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20,
+            params string[] marketSymbols)
         {
             return ConnectWebSocket(string.Empty, async (_socket, msg) =>
             {
@@ -331,10 +363,12 @@ namespace Centipede
                     await _socket.SendMessageAsync(str.Replace("ping", "pong"));
                     return;
                 }
+
                 var ch = token["ch"].ToStringInvariant();
                 var sArray = ch.Split('.');
                 var marketSymbol = sArray[1].ToStringInvariant();
-                ExchangeOrderBook book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token["tick"], maxCount: maxCount);
+                ExchangeOrderBook book =
+                    ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token["tick"], maxCount: maxCount);
                 book.MarketSymbol = marketSymbol;
                 callback(book);
             }, async (_socket) =>
@@ -343,12 +377,13 @@ namespace Centipede
                 {
                     marketSymbols = (await GetMarketSymbolsAsync()).ToArray();
                 }
+
                 foreach (string symbol in marketSymbols)
                 {
                     long id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     var normalizedSymbol = NormalizeMarketSymbol(symbol);
                     string channel = $"market.{normalizedSymbol}.depth.step0";
-                    await _socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
+                    await _socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
                 }
             });
         }
@@ -394,11 +429,14 @@ namespace Centipede
       [7995, 0.88],
              */
             ExchangeOrderBook orders = new ExchangeOrderBook();
-            JToken obj = await MakeJsonRequestAsync<JToken>("/market/depth?symbol=" + marketSymbol + "&type=step0", BaseUrl, null);
-            return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(obj["tick"], sequence: "ts", maxCount: maxCount);
+            JToken obj = await MakeJsonRequestAsync<JToken>("/market/depth?symbol=" + marketSymbol + "&type=step0",
+                BaseUrl, null);
+            return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(obj["tick"], sequence: "ts",
+                maxCount: maxCount);
         }
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol,
+            int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             /*
             {
@@ -425,12 +463,14 @@ namespace Centipede
                 // default is 150, max: 2000
                 url += "&size=" + (limit.Value.ToStringInvariant());
             }
+
             string periodString = PeriodSecondsToString(periodSeconds);
             url += "&period=" + periodString;
             JToken allCandles = await MakeJsonRequestAsync<JToken>(url, BaseUrl, null);
             foreach (var token in allCandles)
             {
-                candles.Add(this.ParseCandle(token, marketSymbol, periodSeconds, "open", "high", "low", "close", "id", TimestampType.UnixSeconds, null, "vol"));
+                candles.Add(this.ParseCandle(token, marketSymbol, periodSeconds, "open", "high", "low", "close", "id",
+                    TimestampType.UnixSeconds, null, "vol"));
             }
 
             candles.Reverse();
@@ -479,8 +519,10 @@ namespace Centipede
                 string key = acc["type"].ToStringInvariant() + "_" + acc["subtype"].ToStringInvariant();
                 accounts.Add(key, acc["id"].ToStringInvariant());
             }
+
             return accounts;
         }
+
 
         protected override async Task<Dictionary<string, decimal>> OnGetAmountsAsync()
         {
@@ -516,7 +558,8 @@ namespace Centipede
             var account_id = await GetAccountID();
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
-            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
+            JToken token =
+                await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
             var list = token["list"];
             foreach (var item in list)
             {
@@ -535,6 +578,7 @@ namespace Centipede
                     amounts[currency] = balance;
                 }
             }
+
             return amounts;
         }
 
@@ -544,7 +588,8 @@ namespace Centipede
 
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
-            JToken token = await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
+            JToken token =
+                await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
             var list = token["list"];
             foreach (var item in list)
             {
@@ -566,10 +611,12 @@ namespace Centipede
                     amounts[currency] = balance;
                 }
             }
+
             return amounts;
         }
 
-        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string marketSymbol = null)
+        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId,
+            string marketSymbol = null)
         {
             /*
              {{
@@ -597,9 +644,13 @@ namespace Centipede
             return ParseOrder(data);
         }
 
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null)
+        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(
+            string marketSymbol = null, DateTime? afterDate = null)
         {
-            if (marketSymbol == null) { throw new APIException("symbol cannot be null"); }
+            if (marketSymbol == null)
+            {
+                throw new APIException("symbol cannot be null");
+            }
 
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             var payload = await GetNoncePayloadAsync();
@@ -609,17 +660,23 @@ namespace Centipede
             {
                 payload.Add("start-date", afterDate.Value.ToString("yyyy-MM-dd"));
             }
+
             JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", BaseUrlV1, payload);
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
             }
+
             return orders;
         }
 
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null)
+        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(
+            string marketSymbol = null)
         {
-            if (marketSymbol == null) { throw new APIException("symbol cannot be null"); }
+            if (marketSymbol == null)
+            {
+                throw new APIException("symbol cannot be null");
+            }
 
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             var payload = await GetNoncePayloadAsync();
@@ -630,6 +687,7 @@ namespace Centipede
             {
                 orders.Add(ParseOrder(prop));
             }
+
             return orders;
         }
 
@@ -677,7 +735,8 @@ namespace Centipede
             throw new NotImplementedException("Huobi does not provide a deposit API");
         }
 
-        protected override Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency, bool forceRegenerate = false)
+        protected override Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency,
+            bool forceRegenerate = false)
         {
             throw new NotImplementedException("Huobi does not provide a deposit API");
 
@@ -701,7 +760,8 @@ namespace Centipede
         {
             throw new NotImplementedException("Huobi does not provide a withdraw API");
         }
-#endregion
+
+        #endregion
 
         #region Private Functions
 
@@ -709,8 +769,11 @@ namespace Centipede
         {
             if (result == null || (result["status"] != null && result["status"].ToStringInvariant() != "ok"))
             {
-                throw new APIException((result["err-msg"] != null ? result["err-msg"].ToStringInvariant() : "Unknown Error"));
+                throw new APIException((result["err-msg"] != null
+                    ? result["err-msg"].ToStringInvariant()
+                    : "Unknown Error"));
             }
+
             return result["data"] ?? result;
         }
 
@@ -765,7 +828,8 @@ namespace Centipede
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
-                OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"].ConvertInvariant<long>()),
+                OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"]
+                    .ConvertInvariant<long>()),
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 Result = ParseState(token["state"].ToStringInvariant()),
             };
@@ -798,10 +862,12 @@ namespace Centipede
             {
                 key = "margin_" + subtype;
             }
+
             var account_id = accounts[key];
             return account_id;
         }
+
         #endregion
     }
-    
+
 }

@@ -10,7 +10,7 @@ namespace Centipede
     /// </summary>
     public interface IExchangeAPI : IBaseAPI,
         ICommonProvider, IAccountProvider,
-        IMarketProvider, IDepthProviderrrr,
+        IMarketProvider, IDepthProvider,
         IOrderProvider,
         IDisposable
 
