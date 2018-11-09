@@ -5,6 +5,79 @@ using System.Threading.Tasks;
 
 namespace ExchangeSharp
 {
+
+    /// <summary>
+    /// 基础信息
+    /// </summary>
+    public interface ICommonProvider
+    {
+        /// <summary>
+        /// 获取可用币种信息
+        /// </summary>
+        /// <returns>Collection of Currencies</returns>
+        Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync();
+
+
+        /// <summary>
+        /// 获取当前交易所所有币对，以及相关限制
+        /// Get exchange market symbols including available metadata such as min trade size and whether the market is active
+        /// </summary>
+        /// <returns>Collection of ExchangeMarkets</returns>
+        Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync();
+
+    }
+
+    /// <summary>
+    /// 行情集合接口
+    /// </summary>
+    public interface IMarketProvider : ITickerProvider, ITradeProvider, IKlineProvider, IOrderBookProvider
+    {
+
+    }
+
+
+    /// <summary>
+    /// 行情信息
+    /// </summary>
+    public interface ITickerProvider
+    {
+
+    }
+
+    /// <summary>
+    /// 成交记录信息
+    /// </summary>
+    public interface ITradeProvider
+    {
+
+    }
+
+    /// <summary>
+    /// K线信息
+    /// </summary>
+    public interface IKlineProvider
+    {
+
+    }
+
+
+
+    /// <summary>
+    /// 订单
+    /// </summary>
+    public interface IOrderProvider
+    {
+
+    }
+
+    /// <summary>
+    /// 账户
+    /// </summary>
+    public interface IAccountProvider
+    {
+
+    }
+
     /// <summary>
     /// Interface for common exchange end points
     /// </summary>
@@ -47,12 +120,7 @@ namespace ExchangeSharp
 
         #region REST
 
-        /// <summary>
-        /// 获取所有币种和相关信息。包括是否启用和手续费
-        /// Gets currencies and related data such as IsEnabled and TxFee (if available)
-        /// </summary>
-        /// <returns>Collection of Currencies</returns>
-        Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync();
+    
 
         /// <summary>
         /// 获取币种的存入地址和相关细节
@@ -71,19 +139,6 @@ namespace ExchangeSharp
         /// <returns>Collection of ExchangeCoinTransfers</returns>
         Task<IEnumerable<ExchangeTransaction>> GetDepositHistoryAsync(string currency);
 
-        /// <summary>
-        /// 获取当前交易所所有币对
-        /// Get symbols for the exchange markets
-        /// </summary>
-        /// <returns>Symbols</returns>
-        Task<IEnumerable<string>> GetMarketSymbolsAsync();
-
-        /// <summary>
-        /// 获取当前交易所所有币对，包括可用的元数据，如最小交易规模和市场是否启用
-        /// Get exchange market symbols including available metadata such as min trade size and whether the market is active
-        /// </summary>
-        /// <returns>Collection of ExchangeMarkets</returns>
-        Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync();
 
         /// <summary>
         /// 获取最后行情数据

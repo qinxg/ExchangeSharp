@@ -1,8 +1,4 @@
-﻿/*
-
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security;
 using System.Threading.Tasks;
@@ -10,7 +6,7 @@ using System.Threading.Tasks;
 namespace ExchangeSharp
 {
     /// <summary>
-    /// Provider of order books
+    /// 深度信息
     /// </summary>
     public interface IOrderBookProvider
     {

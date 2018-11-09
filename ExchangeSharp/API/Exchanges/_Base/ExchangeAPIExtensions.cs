@@ -1,13 +1,7 @@
-﻿/*
-
-*/
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;using Newtonsoft.Json.Linq;
 
 namespace ExchangeSharp
 {

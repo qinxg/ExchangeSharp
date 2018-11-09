@@ -1,11 +1,6 @@
-﻿/*
-
-*/
-
-#define HAS_SIGNALR
+﻿#define HAS_SIGNALR
 
 #if HAS_SIGNALR
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,9 +10,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.AspNet.SignalR.Client;
+using System.Threading.Tasks;using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNet.SignalR.Client.Http;
 using Microsoft.AspNet.SignalR.Client.Transports;
 using Microsoft.AspNet.SignalR.Client.Infrastructure;

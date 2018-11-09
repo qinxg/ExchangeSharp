@@ -1,8 +1,4 @@
-﻿/*
-
-*/
-
-#if HAS_WINDOWS_FORMS
+﻿#if HAS_WINDOWS_FORMS
 
 using System;
 using System.Collections.Generic;
