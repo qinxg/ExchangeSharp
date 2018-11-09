@@ -12,7 +12,7 @@ namespace ExchangeSharp
     /// <seealso cref="ExchangeSharp.IAPIRequestMaker" />
     public sealed class APIRequestMaker : IAPIRequestMaker
     {
-        private readonly IAPIRequestHandler api;
+        private readonly IAPIRequestHandler _api;
 
         private class InternalHttpWebRequest : IHttpWebRequest
         {
@@ -124,7 +124,7 @@ namespace ExchangeSharp
         /// <param name="api">API</param>
         public APIRequestMaker(IAPIRequestHandler api)
         {
-            this.api = api;
+            this._api = api;
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace ExchangeSharp
         {
             await new SynchronizationContextRemover();
 
-            await api.RateLimit.WaitToProceedAsync();
+            await _api.RateLimit.WaitToProceedAsync();
             if (string.IsNullOrWhiteSpace(url))
             {
                 return null;
@@ -150,19 +150,19 @@ namespace ExchangeSharp
                 url = "/" + url;
             }
 
-            string fullUrl = (baseUrl ?? api.BaseUrl) + url;
-            method = method ?? api.RequestMethod;
-            Uri uri = api.ProcessRequestUrl(new UriBuilder(fullUrl), payload, method);
+            string fullUrl = (baseUrl ?? _api.BaseUrl) + url;
+            method = method ?? _api.RequestMethod;
+            Uri uri = _api.ProcessRequestUrl(new UriBuilder(fullUrl), payload, method);
             InternalHttpWebRequest request = new InternalHttpWebRequest(uri)
             {
                 Method = method
             };
             request.AddHeader("accept-language", "en-US,en;q=0.5");
-            request.AddHeader("content-type", api.RequestContentType);
+            request.AddHeader("content-type", _api.RequestContentType);
             request.AddHeader("user-agent", BaseAPI.RequestUserAgent);
-            request.Timeout = request.ReadWriteTimeout = (int)api.RequestTimeout.TotalMilliseconds;
+            request.Timeout = request.ReadWriteTimeout = (int)_api.RequestTimeout.TotalMilliseconds;
             
-            await api.ProcessRequestAsync(request, payload);
+            await _api.ProcessRequestAsync(request, payload);
             HttpWebResponse response = null;
             string responseString = null;
 
@@ -198,7 +198,7 @@ namespace ExchangeSharp
                         }
                         throw new APIException(responseString);
                     }
-                    api.ProcessResponse(new InternalHttpWebResponse(response));
+                    _api.ProcessResponse(new InternalHttpWebResponse(response));
                     RequestStateChanged?.Invoke(this, RequestMakerState.Finished, responseString);
                 }
             }
