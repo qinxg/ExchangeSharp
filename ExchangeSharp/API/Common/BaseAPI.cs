@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -242,15 +243,11 @@ namespace ExchangeSharp
             _requestMaker = new APIRequestMaker(this);
 
             string className = GetType().Name;
-            object[] nameAttributes = GetType().GetCustomAttributes(typeof(ApiNameAttribute), true);
+            var nameAttribute = (ApiNameAttribute) GetType().GetCustomAttribute(typeof(ApiNameAttribute), true);
 
-            if (nameAttributes.Length == 0)
+            if (nameAttribute != null)
             {
-                Name = Regex.Replace(className, "^Exchange|API$", string.Empty, RegexOptions.CultureInvariant);
-            }
-            else
-            {
-                Name = (nameAttributes[0] as ApiNameAttribute).Name;
+                Name = nameAttribute.Name;
             }
         }
 
