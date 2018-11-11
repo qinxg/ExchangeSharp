@@ -17,15 +17,10 @@ namespace Centipede
         /// </summary>
         public const char GlobalMarketSymbolSeparator = '-';
 
-        /// <summary>
-        /// Whether to use the default method cache policy, default is true.
-        /// The default cache policy caches things like get symbols, tickers, order book, order details, etc. See ExchangeAPI constructor for full list.
-        /// </summary>
-        public static bool UseDefaultMethodCachePolicy { get; set; } = true;
-
+  
         #region Private methods
 
-        private static readonly Dictionary<string, IExchangeAPI> apis = new Dictionary<string, IExchangeAPI>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, IExchangeAPI> Apis = new Dictionary<string, IExchangeAPI>(StringComparer.OrdinalIgnoreCase);
         private bool _disposed;
 
         #endregion Private methods
@@ -102,6 +97,7 @@ namespace Centipede
         #region Protected methods
 
         /// <summary>
+        /// 利用交易对的相关信息，控制价格。使他符合标准
         /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
@@ -114,6 +110,7 @@ namespace Centipede
         }
 
         /// <summary>
+        /// 利用交易对的信息，控制数量。使他符合标准
         /// Clamp quantiy using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
@@ -171,7 +168,7 @@ namespace Centipede
                 // the overhead of if a user is only using one or a handful of the apis
                 using (ExchangeAPI api = Activator.CreateInstance(type) as ExchangeAPI)
                 {
-                    apis[api.Name] = null;
+                    Apis[api.Name] = null;
                 }
 
                 // in case derived class is accessed first, check for existance of key
@@ -182,18 +179,6 @@ namespace Centipede
             }
         }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        protected ExchangeAPI()
-        {
-            if (UseDefaultMethodCachePolicy)
-            {
-                MethodCachePolicy.Add(nameof(GetCurrenciesAsync), TimeSpan.FromHours(1.0));
-                MethodCachePolicy.Add(nameof(GetMarketSymbolsAsync), TimeSpan.FromHours(1.0));
-                MethodCachePolicy.Add(nameof(GetMarketSymbolsMetadataAsync), TimeSpan.FromHours(1.0));
-            }
-        }
 
         /// <summary>
         /// Finalizer
@@ -215,11 +200,11 @@ namespace Centipede
                 Cache?.Dispose();
 
                 // take out of global api dictionary if disposed
-                lock (apis)
+                lock (Apis)
                 {
-                    if (apis.TryGetValue(Name, out var cachedApi) && cachedApi == this)
+                    if (Apis.TryGetValue(Name, out var cachedApi) && cachedApi == this)
                     {
-                        apis[Name] = null;
+                        Apis[Name] = null;
                     }
                 }
             }
@@ -234,9 +219,9 @@ namespace Centipede
         {
             // note: this method will be slightly slow (milliseconds) the first time it is called and misses the cache
             // subsequent calls with cache hits will be nanoseconds
-            lock (apis)
+            lock (Apis)
             {
-                if (!apis.TryGetValue(exchangeName, out IExchangeAPI api))
+                if (!Apis.TryGetValue(exchangeName, out IExchangeAPI api))
                 {
                     throw new ArgumentException("No API available with name " + exchangeName);
                 }
@@ -249,7 +234,7 @@ namespace Centipede
                         if (api.Name == exchangeName)
                         {
                             // found one with right name, add it to the API dictionary
-                            apis[exchangeName] = api;
+                            Apis[exchangeName] = api;
 
                             // break out, we are done
                             break;
@@ -272,10 +257,10 @@ namespace Centipede
         /// <returns>All APIs</returns>
         public static IExchangeAPI[] GetExchangeAPIs()
         {
-            lock (apis)
+            lock (Apis)
             {
                 List<IExchangeAPI> apiList = new List<IExchangeAPI>();
-                foreach (var kv in apis.ToArray())
+                foreach (var kv in Apis.ToArray())
                 {
                     if (kv.Value == null)
                     {
@@ -462,6 +447,9 @@ namespace Centipede
         /// <param name="seconds">Seconds</param>
         /// <returns>Period string</returns>
         public virtual string PeriodSecondsToString(int seconds) => CryptoUtility.SecondsToPeriodString(seconds);
+
+        public List<ExchangeCurrency> Currencies { get; set; } = new List<ExchangeCurrency>();
+        public List<ExchangeMarket> Symbols { get; set; } = new List<ExchangeMarket>();
 
         #endregion Other
 

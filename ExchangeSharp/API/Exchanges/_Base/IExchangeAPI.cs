@@ -54,5 +54,18 @@ namespace Centipede
         string PeriodSecondsToString(int seconds);
 
         #endregion Utility Methods
+
+
+        /// <summary>
+        /// 可用币种
+        /// </summary>
+        List<ExchangeCurrency> Currencies { get; set; }
+
+        /// <summary>
+        /// 币对信息
+        /// </summary>
+        List<ExchangeMarket> Symbols { get; set; }
+
+
     }
 }
