@@ -103,9 +103,9 @@ namespace Centipede
         /// <param name="marketSymbol">Market Symbol</param>
         /// <param name="outputPrice">Price</param>
         /// <returns>Clamped price</returns>
-        protected async Task<decimal> ClampOrderPrice(string marketSymbol, decimal outputPrice)
+        protected decimal ClampOrderPrice(string marketSymbol, decimal outputPrice)
         {
-            ExchangeMarket market = await GetExchangeMarketFromCacheAsync(marketSymbol);
+            ExchangeMarket market =  GetExchangeMarketFromCacheAsync(marketSymbol);
             return market == null ? outputPrice : CryptoUtility.ClampDecimal(market.MinPrice, market.MaxPrice, market.PriceStepSize, outputPrice);
         }
 
@@ -116,9 +116,9 @@ namespace Centipede
         /// <param name="marketSymbol">Market Symbol</param>
         /// <param name="outputQuantity">Quantity</param>
         /// <returns>Clamped quantity</returns>
-        protected async Task<decimal> ClampOrderQuantity(string marketSymbol, decimal outputQuantity)
+        protected decimal ClampOrderQuantity(string marketSymbol, decimal outputQuantity)
         {
-            ExchangeMarket market = await GetExchangeMarketFromCacheAsync(marketSymbol);
+            ExchangeMarket market =  GetExchangeMarketFromCacheAsync(marketSymbol);
             return market == null ? outputQuantity : CryptoUtility.ClampDecimal(market.MinTradeSize, market.MaxTradeSize, market.QuantityStepSize, outputQuantity);
         }
 
@@ -197,7 +197,6 @@ namespace Centipede
             {
                 _disposed = true;
                 OnDispose();
-                Cache?.Dispose();
 
                 // take out of global api dictionary if disposed
                 lock (Apis)
@@ -459,9 +458,12 @@ namespace Centipede
         /// Gets currencies and related data such as IsEnabled and TxFee (if available)
         /// </summary>
         /// <returns>Collection of Currencies</returns>
-        public virtual async Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync()
+        public  async Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetCurrenciesAsync(), nameof(GetCurrenciesAsync));
+            var result = await OnGetCurrenciesAsync();
+
+            //todo：currencies赋值
+            return result;
         }
 
         /// <summary>
@@ -470,7 +472,8 @@ namespace Centipede
         /// <returns>Array of symbols</returns>
         public virtual async Task<IEnumerable<string>> GetMarketSymbolsAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => (await OnGetMarketSymbolsAsync()).ToArray(), nameof(GetMarketSymbolsAsync));
+            //todo:即将被废弃
+            return await OnGetMarketSymbolsAsync();
         }
 
         /// <summary>
@@ -479,7 +482,8 @@ namespace Centipede
         /// <returns>Collection of ExchangeMarkets</returns>
         public virtual async Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => (await OnGetMarketSymbolsMetadataAsync()).ToArray(), nameof(GetMarketSymbolsMetadataAsync));
+            //todo:赋值
+            return await OnGetMarketSymbolsMetadataAsync();
         }
 
         /// <summary>
@@ -488,33 +492,10 @@ namespace Centipede
         /// </summary>
         /// <param name="marketSymbol">The market symbol. Ex. ADA/BTC. This is assumed to be normalized and already correct for the exchange.</param>
         /// <returns>The ExchangeMarket or null if it doesn't exist in the cache or there was an error</returns>
-        public virtual async Task<ExchangeMarket> GetExchangeMarketFromCacheAsync(string marketSymbol)
+        public ExchangeMarket GetExchangeMarketFromCacheAsync(string marketSymbol)
         {
-            try
-            {
-                // *NOTE*: custom caching, do not wrap in CacheMethodCall...
 
-                // not sure if this is needed, but adding it just in case
-                await new SynchronizationContextRemover();
-                ExchangeMarket[] markets = (await GetMarketSymbolsMetadataAsync()).ToArray();
-                ExchangeMarket market = markets.FirstOrDefault(m => m.MarketSymbol == marketSymbol);
-                if (market == null)
-                {
-                    // try again with a fresh request, every symbol *should* be in the response from PopulateExchangeMarketsAsync
-                    Cache.Remove(nameof(GetMarketSymbolsMetadataAsync));
-
-                    markets = (await GetMarketSymbolsMetadataAsync()).ToArray();
-
-                    // try and find the market again, this time if not found we give up and just return null
-                    market = markets.FirstOrDefault(m => m.MarketSymbol == marketSymbol);
-                }
-                return market;
-            }
-            catch
-            {
-                // TODO: Report the error somehow, for now a failed network request will just return null symbol which will force the caller to use default handling
-            }
-            return null;
+            return Symbols.FirstOrDefault(m => m.MarketSymbol == marketSymbol);
         }
 
         /// <summary>
@@ -522,19 +503,20 @@ namespace Centipede
         /// </summary>
         /// <param name="marketSymbol">Symbol to get ticker for</param>
         /// <returns>Ticker</returns>
-        public virtual async Task<ExchangeTicker> GetTickerAsync(string marketSymbol)
+        public async Task<ExchangeTicker> GetTickerAsync(string marketSymbol)
         {
             NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetTickerAsync(marketSymbol), nameof(GetTickerAsync), nameof(marketSymbol), marketSymbol);
+            return await OnGetTickerAsync(marketSymbol);
         }
+
 
         /// <summary>
         /// Get all tickers in one request. If the exchange does not support this, a ticker will be requested for each symbol.
         /// </summary>
         /// <returns>Key value pair of symbol and tickers array</returns>
-        public virtual async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync()
+        public  async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetTickersAsync(), nameof(GetTickersAsync));
+            return await OnGetTickersAsync();
         }
 
         /// <summary>
@@ -543,20 +525,21 @@ namespace Centipede
         /// <param name="marketSymbol">Symbol to get order book for</param>
         /// <param name="maxCount">Max count, not all exchanges will honor this parameter</param>
         /// <returns>Exchange order book or null if failure</returns>
-        public virtual async Task<ExchangeOrderBook> GetDepthAsync(string marketSymbol, int maxCount = 100)
+        public  async Task<ExchangeOrderBook> GetDepthAsync(string marketSymbol, int maxCount = 100)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBookAsync(marketSymbol, maxCount), nameof(GetDepthAsync), nameof(marketSymbol), marketSymbol, nameof(maxCount), maxCount);
+            return await OnGetOrderBookAsync(marketSymbol, maxCount);
         }
+
 
         /// <summary>
         /// Get all exchange order book symbols in one request. If the exchange does not support this, an order book will be requested for each symbol. Depending on the exchange, the number of bids and asks will have different counts, typically 50-100.
         /// </summary>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <returns>Symbol and order books pairs</returns>
-        public virtual async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetAllDepthAsync(int maxCount = 100)
+        public  async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetAllDepthAsync(int maxCount = 100)
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderBooksAsync(maxCount), nameof(GetAllDepthAsync), nameof(maxCount), maxCount);
+            return await OnGetOrderBooksAsync(maxCount);
         }
 
         /// <summary>
@@ -566,7 +549,7 @@ namespace Centipede
         /// <param name="marketSymbol">Symbol to get historical data for</param>
         /// <param name="startDate">Optional UTC start date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
         /// <param name="endDate">Optional UTC end date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
-        public virtual async Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string marketSymbol, DateTime? startDate = null, DateTime? endDate = null)
+        public  async Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string marketSymbol, DateTime? startDate = null, DateTime? endDate = null)
         {
             // *NOTE*: Do not wrap in CacheMethodCall, uses a callback with custom queries, not easy to cache
             await new SynchronizationContextRemover();
@@ -578,10 +561,10 @@ namespace Centipede
         /// </summary>
         /// <param name="marketSymbol">Symbol to get recent trades for</param>
         /// <returns>An enumerator that loops through all recent trades</returns>
-        public virtual async Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(string marketSymbol)
+        public  async Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(string marketSymbol)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetRecentTradesAsync(marketSymbol), nameof(GetRecentTradesAsync), nameof(marketSymbol), marketSymbol);
+            return await OnGetRecentTradesAsync(marketSymbol);
         }
 
 
@@ -597,17 +580,16 @@ namespace Centipede
         public virtual async Task<IEnumerable<MarketCandle>> GetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetCandlesAsync(marketSymbol, periodSeconds, startDate, endDate, limit), nameof(GetCandlesAsync),
-                nameof(marketSymbol), marketSymbol, nameof(periodSeconds), periodSeconds, nameof(startDate), startDate, nameof(endDate), endDate, nameof(limit), limit);
+            return  await OnGetCandlesAsync(marketSymbol, periodSeconds, startDate, endDate, limit);
         }
 
         /// <summary>
         /// Get total amounts, symbol / amount dictionary
         /// </summary>
         /// <returns>Dictionary of symbols and amounts</returns>
-        public virtual async Task<Dictionary<string, decimal>> GetAmountsAsync()
+        public  async Task<Dictionary<string, decimal>> GetAmountsAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => (await OnGetAmountsAsync()), nameof(GetAmountsAsync));
+            return await OnGetAmountsAsync();
         }
 
 
@@ -617,7 +599,7 @@ namespace Centipede
         /// <returns>Symbol / amount dictionary</returns>
         public virtual async Task<Dictionary<string, decimal>> GetAmountsAvailableToTradeAsync()
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetAmountsAvailableToTradeAsync(), nameof(GetAmountsAvailableToTradeAsync));
+            return  await OnGetAmountsAvailableToTradeAsync();
         }
 
         /// <summary>
@@ -658,7 +640,7 @@ namespace Centipede
         public virtual async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, string marketSymbol = null)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOrderDetailsAsync(orderId, marketSymbol), nameof(GetOrderDetailsAsync), nameof(orderId), orderId, nameof(marketSymbol), marketSymbol);
+            return await OnGetOrderDetailsAsync(orderId, marketSymbol);
         }
 
         /// <summary>
@@ -669,7 +651,7 @@ namespace Centipede
         public virtual async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(string marketSymbol = null)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOpenOrderDetailsAsync(marketSymbol), nameof(GetOpenOrderDetailsAsync), nameof(marketSymbol), marketSymbol);
+            return await OnGetOpenOrderDetailsAsync(marketSymbol);
         }
 
         /// <summary>
@@ -681,8 +663,7 @@ namespace Centipede
         public virtual async Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => (await OnGetCompletedOrderDetailsAsync(marketSymbol, afterDate)).ToArray(), nameof(GetCompletedOrderDetailsAsync),
-                nameof(marketSymbol), marketSymbol, nameof(afterDate), afterDate);
+            return await OnGetCompletedOrderDetailsAsync(marketSymbol, afterDate);
         }
 
         /// <summary>
@@ -716,8 +697,7 @@ namespace Centipede
         /// <returns>Symbol / amount dictionary</returns>
         public virtual async Task<Dictionary<string, decimal>> GetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances = false)
         {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetMarginAmountsAvailableToTradeAsync(includeZeroBalances),
-                nameof(GetMarginAmountsAvailableToTradeAsync), nameof(includeZeroBalances), includeZeroBalances);
+            return  await OnGetMarginAmountsAvailableToTradeAsync(includeZeroBalances);
         }
 
         /// <summary>
@@ -728,7 +708,7 @@ namespace Centipede
         public virtual async Task<ExchangeMarginPositionResult> GetOpenPositionAsync(string marketSymbol)
         {
             marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetOpenPositionAsync(marketSymbol), nameof(GetOpenPositionAsync), nameof(marketSymbol), marketSymbol);
+            return  await OnGetOpenPositionAsync(marketSymbol);
         }
 
         /// <summary>

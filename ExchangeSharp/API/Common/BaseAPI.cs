@@ -188,19 +188,6 @@ namespace Centipede
         /// </summary>
         public Dictionary<string, TimeSpan> MethodCachePolicy { get; } = new Dictionary<string, TimeSpan>();
 
-        private ICache _cache = new MemoryCache();
-        /// <summary>
-        /// Get or set the current cache. Defaults to MemoryCache.
-        /// </summary>
-        public ICache Cache
-        {
-            get => _cache;
-            set
-            {
-                value.ThrowIfNull(nameof(Cache));
-                _cache = value;
-            }
-        }
 
         private decimal _lastNonce;
 

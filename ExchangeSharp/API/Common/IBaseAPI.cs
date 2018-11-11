@@ -57,11 +57,6 @@ namespace Centipede
         /// </summary>
         System.Net.Cache.RequestCachePolicy RequestCachePolicy { get; set; }
 
-        /// <summary>
-        /// Cache policy for api methods (method name, cache time)
-        /// </summary>
-        Dictionary<string, TimeSpan> MethodCachePolicy { get; }
-
         #endregion Properties
 
         #region Methods

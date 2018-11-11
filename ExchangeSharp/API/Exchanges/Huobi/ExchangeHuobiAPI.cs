@@ -699,8 +699,8 @@ namespace Centipede
             payload.Add("type", order.IsBuy ? "buy" : "sell");
             payload.Add("source", order.IsMargin ? "margin-api" : "api");
 
-            decimal outputQuantity = await ClampOrderQuantity(order.MarketSymbol, order.Amount);
-            decimal outputPrice = await ClampOrderPrice(order.MarketSymbol, order.Price);
+            decimal outputQuantity =  ClampOrderQuantity(order.MarketSymbol, order.Amount);
+            decimal outputPrice =  ClampOrderPrice(order.MarketSymbol, order.Price);
 
             payload["amount"] = outputQuantity.ToStringInvariant();
 

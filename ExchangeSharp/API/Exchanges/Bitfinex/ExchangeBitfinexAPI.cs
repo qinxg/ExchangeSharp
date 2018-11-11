@@ -428,7 +428,7 @@ namespace Centipede
             string marketSymbol = NormalizeMarketSymbolV1(order.MarketSymbol);
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
             payload["symbol"] = marketSymbol;
-            payload["amount"] = (await ClampOrderQuantity(marketSymbol, order.Amount)).ToStringInvariant();
+            payload["amount"] = ( ClampOrderQuantity(marketSymbol, order.Amount)).ToStringInvariant();
             payload["side"] = (order.IsBuy ? "buy" : "sell");
 
             if (order.IsMargin)
@@ -442,7 +442,7 @@ namespace Centipede
 
             if (order.OrderType != OrderType.Market)
             {
-                payload["price"] = (await ClampOrderPrice(marketSymbol, order.Price)).ToStringInvariant();
+                payload["price"] = ( ClampOrderPrice(marketSymbol, order.Price)).ToStringInvariant();
             }
             else
             {

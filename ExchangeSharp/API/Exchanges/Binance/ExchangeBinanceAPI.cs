@@ -423,8 +423,8 @@ namespace Centipede
                 payload["type"] = order.OrderType.ToStringUpperInvariant();
 
             // Binance has strict rules on which prices and quantities are allowed. They have to match the rules defined in the market definition.
-            decimal outputQuantity = await ClampOrderQuantity(order.MarketSymbol, order.Amount);
-            decimal outputPrice = await ClampOrderPrice(order.MarketSymbol, order.Price);
+            decimal outputQuantity =  ClampOrderQuantity(order.MarketSymbol, order.Amount);
+            decimal outputPrice =  ClampOrderPrice(order.MarketSymbol, order.Price);
 
             // Binance does not accept quantities with more than 20 decimal places.
             payload["quantity"] = Math.Round(outputQuantity, 20);
