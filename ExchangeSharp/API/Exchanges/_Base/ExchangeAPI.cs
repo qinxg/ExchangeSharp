@@ -26,7 +26,7 @@ namespace Centipede
         #region Private methods
 
         private static readonly Dictionary<string, IExchangeAPI> apis = new Dictionary<string, IExchangeAPI>(StringComparer.OrdinalIgnoreCase);
-        private bool disposed;
+        private bool _disposed;
 
         #endregion Private methods
 
@@ -185,21 +185,13 @@ namespace Centipede
         /// <summary>
         /// Constructor
         /// </summary>
-        public ExchangeAPI()
+        protected ExchangeAPI()
         {
             if (UseDefaultMethodCachePolicy)
             {
                 MethodCachePolicy.Add(nameof(GetCurrenciesAsync), TimeSpan.FromHours(1.0));
                 MethodCachePolicy.Add(nameof(GetMarketSymbolsAsync), TimeSpan.FromHours(1.0));
                 MethodCachePolicy.Add(nameof(GetMarketSymbolsMetadataAsync), TimeSpan.FromHours(1.0));
-                MethodCachePolicy.Add(nameof(GetTickerAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetTickersAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetDepthAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetAllDepthAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetCandlesAsync), TimeSpan.FromSeconds(10.0));
-                MethodCachePolicy.Add(nameof(GetAmountsAsync), TimeSpan.FromMinutes(1.0));
-                MethodCachePolicy.Add(nameof(GetAmountsAvailableToTradeAsync), TimeSpan.FromMinutes(1.0));
-                MethodCachePolicy.Add(nameof(GetCompletedOrderDetailsAsync), TimeSpan.FromMinutes(2.0));
             }
         }
 
@@ -216,9 +208,9 @@ namespace Centipede
         /// </summary>
         public void Dispose()
         {
-            if (!disposed)
+            if (!_disposed)
             {
-                disposed = true;
+                _disposed = true;
                 OnDispose();
                 Cache?.Dispose();
 
@@ -604,33 +596,6 @@ namespace Centipede
             return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetRecentTradesAsync(marketSymbol), nameof(GetRecentTradesAsync), nameof(marketSymbol), marketSymbol);
         }
 
-        /// <summary>
-        /// Gets the address to deposit to and applicable details.
-        /// </summary>
-        /// <param name="currency">Currency to get address for.</param>
-        /// <param name="forceRegenerate">Regenerate the address</param>
-        /// <returns>Deposit address details (including tag if applicable, such as XRP)</returns>
-        public virtual async Task<ExchangeDepositDetails> GetDepositAddressAsync(string currency, bool forceRegenerate = false)
-        {
-            if (forceRegenerate)
-            {
-                // force regenetate, do not cache
-                return await OnGetDepositAddressAsync(currency, forceRegenerate);
-            }
-            else
-            {
-                return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetDepositAddressAsync(currency, forceRegenerate), nameof(GetDepositAddressAsync), nameof(currency), currency);
-            }
-        }
-
-        /// <summary>
-        /// Gets the deposit history for a symbol
-        /// </summary>
-        /// <returns>Collection of ExchangeCoinTransfers</returns>
-        public virtual async Task<IEnumerable<ExchangeTransaction>> GetDepositHistoryAsync(string currency)
-        {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetDepositHistoryAsync(currency), nameof(GetDepositHistoryAsync), nameof(currency), currency);
-        }
 
         /// <summary>
         /// Get candles (open, high, low, close)
@@ -657,14 +622,6 @@ namespace Centipede
             return await Cache.CacheMethod(MethodCachePolicy, async () => (await OnGetAmountsAsync()), nameof(GetAmountsAsync));
         }
 
-        /// <summary>
-        /// Get fees
-        /// </summary>
-        /// <returns>The customer trading fees</returns>
-        public virtual async Task<Dictionary<string, decimal>> GetFeesAync()
-        {
-            return await Cache.CacheMethod(MethodCachePolicy, async () => await OnGetFeesAsync(), nameof(GetFeesAync));
-        }
 
         /// <summary>
         /// Get amounts available to trade, symbol / amount dictionary

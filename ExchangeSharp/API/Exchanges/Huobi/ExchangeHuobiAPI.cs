@@ -51,8 +51,6 @@ namespace Centipede
 
         #endregion
 
-
-
         #region HTTP请求处理 
 
         protected override async Task ProcessRequestAsync(IHttpWebRequest request, Dictionary<string, object> payload)
