@@ -35,15 +35,6 @@ namespace Centipede
             RateLimit = new RateGate(300, TimeSpan.FromMinutes(5));
         }
 
-        public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GlobalMarketSymbolToExchangeMarketSymbol(string marketSymbol)
-        {
-            throw new NotImplementedException();
-        }
 
         protected override async Task ProcessRequestAsync(IHttpWebRequest request, Dictionary<string, object> payload)
         {

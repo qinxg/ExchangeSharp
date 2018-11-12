@@ -21,7 +21,8 @@ namespace Centipede
         #region Utility Methods
 
         /// <summary>
-        /// Normalize a symbol for use on this exchange
+        /// 格式化交易对编码
+        /// 把传入的编码格式化成当前交易所的编码
         /// </summary>
         /// <param name="marketSymbol">Symbol</param>
         /// <returns>Normalized symbol</returns>
