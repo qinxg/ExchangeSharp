@@ -26,23 +26,6 @@ namespace Centipede
         string NormalizeMarketSymbol(string marketSymbol);
 
         /// <summary>
-        /// Convert an exchange symbol into a global symbol, which will be the same for all exchanges.
-        /// Global symbols are always uppercase and separate the currency pair with a hyphen (-).
-        /// Global symbols list the base currency first (i.e. BTC) and conversion currency
-        /// second (i.e. USD). Example BTC-USD, read as x BTC is worth y USD.
-        /// </summary>
-        /// <param name="marketSymbol">Exchange symbol</param>
-        /// <returns>Global symbol</returns>
-        string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol);
-
-        /// <summary>
-        /// Convert a global symbol into an exchange symbol, which will potentially be different from other exchanges.
-        /// </summary>
-        /// <param name="globalSymbol">Global symbol</param>
-        /// <returns>Exchange symbol</returns>
-        string GlobalMarketSymbolToExchangeMarketSymbol(string globalSymbol);
-
-        /// <summary>
         /// 把秒转换为周期字符串 ， 例如60秒转换后为1m
         /// 主要是给k线用的
         /// Convert seconds to a period string, or throw exception if seconds invalid. Example: 60 seconds becomes 1m.
@@ -54,14 +37,16 @@ namespace Centipede
         #endregion Utility Methods
 
 
+        void Init(List<Currency> currencies, List<Symbol> symbols);
+
         /// <summary>
         /// 可用币种
         /// </summary>
-        List<ExchangeCurrency> Currencies { get; set; }
+        List<Currency> Currencies { get; }
 
         /// <summary>
         /// 币对信息
         /// </summary>
-        List<ExchangeMarket> Symbols { get; set; }
+        List<Symbol> Symbols { get;  }
     }
 }

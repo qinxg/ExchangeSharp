@@ -16,9 +16,9 @@ namespace Centipede
         protected virtual Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync();
         protected virtual Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> OnGetOrderBooksAsync(int maxCount = 100);
         protected virtual Task<IEnumerable<ExchangeTrade>> OnGetRecentTradesAsync(string symbol);
-        protected virtual Task<IReadOnlyDictionary<string, ExchangeCurrency>> OnGetCurrenciesAsync();
+        protected virtual Task<IReadOnlyDictionary<string, OriginCurrency>> OnGetCurrenciesAsync();
         protected virtual Task<IEnumerable<string>> OnGetSymbolsAsync();
-        protected virtual Task<IEnumerable<ExchangeMarket>> OnGetSymbolsMetadataAsync();
+        protected virtual Task<IEnumerable<Symbol>> OnGetSymbolsMetadataAsync();
         protected virtual Task<ExchangeTicker> OnGetTickerAsync(string symbol);
         protected virtual Task<ExchangeOrderBook> OnGetOrderBookAsync(string symbol, int maxCount = 100);
         protected virtual OnGetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string symbol, DateTime? startDate = null, DateTime? endDate = null);

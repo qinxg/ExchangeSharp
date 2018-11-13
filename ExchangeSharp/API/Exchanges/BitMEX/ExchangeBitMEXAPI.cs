@@ -58,10 +58,9 @@ namespace Centipede
 
         protected override async Task<IEnumerable<string>> OnGetMarketSymbolsAsync()
         {
-            var m = await GetMarketSymbolsMetadataAsync();
-            return m.Select(x => x.MarketSymbol);
+            var m = await GetSymbolsAsyncrketSymbol);
         }
-        protected override async Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync()
+        protected override async Task<IEnumerable<Symbol>> OnGetMarketSymbolsMetadataAsync()
         {
             /*
              {{
@@ -169,13 +168,13 @@ namespace Centipede
 }}
              */
 
-            List<ExchangeMarket> markets = new List<ExchangeMarket>();
+            List<Symbol> markets = new List<Symbol>();
             JToken allSymbols = await MakeJsonRequestAsync<JToken>("/instrument");
             foreach (JToken marketSymbolToken in allSymbols)
             {
-                var market = new ExchangeMarket
+                var market = new Symbol
                 {
-                    MarketSymbol = marketSymbolToken["symbol"].ToStringUpperInvariant(),
+                    OriginSymbol = marketSymbolToken["symbol"].ToStringUpperInvariant(),
                     IsActive = marketSymbolToken["status"].ToStringInvariant().EqualsWithOption("Open"),
                     QuoteCurrency = marketSymbolToken["quoteCurrency"].ToStringUpperInvariant(),
                     BaseCurrency = marketSymbolToken["underlying"].ToStringUpperInvariant(),
@@ -601,7 +600,7 @@ namespace Centipede
 
             return result;
         }
-        //private decimal GetInstrumentTickSize(ExchangeMarket market)
+        //private decimal GetInstrumentTickSize(Symbol market)
         //{
         //    if (market.MarketName == "XBTUSD")
         //    {
@@ -610,18 +609,18 @@ namespace Centipede
         //    return market.PriceStepSize.Value;
         //}
 
-        //private ExchangeMarket GetMarket(string symbol)
+        //private Symbol GetMarket(string symbol)
         //{
         //    var m = GetSymbolsMetadata();
         //    return m.Where(x => x.MarketName == symbol).First();
         //}
 
-        //private decimal GetPriceFromID(long id, ExchangeMarket market)
+        //private decimal GetPriceFromID(long id, Symbol market)
         //{
         //    return ((100000000L * market.Idx) - id) * GetInstrumentTickSize(market);
         //}
 
-        //private long GetIDFromPrice(decimal price, ExchangeMarket market)
+        //private long GetIDFromPrice(decimal price, Symbol market)
         //{
         //    return (long)((100000000L * market.Idx) - (price / GetInstrumentTickSize(market)));
         //}

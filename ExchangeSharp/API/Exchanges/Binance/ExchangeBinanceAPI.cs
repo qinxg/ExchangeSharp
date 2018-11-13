@@ -60,22 +60,6 @@ namespace Centipede
             WebSocketDepthType = WebSocketDepthType.DeltasOnly;
         }
 
-        public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
-        {
-            // All pairs in Binance end with BTC, ETH, BNB or USDT
-            if (marketSymbol.EndsWith("BTC") || marketSymbol.EndsWith("ETH") || marketSymbol.EndsWith("BNB"))
-            {
-                string baseSymbol = marketSymbol.Substring(marketSymbol.Length - 3);
-                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator((marketSymbol.Replace(baseSymbol, "") + GlobalMarketSymbolSeparator + baseSymbol), GlobalMarketSymbolSeparator);
-            }
-            if (marketSymbol.EndsWith("USDT"))
-            {
-                string baseSymbol = marketSymbol.Substring(marketSymbol.Length - 4);
-                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator((marketSymbol.Replace(baseSymbol, "") + GlobalMarketSymbolSeparator + baseSymbol), GlobalMarketSymbolSeparator);
-            }
-
-            return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(marketSymbol.Substring(0, marketSymbol.Length - 3) + GlobalMarketSymbolSeparator + (marketSymbol.Substring(marketSymbol.Length - 3, 3)), GlobalMarketSymbolSeparator);
-        }
 
         /// <summary>
         /// Get the details of all trades
@@ -99,7 +83,7 @@ namespace Centipede
             return symbols;
         }
 
-        protected override async Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync()
+        protected override async Task<IEnumerable<Symbol>> OnGetMarketSymbolsMetadataAsync()
         {
             /*
              *         {
@@ -140,14 +124,14 @@ namespace Centipede
         },
              */
 
-            var markets = new List<ExchangeMarket>();
+            var markets = new List<Symbol>();
             JToken obj = await MakeJsonRequestAsync<JToken>("/exchangeInfo");
             JToken allSymbols = obj["symbols"];
             foreach (JToken marketSymbolToken in allSymbols)
             {
-                var market = new ExchangeMarket
+                var market = new Symbol
                 {
-                    MarketSymbol = marketSymbolToken["symbol"].ToStringUpperInvariant(),
+                    OriginSymbol = marketSymbolToken["symbol"].ToStringUpperInvariant(),
                     IsActive = ParseMarketStatus(marketSymbolToken["status"].ToStringUpperInvariant()),
                     QuoteCurrency = marketSymbolToken["quoteAsset"].ToStringUpperInvariant(),
                     BaseCurrency = marketSymbolToken["baseAsset"].ToStringUpperInvariant()
@@ -184,23 +168,17 @@ namespace Centipede
             return markets;
         }
 
-        protected override async Task<IReadOnlyDictionary<string, ExchangeCurrency>> OnGetCurrenciesAsync()
+        protected override async Task<IReadOnlyDictionary<string, Currency>> OnGetCurrenciesAsync()
         {
             // https://www.binance.com/assetWithdraw/getAllAsset.html
-            Dictionary<string, ExchangeCurrency> allCoins = new Dictionary<string, ExchangeCurrency>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, Currency> allCoins = new Dictionary<string, Currency>(StringComparer.OrdinalIgnoreCase);
 
-            List<Currency> currencies = await MakeJsonRequestAsync<List<Currency>>(GetCurrenciesUrl, BaseWebUrl);
-            foreach (Currency coin in currencies)
+            List<Binance.Currency> currencies = await MakeJsonRequestAsync<List<Binance.Currency>>(GetCurrenciesUrl, BaseWebUrl);
+            foreach (Binance.Currency coin in currencies)
             {
-                allCoins[coin.AssetCode] = new ExchangeCurrency
+                allCoins[coin.AssetCode] = new Currency
                 {
-                    CoinType = coin.ParentCode,
-                    DepositEnabled = coin.EnableCharge,
-                    FullName = coin.AssetName,
-                    MinConfirmations = coin.ConfirmTimes.ConvertInvariant<int>(),
-                    Name = coin.AssetCode,
-                    TxFee = coin.TransactionFee,
-                    WithdrawalEnabled = coin.EnableWithdraw
+                    OriginCurrencyn.AssetCode,
                 };
             }
 

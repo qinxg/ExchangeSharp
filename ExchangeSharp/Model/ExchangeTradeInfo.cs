@@ -27,17 +27,18 @@ namespace Centipede
         /// </summary>
         public void Update()
         {
-            Ticker = ExchangeInfo.API.GetTickerAsync(MarketSymbol).Sync();
-            RecentTrades = ExchangeInfo.API.GetRecentTradesAsync(MarketSymbol).Sync().ToArray();
-            if (RecentTrades.Length == 0)
-            {
-                Trade = new Trade();
-            }
-            else
-            {
-                Trade = new Trade { Amount = (float)RecentTrades[RecentTrades.Length - 1].Amount, Price = (float)RecentTrades[RecentTrades.Length - 1].Price, Ticks = (long)CryptoUtility.UnixTimestampFromDateTimeMilliseconds(RecentTrades[RecentTrades.Length - 1].Timestamp) };
-            }
-            Orders = ExchangeInfo.API.GetDepthAsync(MarketSymbol).Sync();
+            //todo
+            //Ticker = ExchangeInfo.API.GetTickerAsync(MarketSymbol).Sync();
+            //RecentTrades = ExchangeInfo.API.GetRecentTradesAsync(MarketSymbol).Sync().ToArray();
+            //if (RecentTrades.Length == 0)
+            //{
+            //    Trade = new Trade();
+            //}
+            //else
+            //{
+            //    Trade = new Trade { Amount = (float)RecentTrades[RecentTrades.Length - 1].Amount, Price = (float)RecentTrades[RecentTrades.Length - 1].Price, Ticks = (long)CryptoUtility.UnixTimestampFromDateTimeMilliseconds(RecentTrades[RecentTrades.Length - 1].Timestamp) };
+            //}
+            //Orders = ExchangeInfo.API.GetDepthAsync(MarketSymbol).Sync();
         }
 
         /// <summary>

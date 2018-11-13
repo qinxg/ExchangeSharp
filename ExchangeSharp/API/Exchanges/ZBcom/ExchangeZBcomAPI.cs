@@ -56,7 +56,7 @@ namespace Centipede
             return symbols;
         }
 
-		protected override async Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync()
+		protected override async Task<IEnumerable<Symbol>> OnGetMarketSymbolsMetadataAsync()
 		{
 			// GET http://api.zb.cn/data/v1/markets
 			// //# Response
@@ -73,7 +73,7 @@ namespace Centipede
 			// }
 
 			var data = await MakeRequestZBcomAsync(string.Empty, "/markets");
-			List<ExchangeMarket> symbols = new List<ExchangeMarket>();
+			List<Symbol> symbols = new List<Symbol>();
 			foreach (JProperty prop in data.Item1)
 			{
 				var split = prop.Name.Split('_');
@@ -81,9 +81,9 @@ namespace Centipede
 				var priceScaleDecimals = (decimal)Math.Pow(0.1, priceScale);
 				var amountScale = prop.First.Value<Int16>("amountScale");
 				var amountScaleDecimals = (decimal)Math.Pow(0.1, amountScale);
-				symbols.Add(new ExchangeMarket()
+				symbols.Add(new Symbol()
 				{
-					MarketSymbol = prop.Name,
+					OriginSymbol = prop.Name,
 					BaseCurrency = split[0],
 					QuoteCurrency = split[1],
 					MinPrice = priceScaleDecimals,

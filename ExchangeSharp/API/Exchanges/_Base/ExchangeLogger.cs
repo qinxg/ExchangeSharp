@@ -75,20 +75,21 @@ namespace Centipede
                 if (MarketSymbol == "*")
                 {
                     // get all symbols
-                    Tickers = API.GetTickersAsync().Sync().ToArray();
+                    Tickers = API.GetTickersAsync().Sync();
                     tickerWriter.Write(Tickers.Count);
-                    foreach (KeyValuePair<string, ExchangeTicker> ticker in Tickers)
+                    foreach ( ExchangeTicker ticker in Tickers)
                     {
-                        tickerWriter.Write(ticker.Key);
-                        ticker.Value.ToBinary(tickerWriter);
+                        //tickerWriter.Write(ticker.Key);
+                        //todo:
+                        //ticker.Value.ToBinary(tickerWriter);
                     }
                 }
                 else
                 {
                     // make API calls first, if they fail we will try again later
-                    Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(MarketSymbol, API.GetTickerAsync(MarketSymbol).Sync()) };
-                    OrderBook = API.GetDepthAsync(MarketSymbol).Sync();
-                    Trades = API.GetRecentTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
+                    //todo  Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(MarketSymbol, API.GetTickerAsync(MarketSymbol).Sync()) };
+                    //OrderBook = API.GetDepthAsync(MarketSymbol).Sync();
+                    //Trades = API.GetRecentTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
 
                     // all API calls succeeded, we can write to files
 
@@ -96,7 +97,8 @@ namespace Centipede
                     sysTimeWriter.Write(CryptoUtility.UtcNow.Ticks);
 
                     // write ticker
-                    Tickers.First().Value.ToBinary(tickerWriter);
+                    //TODO:
+                    //Tickers.First().Value.ToBinary(tickerWriter);
 
                     // write order book
                     OrderBook.ToBinary(bookWriter);
@@ -270,7 +272,7 @@ namespace Centipede
                         {
                             key = tickerReader.ReadString();
                             ticker = new ExchangeTicker();
-                            ticker.FromBinary(tickerReader);
+                            //todo: ticker.FromBinary(tickerReader);
                             tickers[key] = ticker;
                         }
                     }
@@ -316,7 +318,7 @@ namespace Centipede
         /// <summary>
         /// Latest tickers
         /// </summary>
-        public IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>> Tickers { get; private set; }
+        public IReadOnlyCollection< ExchangeTicker> Tickers { get; private set; }
 
         /// <summary>
         /// Latest order book

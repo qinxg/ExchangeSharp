@@ -43,6 +43,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="API\Exchanges\Binance\**" />
+    <Compile Remove="API\Exchanges\Bitfinex\**" />
+    <Compile Remove="API\Exchanges\BitMEX\**" />
+    <Compile Remove="API\Exchanges\ZBcom\**" />
+    <EmbeddedResource Remove="API\Exchanges\Binance\**" />
+    <EmbeddedResource Remove="API\Exchanges\Bitfinex\**" />
+    <EmbeddedResource Remove="API\Exchanges\BitMEX\**" />
+    <EmbeddedResource Remove="API\Exchanges\ZBcom\**" />
+    <None Remove="API\Exchanges\Binance\**" />
+    <None Remove="API\Exchanges\Bitfinex\**" />
+    <None Remove="API\Exchanges\BitMEX\**" />
+    <None Remove="API\Exchanges\ZBcom\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="API\Exchanges\PoloWithdrawalFields.csv" />
   </ItemGroup>
 

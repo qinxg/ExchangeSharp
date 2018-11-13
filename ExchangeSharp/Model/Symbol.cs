@@ -1,28 +1,42 @@
 ﻿
 
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Centipede
 {
     /// <summary> 代表交易所的一个币对
     /// Representation of a market on an exchange.</summary>
-    public sealed class ExchangeMarket
+    public sealed class Symbol
     {
         /// <summary>Id of the market (specific to the exchange), null if none</summary>
         public string MarketId { get; set; }
 
-        /// <summary>币对编码
-        /// Gets or sets the symbol representing the market's currency pair.</summary>
-        public string MarketSymbol { get; set; }
+        /// <summary>
+        /// 在当前交易所的币对名
+        /// </summary>
+        public string OriginSymbol { get; set; }
+
+        /// <summary>
+        /// 通用币对名
+        /// </summary>
+        public string NormSymbol => $"{BaseCurrency?.NormCurrency}-{QuoteCurrency?.OriginCurrency}";
+
+        /// <summary>
+        /// 基础币种
+        /// </summary>
+        public Currency BaseCurrency { get; set; }
+
+        /// <summary>
+        /// 计价币种
+        /// </summary>
+        public Currency QuoteCurrency { get; set; }
+
+
 
         /// <summary>A value indicating whether the market is active.</summary>
         public bool IsActive { get; set; }
 
-        /// <summary> 计价币种	
-        /// In a pair like ZRX/BTC, BTC is the quote currency.</summary>
-        public string QuoteCurrency { get; set; }
-
-        /// <summary> 基础币种	
-        /// In a pair like ZRX/BTC, ZRX is the base currency.</summary>
-        public string BaseCurrency { get; set; }
 
         /// <summary> 最小交易规模
         /// The minimum size of the trade in the unit of "BaseCurrency". For example, in
@@ -70,7 +84,17 @@ namespace Centipede
 
         public override string ToString()
         {
-            return $"{MarketSymbol}, {BaseCurrency}-{QuoteCurrency}";
+            return $"{OriginSymbol}, {BaseCurrency}-{QuoteCurrency}";
+        }
+    }
+
+
+    public static class SymbolsExtensions
+    {
+        public static Symbol Get(this List<Symbol> symbols, string baseCurrency, string quote)
+        {
+            return symbols.FirstOrDefault(p =>
+                p.BaseCurrency.NormCurrency == baseCurrency && p.QuoteCurrency.NormCurrency == quote);
         }
     }
 }

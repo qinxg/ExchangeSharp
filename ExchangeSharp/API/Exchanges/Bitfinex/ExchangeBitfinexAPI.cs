@@ -92,21 +92,20 @@ namespace Centipede
 
         protected override async Task<IEnumerable<string>> OnGetMarketSymbolsAsync()
         {
-            var m = await GetMarketSymbolsMetadataAsync();
-            return m.Select(x => x.MarketSymbol);
+            var m = await GetSymbolsAsyncrketSymbol);
         }
 
-        protected override async Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync()
+        protected override async Task<IEnumerable<Symbol>> OnGetMarketSymbolsMetadataAsync()
         {
-            var markets = new List<ExchangeMarket>();
+            var markets = new List<Symbol>();
             JToken allPairs = await MakeJsonRequestAsync<JToken>("/symbols_details", BaseUrlV1);
             Match m;
             foreach (JToken pair in allPairs)
             {
-                var market = new ExchangeMarket
+                var market = new Symbol
                 {
                     IsActive = true,
-                    MarketSymbol = pair["pair"].ToStringInvariant(),
+                    OriginSymbol = pair["pair"].ToStringInvariant(),
                     MinTradeSize = pair["minimum_order_size"].ConvertInvariant<decimal>(),
                     MaxTradeSize = pair["maximum_order_size"].ConvertInvariant<decimal>(),
                     MarginEnabled = pair["margin"].ConvertInvariant<bool>(false)
@@ -149,8 +148,7 @@ namespace Centipede
         protected override async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
         {
             List<KeyValuePair<string, ExchangeTicker>> tickers = new List<KeyValuePair<string, ExchangeTicker>>();
-            IReadOnlyDictionary<string, ExchangeMarket> marketsBySymbol = (await GetMarketSymbolsMetadataAsync()).ToDictionary(market => market.MarketSymbol, market => market);
-            if (marketsBySymbol != null && marketsBySymbol.Count != 0)
+            IReadOnlyDictionary<string, Symbol> marketsBySymbol = (await GetSymbolsAsynGetSymbolsAsynGetSymbolsAsynGetSymbolsAsyncmarketsBySymbol != null && marketsBySymbol.Count != 0)
             {
                 StringBuilder symbolString = new StringBuilder();
                 foreach (var marketSymbol in marketsBySymbol.Keys)
@@ -187,14 +185,14 @@ namespace Centipede
                         Ask = array[3].ConvertInvariant<decimal>(),
                         Bid = array[1].ConvertInvariant<decimal>(),
                         Last = array[7].ConvertInvariant<decimal>(),
-                        Volume = new ExchangeVolume
-                        {
-                            QuoteCurrencyVolume = array[8].ConvertInvariant<decimal>() * array[7].ConvertInvariant<decimal>(),
-                            QuoteCurrency = market.QuoteCurrency,
-                            BaseCurrencyVolume = array[8].ConvertInvariant<decimal>(),
-                            BaseCurrency = market.BaseCurrency,
-                            Timestamp = now
-                        }
+                        //Volume = new ExchangeVolume  todo:111
+                        //{
+                        //    QuoteCurrencyVolume = array[8].ConvertInvariant<decimal>() * array[7].ConvertInvariant<decimal>(),
+                        //    QuoteCurrency = market.QuoteCurrency,
+                        //    BaseCurrencyVolume = array[8].ConvertInvariant<decimal>(),
+                        //    BaseCurrency = market.BaseCurrency,
+                        //    Timestamp = now
+                        //}
                     }));
                 }
             }
@@ -706,7 +704,7 @@ namespace Centipede
             }
         }
 
-        protected override Task<IReadOnlyDictionary<string, ExchangeCurrency>> OnGetCurrenciesAsync()
+        protected override Task<IReadOnlyDictionary<string, Currency>> OnGetCurrenciesAsync()
         {
             throw new NotSupportedException("Bitfinex does not provide data about its currencies via the API");
         }

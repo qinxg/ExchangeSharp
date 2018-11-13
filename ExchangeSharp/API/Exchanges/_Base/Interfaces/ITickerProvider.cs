@@ -10,19 +10,18 @@ namespace Centipede
     public interface ITickerProvider
     {
         /// <summary>
-        /// 获取最后行情数据
+        /// 获取单个币对的行情信息
         /// Get latest ticker
         /// </summary>
-        /// <param name="marketSymbol">Symbol</param>
         /// <returns>Latest ticker</returns>
-        Task<ExchangeTicker> GetTickerAsync(string marketSymbol);
+        Task<ExchangeTicker> GetTickerAsync(Symbol symbol);
 
         /// <summary>
         /// 获取所有行情数据，不是所有交易所都支持
         /// Get all tickers, not all exchanges support this
         /// </summary>
         /// <returns>Key value pair of symbol and tickers array</returns>
-        Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync();
+        Task<List<ExchangeTicker>> GetTickersAsync();
 
 
         /// <summary>

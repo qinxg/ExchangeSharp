@@ -50,7 +50,7 @@ namespace Centipede
                     }
                     return true;
                 }
-                api.GetHistoricalTradesAsync(innerCallback, marketSymbol, sinceDateTime).Sync();
+                //api.GetHistoricalTradesAsync(innerCallback, marketSymbol, sinceDateTime).Sync();
                 writer.Close();
                 callback?.Invoke(count);
             }

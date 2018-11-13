@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;using Newtonsoft.Json.Linq;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Centipede
 {
@@ -373,7 +375,7 @@ namespace Centipede
         /// </summary>
         /// <param name="api">ExchangeAPI</param>
         /// <param name="token">Token</param>
-        /// <param name="marketSymbol">Symbol</param>
+        /// <param name="marketSymbol">Symbol</param> //todo:这里改为直接传symbol进来
         /// <param name="askKey">Ask key</param>
         /// <param name="bidKey">Bid key</param>
         /// <param name="lastKey">Last key</param>
@@ -386,9 +388,11 @@ namespace Centipede
         /// <param name="idKey">Id key</param>
         /// <returns>ExchangeTicker</returns>
         internal static ExchangeTicker ParseTicker(this ExchangeAPI api, JToken token, string marketSymbol,
-            object askKey, object bidKey, object lastKey, object baseVolumeKey,
-            object quoteVolumeKey = null, object timestampKey = null, TimestampType timestampType = TimestampType.None,
-            object baseCurrencyKey = null, object quoteCurrencyKey = null, object idKey = null)
+            object askKey, object bidKey, object lastKey,
+            object baseVolumeKey, object quoteVolumeKey = null,
+            object timestampKey = null, TimestampType timestampType = TimestampType.None,
+            object baseCurrencyKey = null, object quoteCurrencyKey = null,
+            object idKey = null)
         {
             if (token == null || !token.HasValues)
             {
@@ -398,7 +402,8 @@ namespace Centipede
             decimal last = token[lastKey].ConvertInvariant<decimal>();
 
             // parse out volumes, handle cases where one or both do not exist
-            token.ParseVolumes(baseVolumeKey, quoteVolumeKey, last, out decimal baseCurrencyVolume,
+            token.ParseVolumes(baseVolumeKey, quoteVolumeKey, last,
+                out decimal baseCurrencyVolume,
                 out decimal quoteCurrencyVolume);
 
             // pull out timestamp
@@ -406,24 +411,9 @@ namespace Centipede
                 ? CryptoUtility.UtcNow
                 : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
 
-            // split apart the symbol if we have a separator, otherwise just put the symbol for base and convert symbol
-            string baseCurrency;
-            string quoteCurrency;
-            if (baseCurrencyKey != null && quoteCurrencyKey != null)
-            {
-                baseCurrency = token[baseCurrencyKey].ToStringInvariant();
-                quoteCurrency = token[quoteCurrencyKey].ToStringInvariant();
-            }
-            else if (string.IsNullOrWhiteSpace(marketSymbol))
-            {
-                throw new ArgumentNullException(nameof(marketSymbol));
-            }
-            else
-            {
-                (baseCurrency, quoteCurrency) = api.ExchangeMarketSymbolToCurrencies(marketSymbol);
-            }
+    
+            var symbol = api.Symbols.FirstOrDefault(p => p.OriginSymbol == marketSymbol);
 
-            // create the ticker and return it
             JToken askValue = null;
             if (askKey != null)
             {
@@ -436,7 +426,6 @@ namespace Centipede
             }
 
             JToken bidValue = null;
-
             if (bidKey != null)
             {
                 bidValue = token[bidKey];
@@ -448,20 +437,18 @@ namespace Centipede
 
             ExchangeTicker ticker = new ExchangeTicker
             {
-                MarketSymbol = marketSymbol,
+                Symbol = symbol,
                 Ask = askValue.ConvertInvariant<decimal>(),
                 Bid = bidValue.ConvertInvariant<decimal>(),
                 Id = (idKey == null ? null : token[idKey].ToStringInvariant()),
                 Last = last,
-                Volume = new ExchangeVolume
-                {
-                    BaseCurrencyVolume = baseCurrencyVolume,
-                    BaseCurrency = baseCurrency,
-                    QuoteCurrencyVolume = quoteCurrencyVolume,
-                    QuoteCurrency = quoteCurrency,
-                    Timestamp = timestamp
-                }
+
+                BaseCurrencyVolume = baseCurrencyVolume,
+                QuoteCurrencyVolume = quoteCurrencyVolume,
+                Timestamp = timestamp
+
             };
+
             return ticker;
         }
 

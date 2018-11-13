@@ -12,63 +12,34 @@ namespace Centipede
     /// </summary>
     public abstract partial class ExchangeAPI : BaseAPI, IExchangeAPI
     {
-        /// <summary>
-        /// Separator for global symbols
-        /// </summary>
-        public const char GlobalMarketSymbolSeparator = '-';
-
-  
         #region Private methods
 
         private static readonly Dictionary<string, IExchangeAPI> Apis = new Dictionary<string, IExchangeAPI>(StringComparer.OrdinalIgnoreCase);
         private bool _disposed;
 
+
         #endregion Private methods
 
         #region API Implementation
 
-        protected virtual async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
-        {
-            List<KeyValuePair<string, ExchangeTicker>> tickers = new List<KeyValuePair<string, ExchangeTicker>>();
-            var marketSymbols = await GetMarketSymbolsAsync();
-            foreach (string marketSymbol in marketSymbols)
-            {
-                var ticker = await GetTickerAsync(marketSymbol);
-                tickers.Add(new KeyValuePair<string, ExchangeTicker>(marketSymbol, ticker));
-            }
-            return tickers;
-        }
 
         protected virtual async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> OnGetOrderBooksAsync(int maxCount = 100)
         {
-            List<KeyValuePair<string, ExchangeOrderBook>> books = new List<KeyValuePair<string, ExchangeOrderBook>>();
-            var marketSymbols = await GetMarketSymbolsAsync();
-            foreach (string marketSymbol in marketSymbols)
-            {
-                var book = await GetDepthAsync(marketSymbol);
-                books.Add(new KeyValuePair<string, ExchangeOrderBook>(marketSymbol, book));
-            }
-            return books;
+            //List<KeyValuePair<string, ExchangeOrderBook>> books = new List<KeyValuePair<string, ExchangeOrderBook>>();
+            //var marketSymbols = await GetMarketSymbolsAsync();
+            //foreach (string marketSymbol in marketSymbols)
+            //{
+            //    var book = await GetDepthAsync(marketSymbol);
+            //    books.Add(new KeyValuePair<string, ExchangeOrderBook>(marketSymbol, book));
+            //}
+            //return books;
+
+            return null;
         }
 
-        protected virtual async Task<IEnumerable<ExchangeTrade>> OnGetRecentTradesAsync(string marketSymbol)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            List<ExchangeTrade> trades = new List<ExchangeTrade>();
-            await GetHistoricalTradesAsync((e) =>
-            {
-                trades.AddRange(e);
-                return true;
-            }, marketSymbol);
-            return trades;
-        }
 
-        protected virtual Task<IReadOnlyDictionary<string, ExchangeCurrency>> OnGetCurrenciesAsync() => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<string>> OnGetMarketSymbolsAsync() => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync() => throw new NotImplementedException();
-        protected virtual Task<ExchangeTicker> OnGetTickerAsync(string marketSymbol) => throw new NotImplementedException();
+
         protected virtual Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100) => throw new NotImplementedException();
-        protected virtual Task OnGetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string marketSymbol, DateTime? startDate = null, DateTime? endDate = null) => throw new NotImplementedException();
         protected virtual Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency, bool forceRegenerate = false) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null) => throw new NotImplementedException();
@@ -105,7 +76,7 @@ namespace Centipede
         /// <returns>Clamped price</returns>
         protected decimal ClampOrderPrice(string marketSymbol, decimal outputPrice)
         {
-            ExchangeMarket market =  GetExchangeMarketFromCacheAsync(marketSymbol);
+            Symbol market =  GetExchangeMarketFromCacheAsync(marketSymbol);
             return market == null ? outputPrice : CryptoUtility.ClampDecimal(market.MinPrice, market.MaxPrice, market.PriceStepSize, outputPrice);
         }
 
@@ -118,34 +89,11 @@ namespace Centipede
         /// <returns>Clamped quantity</returns>
         protected decimal ClampOrderQuantity(string marketSymbol, decimal outputQuantity)
         {
-            ExchangeMarket market =  GetExchangeMarketFromCacheAsync(marketSymbol);
+            Symbol market =  GetExchangeMarketFromCacheAsync(marketSymbol);
             return market == null ? outputQuantity : CryptoUtility.ClampDecimal(market.MinTradeSize, market.MaxTradeSize, market.QuantityStepSize, outputQuantity);
         }
 
-        /// <summary>
-        /// Convert an exchange symbol into a global symbol, which will be the same for all exchanges.
-        /// Global symbols are always uppercase and separate the currency pair with a hyphen (-).
-        /// Global symbols list the base currency first (i.e. BTC) and conversion currency
-        /// second (i.e. ETH). Example BTC-ETH, read as x BTC is worth y ETH.
-        /// BTC is always first, then ETH, etc. Fiat pair is always first in global symbol too.
-        /// </summary>
-        /// <param name="marketSymbol">Exchange market symbol</param>
-        /// <param name="separator">Separator</param>
-        /// <returns>Global symbol</returns>
-        protected string ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(string marketSymbol, char separator = GlobalMarketSymbolSeparator)
-        {
-            if (string.IsNullOrEmpty(marketSymbol))
-            {
-                throw new ArgumentException("Symbol must be non null and non empty");
-            }
-            string[] pieces = marketSymbol.Split(separator);
-            if (MarketSymbolIsReversed)
-            {
-                return ExchangeCurrencyToGlobalCurrency(pieces[0]).ToUpperInvariant() + GlobalMarketSymbolSeparator + ExchangeCurrencyToGlobalCurrency(pieces[1]).ToUpperInvariant();
-            }
-            return ExchangeCurrencyToGlobalCurrency(pieces[1]).ToUpperInvariant() + GlobalMarketSymbolSeparator + ExchangeCurrencyToGlobalCurrency(pieces[0]).ToUpperInvariant();
-        }
-
+      
         /// <summary>
         /// Override to dispose of resources when the exchange is disposed
         /// </summary>
@@ -278,40 +226,6 @@ namespace Centipede
             }
         }
 
-        /// <summary>
-        /// Convert an exchange currency to a global currency. For example, on Binance,
-        /// BCH (Bitcoin Cash) is BCC but in most other exchanges it is BCH, hence
-        /// the global symbol is BCH.
-        /// </summary>
-        /// <param name="currency">Exchange currency</param>
-        /// <returns>Global currency</returns>
-        public string ExchangeCurrencyToGlobalCurrency(string currency)
-        {
-            currency = (currency ?? string.Empty);
-            foreach (KeyValuePair<string, string> kv in ExchangeGlobalCurrencyReplacements[GetType()])
-            {
-                currency = currency.Replace(kv.Key, kv.Value);
-            }
-            return currency.ToUpperInvariant();
-        }
-
-        /// <summary>
-        /// Convert a global currency to exchange currency. For example, on Binance,
-        /// BCH (Bitcoin Cash) is BCC but in most other exchanges it is BCH, hence
-        /// the global symbol BCH would convert to BCC for Binance, but stay BCH
-        /// for most other exchanges.
-        /// </summary>
-        /// <param name="currency">Global currency</param>
-        /// <returns>Exchange currency</returns>
-        public string GlobalCurrencyToExchangeCurrency(string currency)
-        {
-            currency = (currency ?? string.Empty);
-            foreach (KeyValuePair<string, string> kv in ExchangeGlobalCurrencyReplacements[GetType()])
-            {
-                currency = currency.Replace(kv.Value, kv.Key);
-            }
-            return (MarketSymbolIsUppercase ? currency.ToUpperInvariant() : currency.ToLowerInvariant());
-        }
 
         /// <summary>
         /// Normalize an exchange specific symbol. The symbol should already be in the correct order,
@@ -335,192 +249,98 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Convert an exchange symbol into a global symbol, which will be the same for all exchanges.
-        /// Global symbols are always uppercase and separate the currency pair with a hyphen (-).
-        /// Global symbols list the base currency first (i.e. BTC) and conversion currency
-        /// second (i.e. ETH). Example BTC-ETH, read as x BTC is worth y ETH.
-        /// BTC is always first, then ETH, etc. Fiat pair is always first in global symbol too.
-        /// </summary>
-        /// <param name="marketSymbol">Exchange symbol</param>
-        /// <returns>Global symbol</returns>
-        public virtual string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
-        {
-            if (string.IsNullOrWhiteSpace(MarketSymbolSeparator))
-            {
-                if (marketSymbol.Length != 6)
-                {
-                    throw new InvalidOperationException(Name + " market symbol must be 6 chars: '" + marketSymbol + "' is not. Override this method to handle symbols that are not 6 chars in length.");
-                }
-                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(marketSymbol.Substring(0, marketSymbol.Length - 3) + GlobalMarketSymbolSeparator + (marketSymbol.Substring(marketSymbol.Length - 3, 3)), GlobalMarketSymbolSeparator);
-            }
-            return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(marketSymbol, MarketSymbolSeparator[0]);
-        }
-
-        public virtual string CurrenciesToExchangeMarketSymbol(string baseCurrency, string quoteCurrency)
-        {
-            var symbol = MarketSymbolIsReversed 
-                       ? $"{quoteCurrency}{MarketSymbolSeparator}{baseCurrency}" 
-                       : $"{baseCurrency}{MarketSymbolSeparator}{quoteCurrency}";
-
-            return MarketSymbolIsUppercase
-                       ? symbol.ToUpperInvariant()
-                       : symbol;
-        }
-
-        /// <summary>
-        /// NOTE: This method can potentially make a call to GetSymbolsMetadataAsync 
-        /// </summary>
-        /// <param name="marketSymbol"></param>
-        /// <returns></returns>
-        public virtual (string BaseCurrency, string QuoteCurrency) ExchangeMarketSymbolToCurrencies(string marketSymbol)
-        {
-            string baseCurrency, quoteCurrency;
-            if (string.IsNullOrWhiteSpace(MarketSymbolSeparator))
-            {
-                if (marketSymbol.Length != 6)
-                {
-                    var errorMessage = Name + " symbol must be 6 chars: '" + marketSymbol + "' is not. Override this method to handle symbols that are not 6 chars in length.";
-                    try
-                    {
-                        //let's try looking this up by the metadata..
-                        var symbols = GetMarketSymbolsMetadataAsync().Sync().ToArray();//.ToDictionary(market => market.MarketName, market => market);
-                        var marketSymbolMetadata = symbols.First(
-                                market => market.MarketSymbol.Equals(marketSymbol, StringComparison.InvariantCultureIgnoreCase) || CurrenciesToExchangeMarketSymbol(market.BaseCurrency, market.QuoteCurrency)
-                                   .Equals(marketSymbol, StringComparison.InvariantCultureIgnoreCase)
-                            );
-
-                        return (marketSymbolMetadata.BaseCurrency, marketSymbolMetadata.QuoteCurrency);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new InvalidOperationException(errorMessage, e);
-                    }
-                    throw new InvalidOperationException(errorMessage);
-                }
-
-                if (MarketSymbolIsReversed)
-                {
-                    quoteCurrency = marketSymbol.Substring(0, marketSymbol.Length - 3);
-                    baseCurrency = marketSymbol.Substring(marketSymbol.Length - 3, 3);
-                }
-                else
-                {
-                    baseCurrency = marketSymbol.Substring(0, marketSymbol.Length - 3);
-                    quoteCurrency = marketSymbol.Substring(marketSymbol.Length - 3, 3);
-                }
-            }
-            else
-            {
-                var pieces = marketSymbol.Split(MarketSymbolSeparator[0]);
-                if (pieces.Length != 2)
-                    throw new InvalidOperationException($"Splitting {Name} symbol '{marketSymbol}' with symbol separator '{MarketSymbolSeparator}' must result in exactly 2 pieces.");
-                quoteCurrency = MarketSymbolIsReversed ? pieces[0] : pieces[1];
-                baseCurrency = MarketSymbolIsReversed ? pieces[1] : pieces[0];
-            }
-
-            return (baseCurrency, quoteCurrency);
-        }
-
-        /// <summary>
-        /// Convert a global symbol into an exchange symbol, which will potentially be different from other exchanges.
-        /// </summary>
-        /// <param name="globalSymbol">Global market symbol</param>
-        /// <returns>Exchange market symbol</returns>
-        public virtual string GlobalMarketSymbolToExchangeMarketSymbol(string globalSymbol)
-        {
-            if (string.IsNullOrWhiteSpace(globalSymbol))
-            {
-                throw new ArgumentException("Market symbol must be non null and non empty");
-            }
-            int pos = globalSymbol.IndexOf(GlobalMarketSymbolSeparator);
-            if (MarketSymbolIsReversed)
-            {
-                globalSymbol = GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(0, pos)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(pos + 1));
-            }
-            else
-            {
-                globalSymbol = GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(pos + 1)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(0, pos));
-            }
-            return (MarketSymbolIsUppercase ? globalSymbol.ToUpperInvariant() : globalSymbol.ToLowerInvariant());
-        }
-
-        /// <summary>
         /// Convert seconds to a period string, or throw exception if seconds invalid. Example: 60 seconds becomes 1m.
         /// </summary>
         /// <param name="seconds">Seconds</param>
         /// <returns>Period string</returns>
         public virtual string PeriodSecondsToString(int seconds) => CryptoUtility.SecondsToPeriodString(seconds);
 
-        public List<ExchangeCurrency> Currencies { get; set; } = new List<ExchangeCurrency>();
-        public List<ExchangeMarket> Symbols { get; set; } = new List<ExchangeMarket>();
+        /// <summary>
+        /// 初始化，设置币种和币对信息
+        /// </summary>
+        /// <param name="currencies"></param>
+        /// <param name="symbols"></param>
+        public void Init(List<Currency> currencies, List<Symbol> symbols)
+        {
+            this.Currencies = currencies;
+            this.Symbols = symbols;
+        }
+
+        public List<Currency> Currencies { get; private set; } = new List<Currency>();
+        public List<Symbol> Symbols { get; private set; } = new List<Symbol>();
 
         #endregion Other
 
         #region REST API
 
-        /// <summary>
+        #region  common
+
+            /// <summary>
         /// Gets currencies and related data such as IsEnabled and TxFee (if available)
         /// </summary>
         /// <returns>Collection of Currencies</returns>
-        public  async Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync()
-        {
-            var result = await OnGetCurrenciesAsync();
-
-            //todo：currencies赋值
-            return result;
-        }
-
-        /// <summary>
-        /// Get exchange symbols
-        /// </summary>
-        /// <returns>Array of symbols</returns>
-        public virtual async Task<IEnumerable<string>> GetMarketSymbolsAsync()
-        {
-            //todo:即将被废弃
-            return await OnGetMarketSymbolsAsync();
-        }
+        public abstract Task<List<Currency>> GetCurrenciesAsync();
 
         /// <summary>
         /// Get exchange symbols including available metadata such as min trade size and whether the market is active
         /// </summary>
         /// <returns>Collection of ExchangeMarkets</returns>
-        public virtual async Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync()
-        {
-            //todo:赋值
-            return await OnGetMarketSymbolsMetadataAsync();
-        }
+        public abstract Task<List<Symbol>> GetSymbolsAsync();
 
-        /// <summary>
-        /// Gets the exchange market from this exchange's SymbolsMetadata cache. This will make a network request if needed to retrieve fresh markets from the exchange using GetSymbolsMetadataAsync().
-        /// Please note that sending a symbol that is not found over and over will result in many network requests. Only send symbols that you are confident exist on the exchange.
+        #endregion
+
+        #region  ticker
+
+           /// <summary>
+        /// 获取单个币对的ticker
         /// </summary>
-        /// <param name="marketSymbol">The market symbol. Ex. ADA/BTC. This is assumed to be normalized and already correct for the exchange.</param>
-        /// <returns>The ExchangeMarket or null if it doesn't exist in the cache or there was an error</returns>
-        public ExchangeMarket GetExchangeMarketFromCacheAsync(string marketSymbol)
-        {
-
-            return Symbols.FirstOrDefault(m => m.MarketSymbol == marketSymbol);
-        }
-
-        /// <summary>
-        /// Get exchange ticker
-        /// </summary>
-        /// <param name="marketSymbol">Symbol to get ticker for</param>
         /// <returns>Ticker</returns>
-        public async Task<ExchangeTicker> GetTickerAsync(string marketSymbol)
-        {
-            NormalizeMarketSymbol(marketSymbol);
-            return await OnGetTickerAsync(marketSymbol);
-        }
+        public abstract Task<ExchangeTicker> GetTickerAsync(Symbol symbol);
 
 
         /// <summary>
         /// Get all tickers in one request. If the exchange does not support this, a ticker will be requested for each symbol.
         /// </summary>
         /// <returns>Key value pair of symbol and tickers array</returns>
-        public  async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> GetTickersAsync()
+        public abstract Task<List<ExchangeTicker>> GetTickersAsync();
+
+        #endregion
+
+        #region  trades
+
+        /// <summary>
+        /// Get historical trades for the exchange. 
+        /// </summary>
+        /// <param name="callback">Callback for each set of trades. Return false to stop getting trades immediately.</param>
+        /// <param name="symbol"></param>
+        /// <param name="startDate">Optional UTC start date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
+        /// <param name="endDate">Optional UTC end date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
+        public virtual  async  Task GetHistoricalTradesAsync(
+            Func<IEnumerable<ExchangeTrade>, bool> callback,
+            Symbol symbol, 
+            DateTime? startDate = null, DateTime? endDate = null)
         {
-            return await OnGetTickersAsync();
+            await new SynchronizationContextRemover();
+        }
+
+        /// <summary>
+        /// Get recent trades on the exchange - the default implementation simply calls GetHistoricalTrades with a null sinceDateTime.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns>An enumerator that loops through all recent trades</returns>
+        public abstract  Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(Symbol symbol);
+
+        #endregion
+
+        /// <summary>
+        /// Gets the exchange market from this exchange's SymbolsMetadata cache. This will make a network request if needed to retrieve fresh markets from the exchange using GetSymbolsMetadataAsync().
+        /// Please note that sending a symbol that is not found over and over will result in many network requests. Only send symbols that you are confident exist on the exchange.
+        /// </summary>
+        /// <param name="marketSymbol">The market symbol. Ex. ADA/BTC. This is assumed to be normalized and already correct for the exchange.</param>
+        /// <returns>The Symbol or null if it doesn't exist in the cache or there was an error</returns>
+        public Symbol GetExchangeMarketFromCacheAsync(string marketSymbol)
+        {
+            return Symbols.FirstOrDefault(m => m.OriginSymbol == marketSymbol);
         }
 
         /// <summary>
@@ -546,32 +366,7 @@ namespace Centipede
             return await OnGetOrderBooksAsync(maxCount);
         }
 
-        /// <summary>
-        /// Get historical trades for the exchange. TODO: Change to async enumerator when available.
-        /// </summary>
-        /// <param name="callback">Callback for each set of trades. Return false to stop getting trades immediately.</param>
-        /// <param name="marketSymbol">Symbol to get historical data for</param>
-        /// <param name="startDate">Optional UTC start date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
-        /// <param name="endDate">Optional UTC end date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
-        public  async Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string marketSymbol, DateTime? startDate = null, DateTime? endDate = null)
-        {
-            // *NOTE*: Do not wrap in CacheMethodCall, uses a callback with custom queries, not easy to cache
-            await new SynchronizationContextRemover();
-            await OnGetHistoricalTradesAsync(callback, NormalizeMarketSymbol(marketSymbol), startDate, endDate);
-        }
-
-        /// <summary>
-        /// Get recent trades on the exchange - the default implementation simply calls GetHistoricalTrades with a null sinceDateTime.
-        /// </summary>
-        /// <param name="marketSymbol">Symbol to get recent trades for</param>
-        /// <returns>An enumerator that loops through all recent trades</returns>
-        public  async Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(string marketSymbol)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await OnGetRecentTradesAsync(marketSymbol);
-        }
-
-
+       
         /// <summary>
         /// Get candles (open, high, low, close)
         /// </summary>

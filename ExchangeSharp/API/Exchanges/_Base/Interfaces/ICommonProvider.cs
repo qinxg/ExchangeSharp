@@ -12,7 +12,7 @@ namespace Centipede
         /// 获取可用币种信息
         /// </summary>
         /// <returns>Collection of Currencies</returns>
-        Task<IReadOnlyDictionary<string, ExchangeCurrency>> GetCurrenciesAsync();
+        Task<List<Currency>> GetCurrenciesAsync();
 
 
         /// <summary>
@@ -20,7 +20,6 @@ namespace Centipede
         /// Get exchange market symbols including available metadata such as min trade size and whether the market is active
         /// </summary>
         /// <returns>Collection of ExchangeMarkets</returns>
-        Task<IEnumerable<ExchangeMarket>> GetMarketSymbolsMetadataAsync();
-
+        Task<List<Symbol>> GetSymbolsAsync();
     }
 }

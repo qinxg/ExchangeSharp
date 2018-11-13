@@ -26,23 +26,7 @@ namespace Centipede
 
         #region  格式转换
 
-        public override string ExchangeMarketSymbolToGlobalMarketSymbol(string marketSymbol)
-        {
-            if (marketSymbol.Length < 6)
-            {
-                throw new ArgumentException("Invalid market symbol " + marketSymbol);
-            }
-            else if (marketSymbol.Length == 6)
-            {
-                return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(
-                    marketSymbol.Substring(0, 3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(3, 3),
-                    GlobalMarketSymbolSeparator);
-            }
 
-            return ExchangeMarketSymbolToGlobalMarketSymbolWithSeparator(
-                marketSymbol.Substring(3) + GlobalMarketSymbolSeparator + marketSymbol.Substring(0, 3),
-                GlobalMarketSymbolSeparator);
-        }
 
         public override string PeriodSecondsToString(int seconds)
         {
@@ -87,7 +71,8 @@ namespace Centipede
                 var dict = new SortedDictionary<string, object>(StringComparer.Ordinal)
                 {
                     ["Timestamp"] =
-                        CryptoUtility.UnixTimeStampToDateTimeMilliseconds(payload["nonce"].ConvertInvariant<long>()).ToString("s"),
+                        CryptoUtility.UnixTimeStampToDateTimeMilliseconds(payload["nonce"].ConvertInvariant<long>())
+                            .ToString("s"),
                     //这里的逻辑是生成一个随机数，然后把这个随机数转成正常的日期。然后转成UTC时间 带T的那种 。有点脱了裤子放屁的感觉。
 
                     ["AccessKeyId"] = PublicApiKey.ToUnsecureString(),
@@ -95,7 +80,7 @@ namespace Centipede
                     ["SignatureVersion"] = "2"
                 };
 
-                if (method == "GET")  //只有get需要验证参数内的内容
+                if (method == "GET") //只有get需要验证参数内的内容
                 {
                     foreach (var kv in payload)
                     {
@@ -120,58 +105,74 @@ namespace Centipede
 
         #endregion
 
-        #region Public APIs
 
-        protected override async Task<IEnumerable<string>> OnGetMarketSymbolsAsync()
-        {
-            var m = await GetMarketSymbolsMetadataAsync();
-            return m.Select(x => x.MarketSymbol);
-        }
+        #region common
 
-        protected override async Task<IEnumerable<ExchangeMarket>> OnGetMarketSymbolsMetadataAsync()
+        public override async Task<List<Currency>> GetCurrenciesAsync()
         {
             /*
-             {
-                "status"
-            :
-                "ok", "data"
-            :
-                [
-                    {
+             * {"status":"ok","data":["hb10","usdt","btc","bch","eth","xrp","ltc","ht","ada","eos","iota","xem","xmr","dash","neo","trx","icx","lsk","qtum","etc","btg","omg","hc","zec","dcr","steem","bts","waves","snt","salt","gnt","cmt","btm","pay","knc","powr","bat","dgd","ven","qash","zrx","gas","mana","eng","cvc","mco","mtl","rdn","storj","chat","srn","link","act","tnb","qsp","req","phx","appc","rcn","smt","adx","tnt","ost","itc","lun","gnx","ast","evx","mds","snc","propy","eko","nas","bcd","wax","wicc","topc","swftc","dbc","elf","aidoc","qun","iost","yee","dat","theta","let","dta","utk","meet","zil","soc","ruff","ocn","ela","bcx","sbtc","etf","bifi","zla","stk","wpr","mtn","mtx","edu","blz","abt","ont","ctxc","bft","wan","kan","lba","poly","pai","wtc","box","dgb","gxc","bix","xlm","xvg","hit","ong","bt1","bt2","xzc","vet","ncash","grs","egcc","she","mex","iic","gsc","uc","uip","cnn","aac","uuu","cdc","lxt","but","18c","datx","portal","gtc","hot","man","get","pc","ren","eosdac","ae","bkbt","gve","seele","fti","ekt","xmx","ycc","fair","ssp","eon","eop","lym","zjlt","meetone","pnt","idt","dac","bcv","sexc","tos","musk","add","mt","kcash","iq","ncc","rccc","hpt","cvcoin","rte","trio","ardr","nano","husd","zen","rbtc"]}
+             */
+
+            var currencies = new List<Currency>();
+            var result = await MakeJsonRequestAsync<JToken>("/common/currencys", BaseUrlV1);
+
+            foreach (var code in result)
+            {
+                var currency = new Currency
+                {
+                    OriginCurrency = code.ToStringInvariant(),
+                    NormCurrency = code.ToStringLowerInvariant()
+                };
+
+                currencies.Add(currency);
+            }
+
+            return currencies;
+        }
+
+
+        public override async Task<List<Symbol>> GetSymbolsAsync()
+        {
+            /*
+             {  "status": "ok", 
+                "data":[{
                         "base-currency": "btc",
                         "quote-currency": "usdt",
                         "price-precision": 2,
                         "amount-precision": 4,
                         "symbol-partition": "main",
                         "symbol": "btcusdt"
-                    }
-                    {
+                  }{
                         "base-currency": "eth",
                         "quote-currency": "usdt",
                         "price-precision": 2,
                         "amount-precision": 4,
                         "symbol-partition": "main",
                         "symbol": "ethusdt"
-                    }
-                ]
-             
+                  }]}
              */
-            List<ExchangeMarket> markets = new List<ExchangeMarket>();
-            JToken allMarketSymbols = await MakeJsonRequestAsync<JToken>("/common/symbols", BaseUrlV1, null);
+            List<Symbol> markets = new List<Symbol>();
+            JToken allMarketSymbols = await MakeJsonRequestAsync<JToken>("/common/symbols", BaseUrlV1);
             foreach (var marketSymbol in allMarketSymbols)
             {
-                var baseCurrency = marketSymbol["base-currency"].ToStringLowerInvariant();
-                var quoteCurrency = marketSymbol["quote-currency"].ToStringLowerInvariant();
+                var baseCurrencyCode = marketSymbol["base-currency"].ToStringInvariant();
+                var quoteCurrencyCode = marketSymbol["quote-currency"].ToStringInvariant();
+                var baseCurrency = this.Currencies.FirstOrDefault(p => p.OriginCurrency == baseCurrencyCode);
+                var quoteCurrency = this.Currencies.FirstOrDefault(p => p.OriginCurrency == quoteCurrencyCode);
+
+                var originSymbol = marketSymbol["symbol"].ToStringInvariant();
+
                 var pricePrecision = marketSymbol["price-precision"].ConvertInvariant<double>();
                 var priceStepSize = Math.Pow(10, -pricePrecision).ConvertInvariant<decimal>();
                 var amountPrecision = marketSymbol["amount-precision"].ConvertInvariant<double>();
                 var quantityStepSize = Math.Pow(10, -amountPrecision).ConvertInvariant<decimal>();
 
-                var market = new ExchangeMarket
+                var market = new Symbol
                 {
                     BaseCurrency = baseCurrency,
                     QuoteCurrency = quoteCurrency,
-                    MarketSymbol = baseCurrency + quoteCurrency,
+                    OriginSymbol = originSymbol,
                     IsActive = true,
                     PriceStepSize = priceStepSize,
                     QuantityStepSize = quantityStepSize,
@@ -184,7 +185,13 @@ namespace Centipede
             return markets;
         }
 
-        protected override async Task<ExchangeTicker> OnGetTickerAsync(string marketSymbol)
+
+        #endregion
+        
+        #region ticker
+
+
+        public override async Task<ExchangeTicker> GetTickerAsync(Symbol symbol)
         {
             /*
              {{
@@ -212,36 +219,52 @@ namespace Centipede
               }
             }}
              */
-            JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + marketSymbol);
-            return this.ParseTicker(ticker["tick"], marketSymbol, "ask", "bid", "close", "amount", "vol", "ts",
+
+            JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + symbol.OriginSymbol);
+            return this.ParseTicker(ticker["tick"], symbol.OriginSymbol, "ask", "bid", "close", "amount", "vol", "ts",
                 TimestampType.UnixMillisecondsDouble, idKey: "id");
         }
 
-        protected override async Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync()
+        public override async Task<List<ExchangeTicker>> GetTickersAsync()
         {
-            List<KeyValuePair<string, ExchangeTicker>> tickers = new List<KeyValuePair<string, ExchangeTicker>>();
-            string symbol;
-            JToken obj = await MakeJsonRequestAsync<JToken>("/market/tickers", BaseUrl, null);
+            List<ExchangeTicker> tickers = new List<ExchangeTicker>();
+
+            JToken obj = await MakeJsonRequestAsync<JToken>("/market/tickers", BaseUrl);
 
             foreach (JToken child in obj)
             {
-                symbol = child["symbol"].ToStringInvariant();
+                var symbol = child["symbol"].ToStringInvariant();
 
-                //移除研发的不严谨返回
-                if (new[] {"hb10", "huobi10"}.Contains(symbol))
-                    continue;
-
-                tickers.Add(new KeyValuePair<string, ExchangeTicker>(symbol,
-                    this.ParseTicker(child, symbol, null, null, "close", "amount", "vol")));
+                tickers.Add(this.ParseTicker(child, symbol, null, null, "close", "amount", "vol"));
             }
 
             return tickers;
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback,
+        #endregion
+
+
+
+        #region  trades
+
+        public override Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, Symbol symbol, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            return base.GetHistoricalTradesAsync(callback, symbol, startDate, endDate);
+        }
+
+        public override Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(Symbol symbol)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+
+        protected override IWebSocket OnGetTradesWebSocket(
+            Action<KeyValuePair<string, ExchangeTrade>> callback,
             params string[] marketSymbols)
         {
-            return ConnectWebSocket(string.Empty, async (_socket, msg) =>
+            return ConnectWebSocket(string.Empty, async (socket, msg) =>
             {
                 /*
 {"id":"id1","status":"ok","subbed":"market.btcusdt.trade.detail","ts":1527574853489}
@@ -272,7 +295,7 @@ namespace Centipede
                 }
                 else if (token["ping"] != null)
                 {
-                    await _socket.SendMessageAsync(str.Replace("ping", "pong"));
+                    await socket.SendMessageAsync(str.Replace("ping", "pong"));
                     return;
                 }
 
@@ -294,7 +317,7 @@ namespace Centipede
             {
                 if (marketSymbols == null || marketSymbols.Length == 0)
                 {
-                    marketSymbols = (await GetMarketSymbolsAsync()).ToArray();
+                    marketSymbols = null; //  todo: (await GetMarketSymbolsAsync()).ToArray();
                 }
 
                 foreach (string marketSymbol in marketSymbols)
@@ -373,7 +396,7 @@ namespace Centipede
             {
                 if (marketSymbols == null || marketSymbols.Length == 0)
                 {
-                    marketSymbols = (await GetMarketSymbolsAsync()).ToArray();
+                    marketSymbols = null; //todo (await GetMarketSymbolsAsync()).ToArray();
                 }
 
                 foreach (string symbol in marketSymbols)
@@ -429,7 +452,7 @@ namespace Centipede
             ExchangeOrderBook orders = new ExchangeOrderBook();
             JToken obj = await MakeJsonRequestAsync<JToken>("/market/depth?symbol=" + marketSymbol + "&type=step0",
                 BaseUrl, null);
-            return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(obj["tick"], sequence: "ts",
+            return obj["tick"].ParseOrderBookFromJTokenArrays(sequence: "ts",
                 maxCount: maxCount);
         }
 
@@ -475,7 +498,7 @@ namespace Centipede
             return candles;
         }
 
-        #endregion
+
 
         #region Private APIs
 
@@ -699,8 +722,8 @@ namespace Centipede
             payload.Add("type", order.IsBuy ? "buy" : "sell");
             payload.Add("source", order.IsMargin ? "margin-api" : "api");
 
-            decimal outputQuantity =  ClampOrderQuantity(order.MarketSymbol, order.Amount);
-            decimal outputPrice =  ClampOrderPrice(order.MarketSymbol, order.Price);
+            decimal outputQuantity = ClampOrderQuantity(order.MarketSymbol, order.Amount);
+            decimal outputPrice = ClampOrderPrice(order.MarketSymbol, order.Price);
 
             payload["amount"] = outputQuantity.ToStringInvariant();
 

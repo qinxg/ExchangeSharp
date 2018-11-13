@@ -16,13 +16,30 @@ namespace CentipedeConsole
         {
 
             var huobi = ExchangeAPI.GetExchangeAPI("Huobi");
-            var ok = ExchangeAPI.GetExchangeAPI("Okex");
+            var currencies = huobi.GetCurrenciesAsync().Result;
+            Console.WriteLine(currencies);
 
-            var okresult = ok.GetTickersAsync().Result;
-            var hbresult = huobi.GetTickersAsync().Result;
+            huobi.Init(currencies, null);
 
-            Console.WriteLine(hbresult);
-            Console.WriteLine(okresult);
+            var symbls = huobi.GetSymbolsAsync().Result;
+            Console.WriteLine(symbls);
+
+            huobi.Init(currencies, symbls);
+
+            //ticker
+            var tickers = huobi.GetTickersAsync().Result;
+            Console.WriteLine(tickers);
+
+            var symbol = symbls.Get("eth", "usdt");
+            var ticker = huobi.GetTickerAsync(symbol).Result;
+            Console.WriteLine(ticker);
+
+
+            //trade
+
+
+
+           
 
             return CentipedeConsoleMain.ConsoleMain(args);
         }
