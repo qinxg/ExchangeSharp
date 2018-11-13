@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace Centipede
 {
+    [ExchangeMeta("Okex")]
     public sealed partial class ExchangeOkexAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "https://www.okex.com/api/v1";

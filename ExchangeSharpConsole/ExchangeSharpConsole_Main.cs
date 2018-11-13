@@ -18,8 +18,8 @@ namespace CentipedeConsole
             var huobi = ExchangeAPI.GetExchangeAPI("Huobi");
             var ok = ExchangeAPI.GetExchangeAPI("Okex");
 
-            var okresult = ok.GetMarketSymbolsMetadataAsync().Result;
-            var hbresult = huobi.GetMarketSymbolsMetadataAsync().Result;
+            var okresult = ok.GetTickersAsync().Result;
+            var hbresult = huobi.GetTickersAsync().Result;
 
             Console.WriteLine(hbresult);
             Console.WriteLine(okresult);

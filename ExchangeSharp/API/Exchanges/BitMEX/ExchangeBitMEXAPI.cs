@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Centipede
 {
+    [ExchangeMeta("BitMEX")]
     public sealed partial class ExchangeBitMEXAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "https://www.bitmex.com/api/v1";

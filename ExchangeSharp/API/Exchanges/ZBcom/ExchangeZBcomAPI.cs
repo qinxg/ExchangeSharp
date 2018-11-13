@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Centipede
 {
+    [ExchangeMeta("ZB")]
     public sealed partial class ExchangeZBcomAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "http://api.zb.com/data/v1";

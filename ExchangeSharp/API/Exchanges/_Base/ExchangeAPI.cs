@@ -168,6 +168,10 @@ namespace Centipede
                 // the overhead of if a user is only using one or a handful of the apis
                 using (ExchangeAPI api = Activator.CreateInstance(type) as ExchangeAPI)
                 {
+
+                    if(string.IsNullOrEmpty(api.Name))
+                        continue;
+
                     Apis[api.Name] = null;
                 }
 
@@ -420,24 +424,24 @@ namespace Centipede
         /// <summary>
         /// Convert a global symbol into an exchange symbol, which will potentially be different from other exchanges.
         /// </summary>
-        /// <param name="marketSymbol">Global market symbol</param>
+        /// <param name="globalSymbol">Global market symbol</param>
         /// <returns>Exchange market symbol</returns>
-        public virtual string GlobalMarketSymbolToExchangeMarketSymbol(string marketSymbol)
+        public virtual string GlobalMarketSymbolToExchangeMarketSymbol(string globalSymbol)
         {
-            if (string.IsNullOrWhiteSpace(marketSymbol))
+            if (string.IsNullOrWhiteSpace(globalSymbol))
             {
                 throw new ArgumentException("Market symbol must be non null and non empty");
             }
-            int pos = marketSymbol.IndexOf(GlobalMarketSymbolSeparator);
+            int pos = globalSymbol.IndexOf(GlobalMarketSymbolSeparator);
             if (MarketSymbolIsReversed)
             {
-                marketSymbol = GlobalCurrencyToExchangeCurrency(marketSymbol.Substring(0, pos)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(marketSymbol.Substring(pos + 1));
+                globalSymbol = GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(0, pos)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(pos + 1));
             }
             else
             {
-                marketSymbol = GlobalCurrencyToExchangeCurrency(marketSymbol.Substring(pos + 1)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(marketSymbol.Substring(0, pos));
+                globalSymbol = GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(pos + 1)) + MarketSymbolSeparator + GlobalCurrencyToExchangeCurrency(globalSymbol.Substring(0, pos));
             }
-            return (MarketSymbolIsUppercase ? marketSymbol.ToUpperInvariant() : marketSymbol.ToLowerInvariant());
+            return (MarketSymbolIsUppercase ? globalSymbol.ToUpperInvariant() : globalSymbol.ToLowerInvariant());
         }
 
         /// <summary>

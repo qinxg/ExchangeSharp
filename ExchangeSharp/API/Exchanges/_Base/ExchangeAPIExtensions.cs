@@ -394,13 +394,17 @@ namespace Centipede
             {
                 return null;
             }
+
             decimal last = token[lastKey].ConvertInvariant<decimal>();
 
             // parse out volumes, handle cases where one or both do not exist
-            token.ParseVolumes(baseVolumeKey, quoteVolumeKey, last, out decimal baseCurrencyVolume, out decimal quoteCurrencyVolume);
+            token.ParseVolumes(baseVolumeKey, quoteVolumeKey, last, out decimal baseCurrencyVolume,
+                out decimal quoteCurrencyVolume);
 
             // pull out timestamp
-            DateTime timestamp = (timestampKey == null ? CryptoUtility.UtcNow : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
+            DateTime timestamp = (timestampKey == null
+                ? CryptoUtility.UtcNow
+                : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
 
             // split apart the symbol if we have a separator, otherwise just put the symbol for base and convert symbol
             string baseCurrency;
@@ -420,16 +424,28 @@ namespace Centipede
             }
 
             // create the ticker and return it
-            JToken askValue = token[askKey];
-            JToken bidValue = token[bidKey];
-            if (askValue is JArray)
+            JToken askValue = null;
+            if (askKey != null)
             {
-                askValue = askValue[0];
+                askValue = token[askKey];
+
+                if (askValue is JArray)
+                {
+                    askValue = askValue[0];
+                }
             }
-            if (bidValue is JArray)
+
+            JToken bidValue = null;
+
+            if (bidKey != null)
             {
-                bidValue = bidValue[0];
+                bidValue = token[bidKey];
+                if (bidValue is JArray)
+                {
+                    bidValue = bidValue[0];
+                }
             }
+
             ExchangeTicker ticker = new ExchangeTicker
             {
                 MarketSymbol = marketSymbol,

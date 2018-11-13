@@ -13,6 +13,7 @@ namespace Centipede
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
+    [ExchangeMeta("Bitfinex")]
     public sealed partial class ExchangeBitfinexAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "https://api.bitfinex.com/v2";

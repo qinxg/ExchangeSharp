@@ -15,9 +15,6 @@ namespace Centipede
         IDisposable
 
     {
-
-        //todo：这块编码转换，晚点在看怎么处理
-
         #region Utility Methods
 
         /// <summary>
@@ -41,9 +38,9 @@ namespace Centipede
         /// <summary>
         /// Convert a global symbol into an exchange symbol, which will potentially be different from other exchanges.
         /// </summary>
-        /// <param name="marketSymbol">Global symbol</param>
+        /// <param name="globalSymbol">Global symbol</param>
         /// <returns>Exchange symbol</returns>
-        string GlobalMarketSymbolToExchangeMarketSymbol(string marketSymbol);
+        string GlobalMarketSymbolToExchangeMarketSymbol(string globalSymbol);
 
         /// <summary>
         /// 把秒转换为周期字符串 ， 例如60秒转换后为1m
@@ -66,7 +63,5 @@ namespace Centipede
         /// 币对信息
         /// </summary>
         List<ExchangeMarket> Symbols { get; set; }
-
-
     }
 }

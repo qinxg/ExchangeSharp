@@ -27,12 +27,12 @@ namespace Centipede
         /// <summary>
         /// The bid is the price to sell at
         /// </summary>
-        public decimal Bid { get; set; }
+        public decimal? Bid { get; set; }
 
         /// <summary>
         /// The ask is the price to buy at
         /// </summary>
-        public decimal Ask { get; set; }
+        public decimal? Ask { get; set; }
 
         /// <summary>
         /// The last trade purchase price
