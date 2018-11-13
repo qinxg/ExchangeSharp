@@ -22,6 +22,8 @@ namespace Centipede
             MarketSymbolSeparator = string.Empty;
             MarketSymbolIsUppercase = false;
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
+
+            TimestampType = TimestampType.UnixMilliseconds;
         }
 
         #region HTTP请求处理 
@@ -211,7 +213,7 @@ namespace Centipede
             JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + symbol.OriginSymbol);
             var data = ticker["tick"];
             return data.ParseTicker(symbol, "ask", "bid", "close", "amount", "vol", "ts",
-                TimestampType.UnixMillisecondsDouble, idKey: "id");
+                TimestampType, idKey: "id");
         }
 
         public override async Task<List<ExchangeTicker>> GetTickersAsync()
@@ -248,7 +250,7 @@ namespace Centipede
 
         #endregion
 
-        #region  Kline
+        #region  kline
 
         public override async Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol,
             int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
@@ -287,13 +289,68 @@ namespace Centipede
             foreach (var token in allCandles)
             {
                 candles.Add(token.ParseCandle(symbol, periodSeconds, "open", "high", "low", "close", "id",
-                    TimestampType.UnixSeconds, null, "vol"));
+                    TimestampType.UnixSeconds, null, "vol"));  // K线的时间戳是到秒的
             }
 
-            //todo:注意先插下k线的顺序
+            //注意先插下k线的顺序
             candles.Reverse();
             return candles;
         }
+
+        #endregion
+
+        #region depth
+
+        public override async Task<ExchangeDepth> GetDepthAsync(Symbol symbol,int maxCount)
+        {
+            /*
+             {
+  "status": "ok",
+  "ch": "market.btcusdt.depth.step0",
+  "ts": 1489472598812,
+  "tick": {
+    "id": 1489464585407,
+    "ts": 1489464585407,
+    "bids": [
+      [7964, 0.0678], // [price, amount]
+      [7963, 0.9162],
+      [7961, 0.1],
+      [7960, 12.8898],
+      [7958, 1.2],
+      [7955, 2.1009],
+      [7954, 0.4708],
+      [7953, 0.0564],
+      [7951, 2.8031],
+      [7950, 13.7785],
+      [7949, 0.125],
+      [7948, 4],
+      [7942, 0.4337],
+      [7940, 6.1612],
+      [7936, 0.02],
+      [7935, 1.3575],
+      [7933, 2.002],
+      [7932, 1.3449],
+      [7930, 10.2974],
+      [7929, 3.2226]
+    ],
+    "asks": [
+      [7979, 0.0736],
+      [7980, 1.0292],
+      [7981, 5.5652],
+      [7986, 0.2416],
+      [7990, 1.9970],
+      [7995, 0.88],
+             */
+
+
+            JToken obj = await MakeJsonRequestAsync<JToken>(
+                "/market/depth?symbol=" + symbol.OriginSymbol + "&type=step0", BaseUrl);
+
+            return obj["tick"].ParseOrderBookFromJTokenArrays(maxCount: maxCount);
+        }
+
+
+
 
         #endregion
 
@@ -368,7 +425,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20,
+        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
             params string[] marketSymbols)
         {
             return ConnectWebSocket(string.Empty, async (_socket, msg) =>
@@ -427,7 +484,7 @@ namespace Centipede
                 var ch = token["ch"].ToStringInvariant();
                 var sArray = ch.Split('.');
                 var marketSymbol = sArray[1].ToStringInvariant();
-                ExchangeOrderBook book =
+                ExchangeDepth book =
                     ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token["tick"], maxCount: maxCount);
                 book.MarketSymbol = marketSymbol;
                 callback(book);
@@ -447,55 +504,6 @@ namespace Centipede
                 }
             });
         }
-
-        protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
-        {
-            /*
-             {
-  "status": "ok",
-  "ch": "market.btcusdt.depth.step0",
-  "ts": 1489472598812,
-  "tick": {
-    "id": 1489464585407,
-    "ts": 1489464585407,
-    "bids": [
-      [7964, 0.0678], // [price, amount]
-      [7963, 0.9162],
-      [7961, 0.1],
-      [7960, 12.8898],
-      [7958, 1.2],
-      [7955, 2.1009],
-      [7954, 0.4708],
-      [7953, 0.0564],
-      [7951, 2.8031],
-      [7950, 13.7785],
-      [7949, 0.125],
-      [7948, 4],
-      [7942, 0.4337],
-      [7940, 6.1612],
-      [7936, 0.02],
-      [7935, 1.3575],
-      [7933, 2.002],
-      [7932, 1.3449],
-      [7930, 10.2974],
-      [7929, 3.2226]
-    ],
-    "asks": [
-      [7979, 0.0736],
-      [7980, 1.0292],
-      [7981, 5.5652],
-      [7986, 0.2416],
-      [7990, 1.9970],
-      [7995, 0.88],
-             */
-            ExchangeOrderBook orders = new ExchangeOrderBook();
-            JToken obj = await MakeJsonRequestAsync<JToken>("/market/depth?symbol=" + marketSymbol + "&type=step0",
-                BaseUrl, null);
-            return obj["tick"].ParseOrderBookFromJTokenArrays(sequence: "ts",
-                maxCount: maxCount);
-        }
-
-     
 
 
         #region Private APIs
@@ -867,7 +875,7 @@ namespace Centipede
             var trades = new List<ExchangeTrade>();
             foreach (var t in token)
             {
-                trades.Add(t.ParseTrade("amount", "price", "direction", "ts", TimestampType.UnixMilliseconds, "id"));
+                trades.Add(t.ParseTrade("amount", "price", "direction", "ts", TimestampType, "id"));
             }
 
             return trades;

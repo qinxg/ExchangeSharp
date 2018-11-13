@@ -59,7 +59,7 @@ namespace Centipede
         /// <summary>
         /// Pending orders on the exchange
         /// </summary>
-        public ExchangeOrderBook Orders { get; private set; }
+        public ExchangeDepth Orders { get; private set; }
 
         /// <summary>
         /// The last trade made, allows setting to facilitate fast testing of traders based on price alone

@@ -21,7 +21,7 @@ namespace Centipede
         /// parameter</param>
         /// <param name="symbols">Order book symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeOrderBook> callback,
+        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeDepth> callback,
             int maxCount = 20, params string[] symbols)
         {
             if (api.WebSocketDepthType == WebSocketDepthType.None)
@@ -32,10 +32,10 @@ namespace Centipede
             // Notes:
             // * Confirm with the Exchange's API docs whether the data in each event is the absolute quantity or differential quantity
             // * Receiving an event that removes a price level that is not in your local order book can happen and is normal.
-            ConcurrentDictionary<string, ExchangeOrderBook> fullBooks =
-                new ConcurrentDictionary<string, ExchangeOrderBook>();
-            Dictionary<string, Queue<ExchangeOrderBook>> partialOrderBookQueues =
-                new Dictionary<string, Queue<ExchangeOrderBook>>();
+            ConcurrentDictionary<string, ExchangeDepth> fullBooks =
+                new ConcurrentDictionary<string, ExchangeDepth>();
+            Dictionary<string, Queue<ExchangeDepth>> partialOrderBookQueues =
+                new Dictionary<string, Queue<ExchangeDepth>>();
 
             void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues,
                 SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit)
@@ -53,7 +53,7 @@ namespace Centipede
                 }
             }
 
-            void updateOrderBook(ExchangeOrderBook fullOrderBook, ExchangeOrderBook freshBook)
+            void updateOrderBook(ExchangeDepth fullOrderBook, ExchangeDepth freshBook)
             {
                 lock (fullOrderBook)
                 {
@@ -67,14 +67,14 @@ namespace Centipede
                 }
             }
 
-            async Task innerCallback(ExchangeOrderBook newOrderBook)
+            async Task innerCallback(ExchangeDepth newOrderBook)
             {
                 // depending on the exchange, newOrderBook may be a complete or partial order book
                 // ideally all exchanges would send the full order book on first message, followed by delta order books
                 // but this is not the case
 
                 bool foundFullBook =
-                    fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeOrderBook fullOrderBook);
+                    fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeDepth fullOrderBook);
                 switch (api.WebSocketDepthType)
                 {
                     case WebSocketDepthType.DeltasOnly:
@@ -82,7 +82,7 @@ namespace Centipede
                         // Fetch an initial book the first time and apply deltas on top
                         // send these exchanges scathing support tickets that they should send
                         // the full book for the first web socket callback message
-                        Queue<ExchangeOrderBook> partialOrderBookQueue;
+                        Queue<ExchangeDepth> partialOrderBookQueue;
                         bool requestFullOrderBook = false;
 
                         // attempt to find the right queue to put the partial order book in to be processed later
@@ -93,7 +93,7 @@ namespace Centipede
                             {
                                 // no queue found, make a new one
                                 partialOrderBookQueues[newOrderBook.MarketSymbol] =
-                                    partialOrderBookQueue = new Queue<ExchangeOrderBook>();
+                                    partialOrderBookQueue = new Queue<ExchangeDepth>();
                                 requestFullOrderBook = !foundFullBook;
                             }
 
@@ -104,7 +104,7 @@ namespace Centipede
                         // request the entire order book if we need it
                         if (requestFullOrderBook)
                         {
-                            fullOrderBook = await api.GetDepthAsync(newOrderBook.MarketSymbol, maxCount);
+                            //fullOrderBook = await api.GetDepthAsync(newOrderBook.MarketSymbol); todo:更新对应代码
                             fullOrderBook.MarketSymbol = newOrderBook.MarketSymbol;
                             fullBooks[newOrderBook.MarketSymbol] = fullOrderBook;
                         }
@@ -223,7 +223,7 @@ namespace Centipede
                 priceThreshold = 1.0m / priceThreshold;
             }
 
-            ExchangeOrderBook book = await api.GetDepthAsync(symbol, orderBookCount);
+            ExchangeDepth book = null;//todo await api.GetDepthAsync(symbol, orderBookCount);
             if (book == null || (isBuy && book.Asks.Count == 0) || (!isBuy && book.Bids.Count == 0))
             {
                 throw new APIException($"Error getting order book for {symbol}");
@@ -311,17 +311,23 @@ namespace Centipede
         /// <param name="asks">Asks key</param>
         /// <param name="bids">Bids key</param>
         /// <param name="maxCount">Max count</param>
+        /// <param name="sequence"></param>
         /// <returns>Order book</returns>
-        internal static ExchangeOrderBook ParseOrderBookFromJTokenArrays
+        internal static ExchangeDepth ParseOrderBookFromJTokenArrays
         (
             this JToken token,
             string asks = "asks",
             string bids = "bids",
-            string sequence = "ts",
+            string sequence = "ts", TimestampType timestampType = TimestampType.None,
             int maxCount = 100
         )
         {
-            var book = new ExchangeOrderBook {SequenceId = token[sequence].ConvertInvariant<long>()};
+            var book = new ExchangeDepth
+            {
+                SequenceId = token[sequence].ConvertInvariant<long>(),
+                LastUpdatedUtc = CryptoUtility.ParseTimestamp(token[sequence], timestampType)
+            };
+
             foreach (JArray array in token[asks])
             {
                 var depth = new ExchangeOrderPrice
@@ -363,7 +369,7 @@ namespace Centipede
         /// <param name="sequence">Sequence key</param>
         /// <param name="maxCount">Max count</param>
         /// <returns>Order book</returns>
-        internal static ExchangeOrderBook ParseOrderBookFromJTokenDictionaries
+        internal static ExchangeDepth ParseOrderBookFromJTokenDictionaries
         (
             this JToken token,
             string asks = "asks",
@@ -374,7 +380,7 @@ namespace Centipede
             int maxCount = 100
         )
         {
-            var book = new ExchangeOrderBook {SequenceId = token[sequence].ConvertInvariant<long>()};
+            var book = new ExchangeDepth {SequenceId = token[sequence].ConvertInvariant<long>()};
             foreach (JToken ask in token[asks])
             {
                 var depth = new ExchangeOrderPrice
@@ -591,7 +597,7 @@ namespace Centipede
         {
             MarketCandle candle = new MarketCandle
             {
-                Name = symbol.OriginSymbol,
+                Symbol = symbol,
                 ClosePrice = token[closeKey].ConvertInvariant<decimal>(),
                 HighPrice = token[highKey].ConvertInvariant<decimal>(),
                 LowPrice = token[lowKey].ConvertInvariant<decimal>(),

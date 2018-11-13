@@ -12,15 +12,11 @@ namespace Centipede
     /// </summary>
     public class MarketCandle
     {
-        /// <summary>
-        /// The name of the exchange for this candle
-        /// </summary>
-        public string ExchangeName { get; set; }
 
         /// <summary>
         /// The name of the market
         /// </summary>
-        public string Name { get; set; }
+        public Symbol Symbol { get; set; }
 
         /// <summary>
         /// Timestamp, the open time of the candle

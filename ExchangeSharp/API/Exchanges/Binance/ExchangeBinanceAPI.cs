@@ -261,7 +261,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepthint maxCount = 20, params string[] marketSymbols)
         {
             if (marketSymbols == null || marketSymbols.Length == 0)
             {
@@ -273,7 +273,7 @@ namespace Centipede
                 string json = msg.ToStringFromUTF8();
                 var update = JsonConvert.DeserializeObject<MultiDepthStream>(json);
                 string marketSymbol = update.Data.MarketSymbol;
-                ExchangeOrderBook book = new ExchangeOrderBook { SequenceId = update.Data.FinalUpdate, MarketSymbol = marketSymbol };
+                ExchExchExchExchangeDepthangeExchangeExchangeDepthate, MarketSymbol = marketSymbol };
                 foreach (List<object> ask in update.Data.Asks)
                 {
                     var depth = new ExchangeOrderPrice { Price = ask[0].ConvertInvariant<decimal>(), Amount = ask[1].ConvertInvariant<decimal>() };
@@ -289,7 +289,7 @@ namespace Centipede
             });
         }
 
-        protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
+        protected override async Task<ExchangeDeptExchangeDeptExchangeDeptExchangeDepthaxCount = 100)
         {
             JToken obj = await MakeJsonRequestAsync<JToken>("/depth?symbol=" + marketSymbol + "&limit=" + maxCount);
             return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(obj, sequence: "lastUpdateId", maxCount: maxCount);

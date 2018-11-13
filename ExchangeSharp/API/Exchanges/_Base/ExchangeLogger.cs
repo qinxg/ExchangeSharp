@@ -88,7 +88,7 @@ namespace Centipede
                 {
                     // make API calls first, if they fail we will try again later
                     //todo  Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(MarketSymbol, API.GetTickerAsync(MarketSymbol).Sync()) };
-                    //OrderBook = API.GetDepthAsync(MarketSymbol).Sync();
+                    //Depth = API.GetDepthAsync(MarketSymbol).Sync();
                     //Trades = API.GetTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
 
                     // all API calls succeeded, we can write to files
@@ -101,7 +101,7 @@ namespace Centipede
                     //Tickers.First().Value.ToBinary(tickerWriter);
 
                     // write order book
-                    OrderBook.ToBinary(bookWriter);
+                    Depth.ToBinary(bookWriter);
 
                     // new trades only
                     newTrades = Trades.Where(t => !tradeIds.Contains(t.Id)).ToArray();
@@ -323,7 +323,7 @@ namespace Centipede
         /// <summary>
         /// Latest order book
         /// </summary>
-        public ExchangeOrderBook OrderBook { get; private set; }
+        public ExchangeDepth Depth { get; private set; }
 
         /// <summary>
         /// Latest trades

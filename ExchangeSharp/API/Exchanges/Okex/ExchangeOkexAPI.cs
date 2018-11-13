@@ -31,7 +31,7 @@ namespace Centipede
         private string GetPayloadForm(Dictionary<string, object> payload)
         {
             payload["api_key"] = PublicApiKey.ToUnsecureString();
-            string form = CryptoUtility.GetFormForPayload(payload, false);
+            string form = payload.GetFormForPayload(false);
             string sign = form + "&secret_key=" + PrivateApiKey.ToUnsecureString();
             sign = CryptoUtility.MD5Sign(sign);
             return form + "&sign=" + sign;
@@ -231,7 +231,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols)
         {
             /*
 {[
@@ -279,17 +279,17 @@ namespace Centipede
                 marketSymbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", marketSymbols);
             }, (_socket, symbol, sArray, token) =>
             {
-                ExchangeOrderBook book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token, sequence: "timestamp", maxCount: maxCount);
+                ExchangeDepth book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token, sequence: "timestamp", maxCount: maxCount);
                 book.MarketSymbol = symbol;
                 callback(book);
                 return Task.CompletedTask;
             });
         }
 
-        protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
+        public override async Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount)
         {
-            var token = await MakeRequestOkexAsync(marketSymbol, "/depth.do?symbol=$SYMBOL$");
-            return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token.Item1, maxCount: maxCount);
+            var token = await MakeRequestOkexAsync(symbol.OriginSymbol, "/depth.do?symbol=$SYMBOL$");
+            return token.Item1.ParseOrderBookFromJTokenArrays(maxCount: maxCount);
         }
 
         //public override async Task GetHistoricalTradesAsync(Func<List<ExchangeTrade>, bool> callback, Symbol symbol , DateTime? startDate = null, DateTime? endDate = null)

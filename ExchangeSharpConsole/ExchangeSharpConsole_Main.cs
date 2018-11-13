@@ -42,6 +42,12 @@ namespace CentipedeConsole
 
             //K线
             var kline = huobi.GetCandlesAsync(symbol, 60).Result;
+            Console.WriteLine(kline);
+
+            //depth
+            var depth = huobi.GetDepthAsync(symbol, 5).Result;
+            Console.WriteLine(depth);
+                
 
             return CentipedeConsoleMain.ConsoleMain(args);
         }

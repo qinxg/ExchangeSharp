@@ -299,10 +299,9 @@ namespace Centipede
             };
         }
 
-        protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
+        protected override async Task<ExchangeDepthBookAsync(string marketSymbol, int maxCount = 100)
         {
-            ExchangeOrderBook orders = new ExchangeOrderBook();
-            decimal[][] books = await MakeJsonRequestAsync<decimal[][]>("/book/t" + marketSymbol + "/P0?len=" + maxCount);
+            ExchExchExchExchangeDepthchangeExchangeExchangeDepth await MakeJsonRequestAsync<decimal[][]>("/book/t" + marketSymbol + "/P0?len=" + maxCount);
             foreach (decimal[] book in books)
             {
                 if (book[2] > 0m)

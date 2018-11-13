@@ -10,7 +10,7 @@ namespace Centipede
     public interface IKlineProvider
     {
         /// <summary>
-        /// K线数据， 开，最高，最低，收盘
+        /// K线数据， 开，最高，最低，收盘   （数据由旧到新返回）
         /// Get candles (open, high, low, close)
         /// </summary>
         /// <param name="symbol"></param>

@@ -54,7 +54,7 @@ namespace Centipede
     /// 深度信息
     /// Represents all the asks (sells) and bids (buys) for an exchange asset
     /// </summary>
-    public sealed class ExchangeOrderBook
+    public sealed class ExchangeDepth
     {
         /// <summary>
         /// The sequence id. This increments as updates come through. Not all exchanges will populate this.
@@ -63,7 +63,7 @@ namespace Centipede
         public long SequenceId { get; set; }
 
         /// <summary>
-        /// The market symbol.
+        /// The market symbol.  todo:这里改掉
         /// This property is not serialized using the ToBinary and FromBinary methods.
         /// </summary>
         public string MarketSymbol { get; set; }
@@ -87,7 +87,7 @@ namespace Centipede
         /// <returns>String</returns>
         public override string ToString()
         {
-            return string.Format("Asks: {0}, Bids: {1}", Asks.Count, Bids.Count);
+            return $"Asks: {Asks.Count}, Bids: {Bids.Count}";
         }
 
         /// <summary>

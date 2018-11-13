@@ -18,28 +18,19 @@ namespace Centipede
         private bool _disposed;
 
 
+
+        protected TimestampType TimestampType { get; set; } = TimestampType.UnixMilliseconds;
+
+        #region Protected methods
+
+        /// <summary>
+        /// 利用交易对的相关信息，控制价格。使他符合标准
+        /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
+        /// </summary>
         #endregion Private methods
 
         #region API Implementation
 
-
-        protected virtual async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> OnGetOrderBooksAsync(int maxCount = 100)
-        {
-            //List<KeyValuePair<string, ExchangeOrderBook>> books = new List<KeyValuePair<string, ExchangeOrderBook>>();
-            //var marketSymbols = await GetMarketSymbolsAsync();
-            //foreach (string marketSymbol in marketSymbols)
-            //{
-            //    var book = await GetDepthAsync(marketSymbol);
-            //    books.Add(new KeyValuePair<string, ExchangeOrderBook>(marketSymbol, book));
-            //}
-            //return books;
-
-            return null;
-        }
-
-
-
-        protected virtual Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100) => throw new NotImplementedException();
         protected virtual Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency, bool forceRegenerate = false) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency) => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
@@ -58,18 +49,12 @@ namespace Centipede
 
         protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols) => throw new NotImplementedException();
-        protected virtual IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols) => throw new NotImplementedException();
+        protected virtual IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
 
         #endregion API implementation
 
-        #region Protected methods
-
-        /// <summary>
-        /// 利用交易对的相关信息，控制价格。使他符合标准
-        /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
-        /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
         /// <param name="outputPrice">Price</param>
         /// <returns>Clamped price</returns>
@@ -323,28 +308,11 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Get exchange order book
+        /// Get exchange Depth
         /// </summary>
-        /// <param name="marketSymbol">Symbol to get order book for</param>
-        /// <param name="maxCount">Max count, not all exchanges will honor this parameter</param>
         /// <returns>Exchange order book or null if failure</returns>
-        public  async Task<ExchangeOrderBook> GetDepthAsync(string marketSymbol, int maxCount = 100)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await OnGetOrderBookAsync(marketSymbol, maxCount);
-        }
-
-
-        /// <summary>
-        /// Get all exchange order book symbols in one request. If the exchange does not support this, an order book will be requested for each symbol. Depending on the exchange, the number of bids and asks will have different counts, typically 50-100.
-        /// </summary>
-        /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
-        /// <returns>Symbol and order books pairs</returns>
-        public  async Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> GetAllDepthAsync(int maxCount = 100)
-        {
-            return await OnGetOrderBooksAsync(maxCount);
-        }
-
+        public abstract Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount);
+       
 
         /// <summary>
         /// Get candles (open, high, low, close)
@@ -534,7 +502,7 @@ namespace Centipede
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetDepthWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        public virtual IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols)
         {
             callback.ThrowIfNull(nameof(callback), "Callback must not be null");
             return OnGetOrderBookWebSocket(callback, maxCount, marketSymbols);

@@ -238,7 +238,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] marketSymbols)
+        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepthint maxCount = 20, params string[] marketSymbols)
         {
             /*
 {"info":"Welcome to the BitMEX Realtime API.","version":"2018-06-29T18:05:14.000Z","timestamp":"2018-07-05T14:22:26.267Z","docs":"https://www.bitmex.com/app/wsAPI","limit":{"remaining":39}}
@@ -263,8 +263,7 @@ namespace Centipede
                 var action = token["action"].ToStringInvariant();
                 JArray data = token["data"] as JArray;
 
-                ExchangeOrderBook book = new ExchangeOrderBook();
-                var price = 0m;
+                ExchExchExchExchangeDepthangeExchangeExchangeDepth
                 var size = 0m;
                 foreach (var d in data)
                 {
