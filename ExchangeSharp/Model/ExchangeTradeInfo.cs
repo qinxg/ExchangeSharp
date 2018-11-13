@@ -29,7 +29,7 @@ namespace Centipede
         {
             //todo
             //Ticker = ExchangeInfo.API.GetTickerAsync(MarketSymbol).Sync();
-            //RecentTrades = ExchangeInfo.API.GetRecentTradesAsync(MarketSymbol).Sync().ToArray();
+            //RecentTrades = ExchangeInfo.API.GetTradesAsync(MarketSymbol).Sync().ToArray();
             //if (RecentTrades.Length == 0)
             //{
             //    Trade = new Trade();

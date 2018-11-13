@@ -36,10 +36,12 @@ namespace CentipedeConsole
 
 
             //trade
+            var trades = huobi.GetTradesAsync(symbol).Result;
+            Console.WriteLine(trades);
 
 
-
-           
+            //K线
+            var kline = huobi.GetCandlesAsync(symbol, 60).Result;
 
             return CentipedeConsoleMain.ConsoleMain(args);
         }

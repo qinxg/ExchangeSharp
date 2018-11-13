@@ -24,17 +24,6 @@ namespace Centipede
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
         }
 
-        #region  格式转换
-
-
-
-        public override string PeriodSecondsToString(int seconds)
-        {
-            return CryptoUtility.SecondsToPeriodStringLong(seconds);
-        }
-
-        #endregion
-
         #region HTTP请求处理 
 
         protected override async Task ProcessRequestAsync(IHttpWebRequest request, Dictionary<string, object> payload)
@@ -104,7 +93,6 @@ namespace Centipede
         }
 
         #endregion
-
 
         #region common
 
@@ -221,7 +209,8 @@ namespace Centipede
              */
 
             JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + symbol.OriginSymbol);
-            return this.ParseTicker(ticker["tick"], symbol.OriginSymbol, "ask", "bid", "close", "amount", "vol", "ts",
+            var data = ticker["tick"];
+            return data.ParseTicker(symbol, "ask", "bid", "close", "amount", "vol", "ts",
                 TimestampType.UnixMillisecondsDouble, idKey: "id");
         }
 
@@ -233,31 +222,81 @@ namespace Centipede
 
             foreach (JToken child in obj)
             {
-                var symbol = child["symbol"].ToStringInvariant();
-
-                tickers.Add(this.ParseTicker(child, symbol, null, null, "close", "amount", "vol"));
+                tickers.Add(child.ParseTicker(null, null, "close", "amount", "vol"));
             }
 
             return tickers;
         }
 
         #endregion
-
-
-
+        
         #region  trades
 
-        public override Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, Symbol symbol, DateTime? startDate = null, DateTime? endDate = null)
-        {
-            return base.GetHistoricalTradesAsync(callback, symbol, startDate, endDate);
-        }
 
-        public override Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(Symbol symbol)
+        public override async Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol, int limit = 20)
         {
-            throw new NotImplementedException();
+            /*
+             * {"status":"ok","ch":"market.ethusdt.trade.detail","ts":1542104543483,
+             * "tick":{"id":27952707649,"ts":1542104541926,
+             *  "data":[{"amount":0.100000000000000000,"ts":1542104541926,"id":2795270764916609236638,"price":210.900000000000000000,"direction":"buy"},{"amount":0.327700000000000000,"ts":1542104541926,"id":2795270764916609248055,"price":210.900000000000000000,"direction":"buy"}]}}
+             */
+
+            JToken result = await MakeJsonRequestAsync<JToken>($"/market/history/trade?symbol={symbol.OriginSymbol}&size={limit}", BaseUrl);
+            var trades = ParseTradesData(result);
+            return trades;
         }
 
         #endregion
+
+        #region  Kline
+
+        public override async Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol,
+            int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        {
+            /*
+            {
+              "status": "ok",
+              "ch": "market.btcusdt.kline.1day",
+              "ts": 1499223904680,
+              “data”: [
+            {
+                "id": 1499184000,
+                "amount": 37593.0266,
+                "count": 0,
+                "open": 1935.2000,
+                "close": 1879.0000,
+                "low": 1856.0000,
+                "high": 1940.0000,
+                "vol": 71031537.97866500
+              },
+             */
+
+            List<MarketCandle> candles = new List<MarketCandle>();
+            string url = "/market/history/kline?symbol=" + symbol.OriginSymbol;
+
+            if (limit != null)
+            {
+                // default is 150, max: 2000
+                url += "&size=" + (limit.Value.ToStringInvariant());
+            }
+
+            string periodString = CryptoUtility.SecondsToPeriodStringLong(periodSeconds);
+            url += "&period=" + periodString;
+
+            JToken allCandles = await MakeJsonRequestAsync<JToken>(url, BaseUrl, null);
+            foreach (var token in allCandles)
+            {
+                candles.Add(token.ParseCandle(symbol, periodSeconds, "open", "high", "low", "close", "id",
+                    TimestampType.UnixSeconds, null, "vol"));
+            }
+
+            //todo:注意先插下k线的顺序
+            candles.Reverse();
+            return candles;
+        }
+
+        #endregion
+
 
 
         protected override IWebSocket OnGetTradesWebSocket(
@@ -304,10 +343,10 @@ namespace Centipede
                 var marketSymbol = sArray[1];
 
                 var tick = token["tick"];
-                var id = tick["id"].ConvertInvariant<long>();
+                var id = tick["id"].ToStringInvariant();
 
                 var data = tick["data"];
-                var trades = ParseTradesWebSocket(data);
+                var trades = ParseTradesData(data);
                 foreach (var trade in trades)
                 {
                     trade.Id = id;
@@ -456,48 +495,7 @@ namespace Centipede
                 maxCount: maxCount);
         }
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol,
-            int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
-        {
-            /*
-            {
-              "status": "ok",
-              "ch": "market.btcusdt.kline.1day",
-              "ts": 1499223904680,
-              “data”: [
-            {
-                "id": 1499184000,
-                "amount": 37593.0266,
-                "count": 0,
-                "open": 1935.2000,
-                "close": 1879.0000,
-                "low": 1856.0000,
-                "high": 1940.0000,
-                "vol": 71031537.97866500
-              },
-             */
-
-            List<MarketCandle> candles = new List<MarketCandle>();
-            string url = "/market/history/kline?symbol=" + marketSymbol;
-            if (limit != null)
-            {
-                // default is 150, max: 2000
-                url += "&size=" + (limit.Value.ToStringInvariant());
-            }
-
-            string periodString = PeriodSecondsToString(periodSeconds);
-            url += "&period=" + periodString;
-            JToken allCandles = await MakeJsonRequestAsync<JToken>(url, BaseUrl, null);
-            foreach (var token in allCandles)
-            {
-                candles.Add(this.ParseCandle(token, marketSymbol, periodSeconds, "open", "high", "low", "close", "id",
-                    TimestampType.UnixSeconds, null, "vol"));
-            }
-
-            candles.Reverse();
-            return candles;
-        }
-
+     
 
 
         #region Private APIs
@@ -864,7 +862,7 @@ namespace Centipede
             return result;
         }
 
-        private IEnumerable<ExchangeTrade> ParseTradesWebSocket(JToken token)
+        private List<ExchangeTrade> ParseTradesData(JToken token)
         {
             var trades = new List<ExchangeTrade>();
             foreach (var t in token)

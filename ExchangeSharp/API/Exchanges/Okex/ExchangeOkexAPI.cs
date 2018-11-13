@@ -27,10 +27,6 @@ namespace Centipede
             WebSocketDepthType = WebSocketDepthType.FullBookFirstThenDeltas;
         }
 
-        public override string PeriodSecondsToString(int seconds)
-        {
-            return CryptoUtility.SecondsToPeriodStringLong(seconds);
-        }
 
         private string GetPayloadForm(Dictionary<string, object> payload)
         {
@@ -153,7 +149,9 @@ namespace Centipede
         public override async Task<ExchangeTicker> GetTickerAsync(Symbol symbol)
         {
             var data = await MakeRequestOkexAsync(symbol.OriginSymbol, "/ticker.do?symbol=$SYMBOL$");
-            return ParseTicker(data.Item2, data.Item1);
+            //return ParseTicker(data.Item2, data.Item1); todo
+
+            return null;
         }
 
         public override async Task<List<ExchangeTicker>> GetTickersAsync()
@@ -163,13 +161,13 @@ namespace Centipede
             foreach (JToken token in data.Item1)
             {
                 var marketSymbol = token["symbol"].ToStringInvariant();
-                tickers.Add(ParseTickerV2(marketSymbol, token));
+                //tickers.Add(ParseTickerV2(marketSymbol, token)); todo:改到这里在处理
             }
             return tickers;
         }
 
 
-        public override Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(Symbol symbol)
+        public override Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol,int limit)
         {
             throw new NotImplementedException();
         }
@@ -224,7 +222,7 @@ namespace Centipede
                 marketSymbols = await AddMarketSymbolsToChannel(_socket, "ok_sub_spot_{0}_deals", marketSymbols);
             }, (_socket, symbol, sArray, token) =>
             {
-                IEnumerable<ExchangeTrade> trades = ParseTradesWebSocket(token);
+                List<ExchangeTrade> trades = ParseTradesWebSocket(token);
                 foreach (var trade in trades)
                 {
                     callback(new KeyValuePair<string, ExchangeTrade>(symbol, trade));
@@ -294,19 +292,20 @@ namespace Centipede
             return ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token.Item1, maxCount: maxCount);
         }
 
-        public override async Task GetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, Symbol symbol , DateTime? startDate = null, DateTime? endDate = null)
-        {
-            List<ExchangeTrade> allTrades = new List<ExchangeTrade>();
-            var trades = await MakeRequestOkexAsync(symbol.OriginSymbol, "/trades.do?symbol=$SYMBOL$");
-            foreach (JToken trade in trades.Item1)
-            {
-                // [ { "date": "1367130137", "date_ms": "1367130137000", "price": 787.71, "amount": 0.003, "tid": "230433", "type": "sell" } ]
-                allTrades.Add(trade.ParseTrade("amount", "price", "type", "date_ms", TimestampType.UnixMilliseconds, "tid"));
-            }
-            callback(allTrades);
-        }
+        //public override async Task GetHistoricalTradesAsync(Func<List<ExchangeTrade>, bool> callback, Symbol symbol , DateTime? startDate = null, DateTime? endDate = null)
+        //{
+        //    List<ExchangeTrade> allTrades = new List<ExchangeTrade>();
+        //    var trades = await MakeRequestOkexAsync(symbol.OriginSymbol, "/trades.do?symbol=$SYMBOL$");
+        //    foreach (JToken trade in trades.Item1)
+        //    {
+        //        // [ { "date": "1367130137", "date_ms": "1367130137000", "price": 787.71, "amount": 0.003, "tid": "230433", "type": "sell" } ]
+        //        allTrades.Add(trade.ParseTrade("amount", "price", "type", "date_ms", TimestampType.UnixMilliseconds, "tid"));
+        //    }
+        //    callback(allTrades);
+        //}
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        public override async Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             /*
              [
@@ -320,7 +319,7 @@ namespace Centipede
             */
 
             List<MarketCandle> candles = new List<MarketCandle>();
-            string url = "/kline.do?symbol=" + marketSymbol;
+            string url = "/kline.do?symbol=" + symbol.OriginSymbol;
             if (startDate != null)
             {
                 url += "&since=" + (long)startDate.Value.UnixTimestampFromDateTimeMilliseconds();
@@ -329,12 +328,14 @@ namespace Centipede
             {
                 url += "&size=" + (limit.Value.ToStringInvariant());
             }
-            string periodString = PeriodSecondsToString(periodSeconds);
+            string periodString = CryptoUtility.SecondsToPeriodStringLong(periodSeconds);
             url += "&type=" + periodString;
+
             JToken obj = await MakeJsonRequestAsync<JToken>(url);
+
             foreach (JArray token in obj)
             {
-                candles.Add(this.ParseCandle(token, marketSymbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5));
+                candles.Add(token.ParseCandle(symbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5));
             }
             return candles;
         }
@@ -492,17 +493,17 @@ namespace Centipede
 
         #region Private Functions
 
-        private ExchangeTicker ParseTicker(string symbol, JToken data)
-        {
-            //{"date":"1518043621","ticker":{"high":"0.01878000","vol":"1911074.97335534","last":"0.01817627","low":"0.01813515","buy":"0.01817626","sell":"0.01823447"}}
-            return this.ParseTicker(data["ticker"], symbol, "sell", "buy", "last", "vol", null, "date", TimestampType.UnixSeconds);
-        }
+        //private ExchangeTicker ParseTicker(string symbol, JToken data)
+        //{
+        //    //{"date":"1518043621","ticker":{"high":"0.01878000","vol":"1911074.97335534","last":"0.01817627","low":"0.01813515","buy":"0.01817626","sell":"0.01823447"}}
+        //    return this.ParseTicker(data["ticker"], symbol, "sell", "buy", "last", "vol", null, "date", TimestampType.UnixSeconds);
+        //}
 
-        private ExchangeTicker ParseTickerV2(string symbol, JToken ticker)
-        {
-            // {"buy":"0.00001273","change":"-0.00000009","changePercentage":"-0.70%","close":"0.00001273","createdDate":1527355333053,"currencyId":535,"dayHigh":"0.00001410","dayLow":"0.00001174","high":"0.00001410","inflows":"19.52673814","last":"0.00001273","low":"0.00001174","marketFrom":635,"name":{},"open":"0.00001282","outflows":"52.53715678","productId":535,"sell":"0.00001284","symbol":"you_btc","volume":"5643177.15601228"}
-            return this.ParseTicker(ticker, symbol, "sell", "buy", "last", "volume", null, "createdDate", TimestampType.UnixMilliseconds);
-        }
+        //private ExchangeTicker ParseTickerV2(string symbol, JToken ticker)
+        //{
+        //    // {"buy":"0.00001273","change":"-0.00000009","changePercentage":"-0.70%","close":"0.00001273","createdDate":1527355333053,"currencyId":535,"dayHigh":"0.00001410","dayLow":"0.00001174","high":"0.00001410","inflows":"19.52673814","last":"0.00001273","low":"0.00001174","marketFrom":635,"name":{},"open":"0.00001282","outflows":"52.53715678","productId":535,"sell":"0.00001284","symbol":"you_btc","volume":"5643177.15601228"}
+        //    return this.ParseTicker(ticker, symbol, "sell", "buy", "last", "volume", null, "createdDate", TimestampType.UnixMilliseconds);
+        //}
 
         private Dictionary<string, decimal> ParseAmounts(JToken token, Dictionary<string, decimal> amounts)
         {
@@ -600,7 +601,7 @@ namespace Centipede
             return result;
         }
 
-        private IEnumerable<ExchangeTrade> ParseTradesWebSocket(JToken token)
+        private List<ExchangeTrade> ParseTradesWebSocket(JToken token)
         {
             var trades = new List<ExchangeTrade>();
             foreach (var t in token)
@@ -610,7 +611,7 @@ namespace Centipede
                 var dt = CryptoUtility.UtcNow.Date.Add(ts);
                 var trade = new ExchangeTrade()
                 {
-                    Id = t[0].ConvertInvariant<long>(),
+                    Id = t[0].ToStringInvariant(),
                     Price = t[1].ConvertInvariant<decimal>(),
                     Amount = t[2].ConvertInvariant<decimal>(),
                     Timestamp = dt,

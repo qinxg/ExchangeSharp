@@ -21,7 +21,8 @@ namespace Centipede
         /// parameter</param>
         /// <param name="symbols">Order book symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] symbols)
+        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeOrderBook> callback,
+            int maxCount = 20, params string[] symbols)
         {
             if (api.WebSocketDepthType == WebSocketDepthType.None)
             {
@@ -31,10 +32,13 @@ namespace Centipede
             // Notes:
             // * Confirm with the Exchange's API docs whether the data in each event is the absolute quantity or differential quantity
             // * Receiving an event that removes a price level that is not in your local order book can happen and is normal.
-            ConcurrentDictionary<string, ExchangeOrderBook> fullBooks = new ConcurrentDictionary<string, ExchangeOrderBook>();
-            Dictionary<string, Queue<ExchangeOrderBook>> partialOrderBookQueues = new Dictionary<string, Queue<ExchangeOrderBook>>();
+            ConcurrentDictionary<string, ExchangeOrderBook> fullBooks =
+                new ConcurrentDictionary<string, ExchangeOrderBook>();
+            Dictionary<string, Queue<ExchangeOrderBook>> partialOrderBookQueues =
+                new Dictionary<string, Queue<ExchangeOrderBook>>();
 
-            void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues, SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit)
+            void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues,
+                SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit)
             {
                 foreach (ExchangeOrderPrice record in deltaValues.Values)
                 {
@@ -69,7 +73,8 @@ namespace Centipede
                 // ideally all exchanges would send the full order book on first message, followed by delta order books
                 // but this is not the case
 
-                bool foundFullBook = fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeOrderBook fullOrderBook);
+                bool foundFullBook =
+                    fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeOrderBook fullOrderBook);
                 switch (api.WebSocketDepthType)
                 {
                     case WebSocketDepthType.DeltasOnly:
@@ -83,10 +88,12 @@ namespace Centipede
                         // attempt to find the right queue to put the partial order book in to be processed later
                         lock (partialOrderBookQueues)
                         {
-                            if (!partialOrderBookQueues.TryGetValue(newOrderBook.MarketSymbol, out partialOrderBookQueue))
+                            if (!partialOrderBookQueues.TryGetValue(newOrderBook.MarketSymbol,
+                                out partialOrderBookQueue))
                             {
                                 // no queue found, make a new one
-                                partialOrderBookQueues[newOrderBook.MarketSymbol] = partialOrderBookQueue = new Queue<ExchangeOrderBook>();
+                                partialOrderBookQueues[newOrderBook.MarketSymbol] =
+                                    partialOrderBookQueue = new Queue<ExchangeOrderBook>();
                                 requestFullOrderBook = !foundFullBook;
                             }
 
@@ -127,7 +134,8 @@ namespace Centipede
                                 }
                             }
                         }
-                    } break;
+                    }
+                        break;
 
                     case WebSocketDepthType.FullBookFirstThenDeltas:
                     {
@@ -141,13 +149,15 @@ namespace Centipede
                         {
                             updateOrderBook(fullOrderBook, newOrderBook);
                         }
-                    } break;
+                    }
+                        break;
 
                     case WebSocketDepthType.FullBookAlways:
                     {
                         // Websocket always returns full order book, WTF...?
                         fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
-                    } break;
+                    }
+                        break;
                 }
 
                 fullOrderBook.LastUpdatedUtc = CryptoUtility.UtcNow;
@@ -173,6 +183,7 @@ namespace Centipede
                 {
                     partialOrderBookQueues.Clear();
                 }
+
                 return Task.CompletedTask;
             };
             return socket;
@@ -193,12 +204,14 @@ namespace Centipede
         /// This ensures that your order does not buy or sell at an extreme margin.</param>
         /// <param name="abortIfOrderBookTooSmall">Whether to abort if the order book does not have enough bids or ask amounts to fulfill the order.</param>
         /// <returns>Order result</returns>
-        public static async Task<ExchangeOrderResult> PlaceSafeMarketOrderAsync(this ExchangeAPI api, string symbol, decimal amount, bool isBuy, int orderBookCount = 100, decimal priceThreshold = 0.9m,
+        public static async Task<ExchangeOrderResult> PlaceSafeMarketOrderAsync(this ExchangeAPI api, string symbol,
+            decimal amount, bool isBuy, int orderBookCount = 100, decimal priceThreshold = 0.9m,
             decimal thresholdToAbort = 0.75m, bool abortIfOrderBookTooSmall = false)
         {
             if (priceThreshold > 0.9m)
             {
-                throw new APIException("You cannot specify a price threshold above 0.9m, otherwise there is a chance your order will never be fulfilled. For buys, this is " +
+                throw new APIException(
+                    "You cannot specify a price threshold above 0.9m, otherwise there is a chance your order will never be fulfilled. For buys, this is " +
                     "converted to 1.0m / priceThreshold, so always specify the value below 0.9m");
             }
             else if (priceThreshold <= 0m)
@@ -209,11 +222,13 @@ namespace Centipede
             {
                 priceThreshold = 1.0m / priceThreshold;
             }
+
             ExchangeOrderBook book = await api.GetDepthAsync(symbol, orderBookCount);
             if (book == null || (isBuy && book.Asks.Count == 0) || (!isBuy && book.Bids.Count == 0))
             {
                 throw new APIException($"Error getting order book for {symbol}");
             }
+
             decimal counter = 0m;
             decimal highPrice = decimal.MinValue;
             decimal lowPrice = decimal.MaxValue;
@@ -243,14 +258,18 @@ namespace Centipede
                     }
                 }
             }
+
             if (abortIfOrderBookTooSmall && counter < amount)
             {
-                throw new APIException($"{(isBuy ? "Buy" : "Sell") } order for {symbol} and amount {amount} cannot be fulfilled because the order book is too thin.");
+                throw new APIException(
+                    $"{(isBuy ? "Buy" : "Sell")} order for {symbol} and amount {amount} cannot be fulfilled because the order book is too thin.");
             }
             else if (lowPrice / highPrice < thresholdToAbort)
             {
-                throw new APIException($"{(isBuy ? "Buy" : "Sell")} order for {symbol} and amount {amount} would place for a price below threshold of {thresholdToAbort}, aborting.");
+                throw new APIException(
+                    $"{(isBuy ? "Buy" : "Sell")} order for {symbol} and amount {amount} would place for a price below threshold of {thresholdToAbort}, aborting.");
             }
+
             ExchangeOrderRequest request = new ExchangeOrderRequest
             {
                 Amount = amount,
@@ -279,7 +298,8 @@ namespace Centipede
 
             if (i == maxTries)
             {
-                throw new APIException($"{(isBuy ? "Buy" : "Sell")} order for {symbol} and amount {amount} timed out and may not have been fulfilled");
+                throw new APIException(
+                    $"{(isBuy ? "Buy" : "Sell")} order for {symbol} and amount {amount} timed out and may not have been fulfilled");
             }
 
             return result;
@@ -301,10 +321,14 @@ namespace Centipede
             int maxCount = 100
         )
         {
-            var book = new ExchangeOrderBook { SequenceId = token[sequence].ConvertInvariant<long>() };
+            var book = new ExchangeOrderBook {SequenceId = token[sequence].ConvertInvariant<long>()};
             foreach (JArray array in token[asks])
             {
-                var depth = new ExchangeOrderPrice { Price = array[0].ConvertInvariant<decimal>(), Amount = array[1].ConvertInvariant<decimal>() };
+                var depth = new ExchangeOrderPrice
+                {
+                    Price = array[0].ConvertInvariant<decimal>(),
+                    Amount = array[1].ConvertInvariant<decimal>()
+                };
                 book.Asks[depth.Price] = depth;
                 if (book.Asks.Count == maxCount)
                 {
@@ -314,7 +338,11 @@ namespace Centipede
 
             foreach (JArray array in token[bids])
             {
-                var depth = new ExchangeOrderPrice { Price = array[0].ConvertInvariant<decimal>(), Amount = array[1].ConvertInvariant<decimal>() };
+                var depth = new ExchangeOrderPrice
+                {
+                    Price = array[0].ConvertInvariant<decimal>(),
+                    Amount = array[1].ConvertInvariant<decimal>()
+                };
                 book.Bids[depth.Price] = depth;
                 if (book.Bids.Count == maxCount)
                 {
@@ -346,10 +374,14 @@ namespace Centipede
             int maxCount = 100
         )
         {
-            var book = new ExchangeOrderBook { SequenceId = token[sequence].ConvertInvariant<long>() };
+            var book = new ExchangeOrderBook {SequenceId = token[sequence].ConvertInvariant<long>()};
             foreach (JToken ask in token[asks])
             {
-                var depth = new ExchangeOrderPrice { Price = ask[price].ConvertInvariant<decimal>(), Amount = ask[amount].ConvertInvariant<decimal>() };
+                var depth = new ExchangeOrderPrice
+                {
+                    Price = ask[price].ConvertInvariant<decimal>(),
+                    Amount = ask[amount].ConvertInvariant<decimal>()
+                };
                 book.Asks[depth.Price] = depth;
                 if (book.Asks.Count == maxCount)
                 {
@@ -359,7 +391,11 @@ namespace Centipede
 
             foreach (JToken bid in token[bids])
             {
-                var depth = new ExchangeOrderPrice { Price = bid[price].ConvertInvariant<decimal>(), Amount = bid[amount].ConvertInvariant<decimal>() };
+                var depth = new ExchangeOrderPrice
+                {
+                    Price = bid[price].ConvertInvariant<decimal>(),
+                    Amount = bid[amount].ConvertInvariant<decimal>()
+                };
                 book.Bids[depth.Price] = depth;
                 if (book.Bids.Count == maxCount)
                 {
@@ -373,9 +409,8 @@ namespace Centipede
         /// <summary>
         /// Parse a JToken into a ticker
         /// </summary>
-        /// <param name="api">ExchangeAPI</param>
         /// <param name="token">Token</param>
-        /// <param name="marketSymbol">Symbol</param> //todo:这里改为直接传symbol进来
+        /// <param name="symbol"></param>
         /// <param name="askKey">Ask key</param>
         /// <param name="bidKey">Bid key</param>
         /// <param name="lastKey">Last key</param>
@@ -387,7 +422,7 @@ namespace Centipede
         /// <param name="quoteCurrencyKey">Quote currency key</param>
         /// <param name="idKey">Id key</param>
         /// <returns>ExchangeTicker</returns>
-        internal static ExchangeTicker ParseTicker(this ExchangeAPI api, JToken token, string marketSymbol,
+        internal static ExchangeTicker ParseTicker(this JToken token, Symbol symbol,
             object askKey, object bidKey, object lastKey,
             object baseVolumeKey, object quoteVolumeKey = null,
             object timestampKey = null, TimestampType timestampType = TimestampType.None,
@@ -410,9 +445,6 @@ namespace Centipede
             DateTime timestamp = (timestampKey == null
                 ? CryptoUtility.UtcNow
                 : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
-
-    
-            var symbol = api.Symbols.FirstOrDefault(p => p.OriginSymbol == marketSymbol);
 
             JToken askValue = null;
             if (askKey != null)
@@ -473,22 +505,27 @@ namespace Centipede
                 Price = token[priceKey].ConvertInvariant<decimal>(),
                 IsBuy = (token[typeKey].ToStringInvariant().EqualsWithOption(typeKeyIsBuyValue))
             };
-            trade.Timestamp = (timestampKey == null ? CryptoUtility.UtcNow : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
+
+            trade.Timestamp = (timestampKey == null
+                ? CryptoUtility.UtcNow
+                : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
+
             if (idKey == null)
             {
-                trade.Id = trade.Timestamp.Ticks;
+                trade.Id = trade.Timestamp.Ticks.ToString();
             }
             else
             {
                 try
                 {
-                    trade.Id = (long)token[idKey].ConvertInvariant<ulong>();
+                    trade.Id = token[idKey].ToStringInvariant();
                 }
                 catch
                 {
                     // dont care
                 }
             }
+
             return trade;
         }
 
@@ -501,7 +538,8 @@ namespace Centipede
         /// <param name="last">Last volume value</param>
         /// <param name="baseCurrencyVolume">Receive base currency volume</param>
         /// <param name="quoteCurrencyVolume">Receive quote currency volume</param>
-        internal static void ParseVolumes(this JToken token, object baseVolumeKey, object quoteVolumeKey, decimal last, out decimal baseCurrencyVolume, out decimal quoteCurrencyVolume)
+        internal static void ParseVolumes(this JToken token, object baseVolumeKey, object quoteVolumeKey, decimal last,
+            out decimal baseCurrencyVolume, out decimal quoteCurrencyVolume)
         {
             // parse out volumes, handle cases where one or both do not exist
             if (baseVolumeKey == null)
@@ -531,11 +569,10 @@ namespace Centipede
         }
 
         /// <summary>
-        /// Parse market candle from JToken
+        /// Parse market candle from JArray
         /// </summary>
-        /// <param name="named">Named item</param>
         /// <param name="token">JToken</param>
-        /// <param name="marketSymbol">Symbol</param>
+        /// <param name="symbol"></param>
         /// <param name="periodSeconds">Period seconds</param>
         /// <param name="openKey">Open key</param>
         /// <param name="highKey">High key</param>
@@ -547,28 +584,34 @@ namespace Centipede
         /// <param name="quoteVolumeKey">Quote currency volume key</param>
         /// <param name="weightedAverageKey">Weighted average key</param>
         /// <returns>MarketCandle</returns>
-        internal static MarketCandle ParseCandle(this INamed named, JToken token, string marketSymbol, int periodSeconds, object openKey, object highKey, object lowKey,
-            object closeKey, object timestampKey, TimestampType timestampType, object baseVolumeKey, object quoteVolumeKey = null, object weightedAverageKey = null)
+        internal static MarketCandle ParseCandle(this JToken token, Symbol symbol, int periodSeconds,
+            object openKey, object highKey, object lowKey,
+            object closeKey, object timestampKey, TimestampType timestampType, object baseVolumeKey,
+            object quoteVolumeKey = null, object weightedAverageKey = null)
         {
             MarketCandle candle = new MarketCandle
             {
+                Name = symbol.OriginSymbol,
                 ClosePrice = token[closeKey].ConvertInvariant<decimal>(),
-                ExchangeName = named.Name,
                 HighPrice = token[highKey].ConvertInvariant<decimal>(),
                 LowPrice = token[lowKey].ConvertInvariant<decimal>(),
-                Name = marketSymbol,
                 OpenPrice = token[openKey].ConvertInvariant<decimal>(),
                 PeriodSeconds = periodSeconds,
                 Timestamp = CryptoUtility.ParseTimestamp(token[timestampKey], timestampType)
             };
 
-            token.ParseVolumes(baseVolumeKey, quoteVolumeKey, candle.ClosePrice, out decimal baseVolume, out decimal convertVolume);
-            candle.BaseCurrencyVolume = (double)baseVolume;
-            candle.QuoteCurrencyVolume = (double)convertVolume;
+            token.ParseVolumes(
+                baseVolumeKey, quoteVolumeKey, candle.ClosePrice, 
+                out decimal baseVolume, out decimal convertVolume);
+
+            candle.BaseCurrencyVolume = (double) baseVolume;
+            candle.QuoteCurrencyVolume = (double) convertVolume;
+
             if (weightedAverageKey != null)
             {
                 candle.WeightedAverage = token[weightedAverageKey].ConvertInvariant<decimal>();
             }
+
             return candle;
         }
     }

@@ -73,7 +73,8 @@ namespace Centipede
         /// <returns>String</returns>
         public override string ToString()
         {
-            return string.Format("{0}/{1}: {2}, {3}, {4}, {5}, {6}, {7}, {8}", Timestamp, PeriodSeconds, OpenPrice, HighPrice, LowPrice, ClosePrice, BaseCurrencyVolume, QuoteCurrencyVolume, WeightedAverage);
+            return
+                $"{Timestamp}/{PeriodSeconds}: {OpenPrice}, {HighPrice}, {LowPrice}, {ClosePrice}, {BaseCurrencyVolume}, {QuoteCurrencyVolume}, {WeightedAverage}";
         }
     }
 }

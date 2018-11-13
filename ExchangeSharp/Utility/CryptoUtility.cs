@@ -1275,6 +1275,7 @@ namespace Centipede
         /// True if running under Mono (https://www.mono-project.com/), false if not
         /// </summary>
         public static bool IsMono { get; } = (Type.GetType("Mono.Runtime") != null);
+   
     }
 
     /// <summary>

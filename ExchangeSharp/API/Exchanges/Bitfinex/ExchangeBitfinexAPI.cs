@@ -358,12 +358,13 @@ namespace Centipede
             }
         }
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             // https://api.bitfinex.com/v2/candles/trade:1d:btcusd/hist?start=ms_start&end=ms_end
             List<MarketCandle> candles = new List<MarketCandle>();
             string periodString = PeriodSecondsToString(periodSeconds);
-            string url = "/candles/trade:" + periodString + ":t" + marketSymbol + "/hist?sort=1";
+            string url = "/candles/trade:" + periodString + ":t" + symbol + "/hist?sort=1";
             if (startDate != null || endDate != null)
             {
                 endDate = endDate ?? CryptoUtility.UtcNow;
@@ -380,7 +381,7 @@ namespace Centipede
             /* MTS, OPEN, CLOSE, HIGH, LOW, VOL */
             foreach (JToken candle in token)
             {
-                candles.Add(this.ParseCandle(candle, marketSymbol, periodSeconds, 1, 3, 4, 2, 0, TimestampType.UnixMilliseconds, 5));
+                candles.Add(this.ParseCandle(candle, symbol, periodSeconds, 1, 3, 4, 2, 0, TimestampType.UnixMilliseconds, 5));
             }
 
             return candles;

@@ -21,7 +21,7 @@ namespace Centipede
         /// <summary>
         /// Trade id
         /// </summary>
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Price
@@ -44,7 +44,7 @@ namespace Centipede
         /// <returns>String</returns>
         public override string ToString()
         {
-            return string.Format("{0:s},{1},{2},{3}", Timestamp, Price, Amount, IsBuy ? "Buy" : "Sell");
+            return $"{Timestamp:s},{Price},{Amount},{(IsBuy ? "Buy" : "Sell")}";
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Centipede
         public void FromBinary(BinaryReader reader)
         {
             Timestamp = new DateTime(reader.ReadInt64(), DateTimeKind.Utc);
-            Id = reader.ReadInt64();
+            Id = reader.ReadString();
             Price = (decimal)reader.ReadDouble();
             Amount = (decimal)reader.ReadDouble();
             IsBuy = reader.ReadBoolean();

@@ -28,7 +28,7 @@ namespace Centipede
                 int lastYear = -1;
                 int lastMonth = -1;
                 StreamWriter writer = null;
-                bool innerCallback(IEnumerable<ExchangeTrade> trades)
+                bool innerCallback(List<ExchangeTrade> trades)
                 {
                     foreach (ExchangeTrade trade in trades)
                     {

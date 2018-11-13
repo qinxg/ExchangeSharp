@@ -24,7 +24,7 @@ namespace CentipedeConsole
             {
                 endDate = DateTime.Parse(dict["endDate"]).ToUniversalTime();
             }
-            //api.GetHistoricalTradesAsync((IEnumerable<ExchangeTrade> trades) =>
+            //api.GetHistoricalTradesAsync((List<ExchangeTrade> trades) =>
             //{
             //    foreach (ExchangeTrade trade in trades)
             //    {

@@ -323,7 +323,8 @@ namespace Centipede
             });
         }
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             /*
              [
@@ -333,7 +334,7 @@ namespace Centipede
 
             List<MarketCandle> candles = new List<MarketCandle>();
             string periodString = PeriodSecondsToString(periodSeconds);
-            string url = $"/trade/bucketed?binSize={periodString}&partial=false&symbol={marketSymbol}&reverse=true" + marketSymbol;
+            string url = $"/trade/bucketed?binSize={periodString}&partial=false&symbol={symbol}&reverse=true" + symbol;
             if (startDate != null)
             {
                 url += "&startTime=" + startDate.Value.ToString("yyyy-MM-dd");
@@ -350,7 +351,7 @@ namespace Centipede
             var obj = await MakeJsonRequestAsync<JToken>(url);
             foreach (var t in obj)
             {
-                candles.Add(this.ParseCandle(t, marketSymbol, periodSeconds, "open", "high", "low", "close", "timestamp", TimestampType.Iso8601, "volume", "turnover", "vwap"));
+                candles.Add(this.ParseCandle(t, symbol, periodSeconds, "open", "high", "low", "close", "timestamp", TimestampType.Iso8601, "volume", "turnover", "vwap"));
             }
             candles.Reverse();
 

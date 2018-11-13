@@ -321,7 +321,8 @@ namespace Centipede
             await state.ProcessHistoricalTrades();
         }
 
-        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
+        protected override async Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
         {
             /* [
             [
@@ -340,7 +341,7 @@ namespace Centipede
 		    ]] */
 
             List<MarketCandle> candles = new List<MarketCandle>();
-            string url = "/klines?symbol=" + marketSymbol;
+            string url = "/klines?symbol=" + symbol;
             if (startDate != null)
             {
                 url += "&startTime=" + (long)startDate.Value.UnixTimestampFromDateTimeMilliseconds();
@@ -354,7 +355,7 @@ namespace Centipede
             JToken obj = await MakeJsonRequestAsync<JToken>(url);
             foreach (JToken token in obj)
             {
-                candles.Add(this.ParseCandle(token, marketSymbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5, 7));
+                candles.Add(this.ParseCandle(token, symbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5, 7));
             }
 
             return candles;

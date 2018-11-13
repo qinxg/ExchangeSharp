@@ -42,7 +42,6 @@ namespace Centipede
         protected virtual Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100) => throw new NotImplementedException();
         protected virtual Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency, bool forceRegenerate = false) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency) => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null) => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetFeesAsync() => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync() => throw new NotImplementedException();
@@ -248,12 +247,6 @@ namespace Centipede
             return marketSymbol.ToLowerInvariant();
         }
 
-        /// <summary>
-        /// Convert seconds to a period string, or throw exception if seconds invalid. Example: 60 seconds becomes 1m.
-        /// </summary>
-        /// <param name="seconds">Seconds</param>
-        /// <returns>Period string</returns>
-        public virtual string PeriodSecondsToString(int seconds) => CryptoUtility.SecondsToPeriodString(seconds);
 
         /// <summary>
         /// 初始化，设置币种和币对信息
@@ -309,26 +302,12 @@ namespace Centipede
         #region  trades
 
         /// <summary>
-        /// Get historical trades for the exchange. 
-        /// </summary>
-        /// <param name="callback">Callback for each set of trades. Return false to stop getting trades immediately.</param>
-        /// <param name="symbol"></param>
-        /// <param name="startDate">Optional UTC start date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
-        /// <param name="endDate">Optional UTC end date time to start getting the historical data at, null for the most recent data. Not all exchanges support this.</param>
-        public virtual  async  Task GetHistoricalTradesAsync(
-            Func<IEnumerable<ExchangeTrade>, bool> callback,
-            Symbol symbol, 
-            DateTime? startDate = null, DateTime? endDate = null)
-        {
-            await new SynchronizationContextRemover();
-        }
-
-        /// <summary>
         /// Get recent trades on the exchange - the default implementation simply calls GetHistoricalTrades with a null sinceDateTime.
         /// </summary>
         /// <param name="symbol"></param>
+        /// <param name="limit"></param>
         /// <returns>An enumerator that loops through all recent trades</returns>
-        public abstract  Task<IEnumerable<ExchangeTrade>> GetRecentTradesAsync(Symbol symbol);
+        public abstract  Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol, int limit);
 
         #endregion
 
@@ -366,21 +345,19 @@ namespace Centipede
             return await OnGetOrderBooksAsync(maxCount);
         }
 
-       
+
         /// <summary>
         /// Get candles (open, high, low, close)
         /// </summary>
-        /// <param name="marketSymbol">Symbol to get candles for</param>
+        /// <param name="symbol"></param>
         /// <param name="periodSeconds">Period in seconds to get candles for. Use 60 for minute, 3600 for hour, 3600*24 for day, 3600*24*30 for month.</param>
         /// <param name="startDate">Optional start date to get candles for</param>
         /// <param name="endDate">Optional end date to get candles for</param>
         /// <param name="limit">Max results, can be used instead of startDate and endDate if desired</param>
         /// <returns>Candles</returns>
-        public virtual async Task<IEnumerable<MarketCandle>> GetCandlesAsync(string marketSymbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return  await OnGetCandlesAsync(marketSymbol, periodSeconds, startDate, endDate, limit);
-        }
+        public abstract Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
+
 
         /// <summary>
         /// Get total amounts, symbol / amount dictionary

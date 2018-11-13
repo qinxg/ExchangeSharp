@@ -12,48 +12,7 @@ namespace Centipede
     /// </summary>
     public abstract partial class ExchangeAPI
     {
-        /*
-        protected virtual Task<IEnumerable<KeyValuePair<string, ExchangeTicker>>> OnGetTickersAsync();
-        protected virtual Task<IEnumerable<KeyValuePair<string, ExchangeOrderBook>>> OnGetOrderBooksAsync(int maxCount = 100);
-        protected virtual Task<IEnumerable<ExchangeTrade>> OnGetRecentTradesAsync(string symbol);
-        protected virtual Task<IReadOnlyDictionary<string, OriginCurrency>> OnGetCurrenciesAsync();
-        protected virtual Task<IEnumerable<string>> OnGetSymbolsAsync();
-        protected virtual Task<IEnumerable<Symbol>> OnGetSymbolsMetadataAsync();
-        protected virtual Task<ExchangeTicker> OnGetTickerAsync(string symbol);
-        protected virtual Task<ExchangeOrderBook> OnGetOrderBookAsync(string symbol, int maxCount = 100);
-        protected virtual OnGetHistoricalTradesAsync(Func<IEnumerable<ExchangeTrade>, bool> callback, string symbol, DateTime? startDate = null, DateTime? endDate = null);
-        protected virtual Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string symbol, bool forceRegenerate = false);
-        protected virtual Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string symbol);
-        protected virtual Task<IEnumerable<MarketCandle>> OnGetCandlesAsync(string symbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
-        protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync();
-        protected virtual Task<Dictionary<string, decimal>> OnGetFeesAsync();
-        protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync();
-        protected virtual Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order);
-        protected virtual Task<ExchangeOrderResult[]> OnPlaceOrdersAsync(params ExchangeOrderRequest[] order);
-        protected virtual Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string symbol = null);
-        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string symbol = null);
-        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string symbol = null, DateTime? afterDate = null);
-        protected virtual Task OnCancelOrderAsync(string orderId, string symbol = null);
-        protected virtual Task<ExchangeWithdrawalResponse> OnWithdrawAsync(ExchangeWithdrawalRequest withdrawalRequest);
-        protected virtual Task<Dictionary<string, decimal>> OnGetMarginAmountsAvailableToTradeAsync();
-        protected virtual Task<ExchangeMarginPositionResult> OnGetOpenPositionAsync(string symbol);
-        protected virtual Task<ExchangeCloseMarginPositionResult> OnCloseMarginPositionAsync(string symbol);
-
-        protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers);
-        protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] symbols);
-        protected virtual IWebSocket OnGetOrderBookWebSocket(Action<ExchangeOrderBook> callback, int maxCount = 20, params string[] symbols);
-        protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback);
-        protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback);
-
-        // these generally do not need to be overriden unless your Exchange does something funny or does not use a symbol separator
-        public virtual string NormalizeSymbol(string symbol);
-        public virtual string ExchangeSymbolToGlobalSymbol(string symbol);
-        public virtual string GlobalSymbolToExchangeSymbol(string symbol);
-        public virtual string PeriodSecondsToString(int seconds);
-
-        protected virtual void OnDispose();
-        */
-
+       
         /// <summary>
         /// Dictionary of key (exchange currency) and value (global currency). Add entries in static constructor.
         /// Some exchanges (Yobit for example) use odd names for some currencies like BCC for Bitcoin Cash.

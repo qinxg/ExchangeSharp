@@ -19,8 +19,8 @@ namespace Centipede
         private BinaryWriter bookWriter;
         private BinaryWriter tradeWriter;
 
-        HashSet<long> tradeIds = new HashSet<long>();
-        HashSet<long> tradeIds2 = new HashSet<long>();
+        HashSet<string> tradeIds = new HashSet<string>();
+        HashSet<string> tradeIds2 = new HashSet<string>();
 
         private void LoggerThread()
         {
@@ -68,7 +68,7 @@ namespace Centipede
         public void Update()
         {
             ExchangeTrade[] newTrades;
-            HashSet<long> tmpTradeIds;
+            HashSet<string> tmpTradeIds;
 
             try
             {
@@ -89,7 +89,7 @@ namespace Centipede
                     // make API calls first, if they fail we will try again later
                     //todo  Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(MarketSymbol, API.GetTickerAsync(MarketSymbol).Sync()) };
                     //OrderBook = API.GetDepthAsync(MarketSymbol).Sync();
-                    //Trades = API.GetRecentTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
+                    //Trades = API.GetTradesAsync(MarketSymbol).Sync().OrderBy(t => t.Timestamp).ToArray();
 
                     // all API calls succeeded, we can write to files
 

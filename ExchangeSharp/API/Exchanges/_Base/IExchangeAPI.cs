@@ -25,14 +25,6 @@ namespace Centipede
         /// <returns>Normalized symbol</returns>
         string NormalizeMarketSymbol(string marketSymbol);
 
-        /// <summary>
-        /// 把秒转换为周期字符串 ， 例如60秒转换后为1m
-        /// 主要是给k线用的
-        /// Convert seconds to a period string, or throw exception if seconds invalid. Example: 60 seconds becomes 1m.
-        /// </summary>
-        /// <param name="seconds">Seconds</param>
-        /// <returns>Period string</returns>
-        string PeriodSecondsToString(int seconds);
 
         #endregion Utility Methods
 

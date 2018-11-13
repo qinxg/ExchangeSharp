@@ -11,7 +11,7 @@ namespace Centipede
         {
             private ExchangeAPI api;
 
-            public Func<IEnumerable<ExchangeTrade>, bool> Callback { get; set; }
+            public Func<List<ExchangeTrade>, bool> Callback { get; set; }
             public string MarketSymbol { get; set; }
             public DateTime? StartDate { get; set; }
             public DateTime? EndDate { get; set; }
@@ -57,9 +57,9 @@ namespace Centipede
                 StartDate = (StartDate ?? EndDate.Value.Subtract(BlockTime));
                 string startTimestamp;
                 string endTimestamp;
-                HashSet<long> previousTrades = new HashSet<long>();
-                HashSet<long> tempTradeIds = new HashSet<long>();
-                HashSet<long> tmpIds;
+                HashSet<string> previousTrades = new HashSet<string>();
+                HashSet<string> tempTradeIds = new HashSet<string>();
+                HashSet<string> tmpIds;
                 SetDates(out DateTime startDateMoving, out DateTime endDateMoving);
 
                 while (true)
@@ -86,15 +86,18 @@ namespace Centipede
                     foreach (JToken token in obj)
                     {
                         trade = ParseFunction(token);
-                        if (!previousTrades.Contains(trade.Id) && trade.Timestamp >= StartDate.Value && trade.Timestamp <= EndDate.Value)
+                        if (!previousTrades.Contains(trade.Id) && trade.Timestamp >= StartDate.Value &&
+                            trade.Timestamp <= EndDate.Value)
                         {
                             trades.Add(trade);
                         }
-                        if (trade.Id != 0)
+
+                        if (!string.IsNullOrEmpty(trade.Id))
                         {
                             tempTradeIds.Add(trade.Id);
                         }
                     }
+
                     previousTrades.Clear();
                     tmpIds = previousTrades;
                     previousTrades = tempTradeIds;
