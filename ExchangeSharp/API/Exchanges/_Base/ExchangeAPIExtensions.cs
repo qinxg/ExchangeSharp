@@ -509,28 +509,13 @@ namespace Centipede
             {
                 Amount = token[amountKey].ConvertInvariant<decimal>(),
                 Price = token[priceKey].ConvertInvariant<decimal>(),
-                IsBuy = (token[typeKey].ToStringInvariant().EqualsWithOption(typeKeyIsBuyValue))
+                IsBuy = (token[typeKey].ToStringInvariant().EqualsWithOption(typeKeyIsBuyValue)),
+                Timestamp = (timestampKey == null
+                    ? CryptoUtility.UtcNow
+                    : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType))
             };
 
-            trade.Timestamp = (timestampKey == null
-                ? CryptoUtility.UtcNow
-                : CryptoUtility.ParseTimestamp(token[timestampKey], timestampType));
-
-            if (idKey == null)
-            {
-                trade.Id = trade.Timestamp.Ticks.ToString();
-            }
-            else
-            {
-                try
-                {
-                    trade.Id = token[idKey].ToStringInvariant();
-                }
-                catch
-                {
-                    // dont care
-                }
-            }
+            trade.Id = idKey == null ? trade.Timestamp.Ticks.ToString() : token[idKey].ToStringInvariant();
 
             return trade;
         }
