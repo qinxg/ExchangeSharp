@@ -757,36 +757,6 @@ namespace Centipede
             await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", BaseUrlV1, payload, "POST");
         }
 
-        protected override Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency)
-        {
-            throw new NotImplementedException("Huobi does not provide a deposit API");
-        }
-
-        protected override Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency,
-            bool forceRegenerate = false)
-        {
-            throw new NotImplementedException("Huobi does not provide a deposit API");
-
-            /*
-            var payload = await GetNoncePayloadAsync();
-            payload.Add("need_new", forceRegenerate ? 1 : 0);
-            payload.Add("method", "GetDepositAddress");
-            payload.Add("coinName", symbol);
-            payload["method"] = "POST";
-            // "return":{"address": 1UHAnAWvxDB9XXETsi7z483zRRBmcUZxb3,"processed_amount": 1.00000000,"server_time": 1437146228 }
-            JToken token = await MakeJsonRequestAsync<JToken>("/", BaseUrlV1, payload, "POST");
-            return new ExchangeDepositDetails
-            {
-                Address = token["address"].ToStringInvariant(),
-                Symbol = symbol
-            };
-            */
-        }
-
-        protected override Task<ExchangeWithdrawalResponse> OnWithdrawAsync(ExchangeWithdrawalRequest withdrawalRequest)
-        {
-            throw new NotImplementedException("Huobi does not provide a withdraw API");
-        }
 
         #endregion
 

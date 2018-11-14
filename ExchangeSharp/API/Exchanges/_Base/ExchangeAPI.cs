@@ -21,20 +21,10 @@ namespace Centipede
 
         protected TimestampType TimestampType { get; set; } = TimestampType.UnixMilliseconds;
 
-        #region Protected methods
-
-        /// <summary>
-        /// 利用交易对的相关信息，控制价格。使他符合标准
-        /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
-        /// </summary>
-        #endregion Private methods
-
+  
         #region API Implementation
 
-        protected virtual Task<ExchangeDepositDetails> OnGetDepositAddressAsync(string currency, bool forceRegenerate = false) => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<ExchangeTransaction>> OnGetDepositHistoryAsync(string currency) => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
-        protected virtual Task<Dictionary<string, decimal>> OnGetFeesAsync() => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync() => throw new NotImplementedException();
         protected virtual Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order) => throw new NotImplementedException();
         protected virtual Task<ExchangeOrderResult[]> OnPlaceOrdersAsync(params ExchangeOrderRequest[] order) => throw new NotImplementedException();
@@ -42,10 +32,11 @@ namespace Centipede
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
         protected virtual Task OnCancelOrderAsync(string orderId, string marketSymbol = null) => throw new NotImplementedException();
-        protected virtual Task<ExchangeWithdrawalResponse> OnWithdrawAsync(ExchangeWithdrawalRequest withdrawalRequest) => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances) => throw new NotImplementedException();
         protected virtual Task<ExchangeMarginPositionResult> OnGetOpenPositionAsync(string marketSymbol) => throw new NotImplementedException();
         protected virtual Task<ExchangeCloseMarginPositionResult> OnCloseMarginPositionAsync(string marketSymbol) => throw new NotImplementedException();
+
+
 
         protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols) => throw new NotImplementedException();
@@ -55,6 +46,11 @@ namespace Centipede
 
         #endregion API implementation
 
+
+        /// <summary>
+        /// 利用交易对的相关信息，控制价格。使他符合标准
+        /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
+        /// </summary>
         /// <param name="marketSymbol">Market Symbol</param>
         /// <param name="outputPrice">Price</param>
         /// <returns>Clamped price</returns>
@@ -284,7 +280,7 @@ namespace Centipede
 
         #endregion
 
-        #region  trades
+        #region  trade
 
         /// <summary>
         /// Get recent trades on the exchange - the default implementation simply calls GetHistoricalTrades with a null sinceDateTime.
@@ -295,6 +291,37 @@ namespace Centipede
         public abstract  Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol, int limit);
 
         #endregion
+
+        #region depth
+
+        /// <summary>
+        /// Get exchange Depth
+        /// </summary>
+        /// <returns>Exchange order book or null if failure</returns>
+        public abstract Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount);
+
+
+        #endregion
+
+        #region candles
+
+          /// <summary>
+        /// Get candles (open, high, low, close)
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="periodSeconds">Period in seconds to get candles for. Use 60 for minute, 3600 for hour, 3600*24 for day, 3600*24*30 for month.</param>
+        /// <param name="startDate">Optional start date to get candles for</param>
+        /// <param name="endDate">Optional end date to get candles for</param>
+        /// <param name="limit">Max results, can be used instead of startDate and endDate if desired</param>
+        /// <returns>Candles</returns>
+        public abstract Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
+            DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
+
+        #endregion
+
+      
+
+
 
         /// <summary>
         /// Gets the exchange market from this exchange's SymbolsMetadata cache. This will make a network request if needed to retrieve fresh markets from the exchange using GetSymbolsMetadataAsync().
@@ -307,24 +334,6 @@ namespace Centipede
             return Symbols.FirstOrDefault(m => m.OriginSymbol == marketSymbol);
         }
 
-        /// <summary>
-        /// Get exchange Depth
-        /// </summary>
-        /// <returns>Exchange order book or null if failure</returns>
-        public abstract Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount);
-       
-
-        /// <summary>
-        /// Get candles (open, high, low, close)
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="periodSeconds">Period in seconds to get candles for. Use 60 for minute, 3600 for hour, 3600*24 for day, 3600*24*30 for month.</param>
-        /// <param name="startDate">Optional start date to get candles for</param>
-        /// <param name="endDate">Optional end date to get candles for</param>
-        /// <param name="limit">Max results, can be used instead of startDate and endDate if desired</param>
-        /// <returns>Candles</returns>
-        public abstract Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
-            DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
 
 
         /// <summary>
@@ -422,17 +431,6 @@ namespace Centipede
             await OnCancelOrderAsync(orderId, NormalizeMarketSymbol(marketSymbol));
         }
 
-        /// <summary>
-        /// Asynchronous withdraws request.
-        /// </summary>
-        /// <param name="withdrawalRequest">The withdrawal request.</param>
-        public virtual async Task<ExchangeWithdrawalResponse> WithdrawAsync(ExchangeWithdrawalRequest withdrawalRequest)
-        {
-            // *NOTE* do not wrap in CacheMethodCall
-            await new SynchronizationContextRemover();
-            withdrawalRequest.Currency = NormalizeMarketSymbol(withdrawalRequest.Currency);
-            return await OnWithdrawAsync(withdrawalRequest);
-        }
 
         /// <summary>
         /// Get margin amounts available to trade, symbol / amount dictionary
