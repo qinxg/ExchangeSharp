@@ -231,7 +231,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols)
+        public override IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params Symbol[] symbols)
         {
             /*
 {[
@@ -276,7 +276,7 @@ namespace Centipede
 
             return ConnectWebSocketOkex(async (_socket) =>
             {
-                marketSymbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", marketSymbols);
+               //todo marketSymbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", marketSymbols);
             }, (_socket, symbol, sArray, token) =>
             {
                 ExchangeDepth book = token.ParseDepthFromJTokenArrays(null, sequence: "timestamp", maxCount: maxCount); //todo:改为symbol

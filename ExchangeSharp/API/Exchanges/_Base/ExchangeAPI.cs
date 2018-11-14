@@ -40,7 +40,6 @@ namespace Centipede
 
         protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols) => throw new NotImplementedException();
-        protected virtual IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
 
@@ -500,11 +499,8 @@ namespace Centipede
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
         /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols)
-        {
-            callback.ThrowIfNull(nameof(callback), "Callback must not be null");
-            return OnGetOrderBookWebSocket(callback, maxCount, marketSymbols);
-        }
+        public abstract IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
+            params Symbol[] marketSymbols);
 
         /// <summary>
         /// Get the details of all changed orders via web socket

@@ -316,22 +316,7 @@ namespace Centipede
       [7963, 0.9162],
       [7961, 0.1],
       [7960, 12.8898],
-      [7958, 1.2],
-      [7955, 2.1009],
-      [7954, 0.4708],
-      [7953, 0.0564],
-      [7951, 2.8031],
-      [7950, 13.7785],
-      [7949, 0.125],
-      [7948, 4],
-      [7942, 0.4337],
-      [7940, 6.1612],
-      [7936, 0.02],
-      [7935, 1.3575],
-      [7933, 2.002],
-      [7932, 1.3449],
-      [7930, 10.2974],
-      [7929, 3.2226]
+      [7958, 1.2]
     ],
     "asks": [
       [7979, 0.0736],
@@ -341,23 +326,82 @@ namespace Centipede
       [7990, 1.9970],
       [7995, 0.88],
              */
-
-
             JToken obj = await MakeJsonRequestAsync<JToken>(
                 "/market/depth?symbol=" + symbol.OriginSymbol + "&type=step0", BaseUrl);
 
-            return obj["tick"].ParseDepthFromJTokenArrays(symbol: symbol, maxCount: maxCount);
+            return obj["tick"].ParseDepthFromJTokenArrays(symbol, maxCount: maxCount);
         }
 
 
+        public override IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params Symbol[] symbols)
+        {
+            return ConnectWebSocket(string.Empty, async (socket, msg) =>
+            {
+                /* {"ch":"market.btcusdt.depth.step0","ts":1526749254037,
+                    "tick":{
+                    "bids":[[8268.3,0.101],[8268.29,0.8248]],
+                    "asks":[[8275.07,0.1961],[8337.1,0.5803]],
+                    "ts":1526749254016,"version":7664175145}}
+                 */
+                var str = msg.ToStringFromUTF8Gzip();
+                JToken token = JToken.Parse(str);
 
+                if (!await OnReceivedContinue(token, socket, str))
+                    return;
+
+                var ch = token["ch"].ToStringInvariant();
+                var sArray = ch.Split('.');
+                var originSymbol =  sArray[1].ToStringInvariant();
+                var symbol = symbols.FirstOrDefault(p => p.OriginSymbol == originSymbol);
+
+                if (symbol == null) //订阅错误
+                    return;
+
+                var depth = token["tick"].ParseDepthFromJTokenArrays(symbol, maxCount: maxCount);
+                callback(depth);
+
+            }, async (socket) =>
+            {
+                if (symbols == null || symbols.Length == 0)
+                {
+                    symbols = Symbols.ToArray();
+                }
+
+                foreach (var symbol in symbols)
+                {
+                    var id = System.Threading.Interlocked.Increment(ref _webSocketId);
+                    var channel = $"market.{symbol.OriginSymbol}.depth.step0";
+                    await socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
+                    /*
+                     * {"id":"id1","status":"ok","subbed":"market.btcusdt.depth.step0","ts":1526749164133}
+                     */
+                }
+            });
+        }
 
         #endregion
+
+        private async Task<bool> OnReceivedContinue(JToken token, IWebSocket socket, string message)
+        {
+            if (token["status"] != null)
+            {
+                //todo:订阅失败
+                return false;
+            }
+
+            if (token["ping"] != null)
+            {
+                await socket.SendMessageAsync(message.Replace("ping", "pong"));
+                return false;
+            }
+
+            return true;
+        }
 
 
         #region order
 
-        
+
 
         #endregion
 
@@ -431,87 +475,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetOrderBookWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
-            params string[] marketSymbols)
-        {
-            return ConnectWebSocket(string.Empty, async (_socket, msg) =>
-            {
-                /*
-{{
-  "id": "id1",
-  "status": "ok",
-  "subbed": "market.btcusdt.depth.step0",
-  "ts": 1526749164133
-}}
-{{
-  "ch": "market.btcusdt.depth.step0",
-  "ts": 1526749254037,
-  "tick": {
-    "bids": [
-      [
-        8268.3,
-        0.101
-      ],
-      [
-        8268.29,
-        0.8248
-      ],
       
-    ],
-    "asks": [
-      [
-        8275.07,
-        0.1961
-      ],
-	  
-      [
-        8337.1,
-        0.5803
-      ]
-    ],
-    "ts": 1526749254016,
-    "version": 7664175145
-  }
-}}
-                 */
-                var str = msg.ToStringFromUTF8Gzip();
-                JToken token = JToken.Parse(str);
-
-                if (token["status"] != null)
-                {
-                    return;
-                }
-                else if (token["ping"] != null)
-                {
-                    await _socket.SendMessageAsync(str.Replace("ping", "pong"));
-                    return;
-                }
-
-                var ch = token["ch"].ToStringInvariant();
-                var sArray = ch.Split('.');
-                var marketSymbol = sArray[1].ToStringInvariant();
-                ExchangeDepth book =
-                    token["tick"].ParseDepthFromJTokenArrays(null, maxCount: maxCount); //todo:改为symbol
-
-                callback(book);
-            }, async (_socket) =>
-            {
-                if (marketSymbols == null || marketSymbols.Length == 0)
-                {
-                    marketSymbols = null; //todo (await GetMarketSymbolsAsync()).ToArray();
-                }
-
-                foreach (string symbol in marketSymbols)
-                {
-                    long id = System.Threading.Interlocked.Increment(ref _webSocketId);
-                    var normalizedSymbol = NormalizeMarketSymbol(symbol);
-                    string channel = $"market.{normalizedSymbol}.depth.step0";
-                    await _socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
-                }
-            });
-        }
-
-
         #region Private APIs
 
         private async Task<Dictionary<string, string>> OnGetAccountsAsync()

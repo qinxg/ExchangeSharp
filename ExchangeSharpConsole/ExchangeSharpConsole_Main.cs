@@ -48,6 +48,17 @@ namespace CentipedeConsole
             var depth = huobi.GetDepthAsync(symbol, 5).Result;
             Console.WriteLine(depth);
                 
+
+
+            //ws
+
+
+            var deptws = huobi.GetDepthWebSocket(d =>
+            {
+                Console.WriteLine(d);
+            }, 5, symbol);
+
+
             return CentipedeConsoleMain.ConsoleMain(args);
         }
 

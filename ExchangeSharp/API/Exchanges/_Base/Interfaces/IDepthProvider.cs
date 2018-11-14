@@ -22,9 +22,9 @@ namespace Centipede
         /// </summary>
         /// <param name="callback">Callback with the full ExchangeDepth</param>
         /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
-        /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
+        /// <param name="symbols">Market symbols or null/empty for all of them (if supported)</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params string[] marketSymbols);
+        IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params Symbol[] symbols);
 
         /// <summary>
         /// What type of web socket order book is provided

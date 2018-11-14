@@ -6,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Security;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Centipede
@@ -434,6 +433,7 @@ namespace Centipede
         /// <param name="url">The sub url for the web socket, or null for none</param>
         /// <param name="messageCallback">Callback for messages</param>
         /// <param name="connectCallback">Connect callback</param>
+        /// <param name="disconnectCallback"></param>
         /// <returns>Web socket - dispose of the wrapper to shutdown the socket</returns>
         public IWebSocket ConnectWebSocket
         (
@@ -449,7 +449,7 @@ namespace Centipede
             }
 
             string fullUrl = BaseUrlWebSocket + (url ?? string.Empty);
-            Centipede.ClientWebSocket wrapper = new Centipede.ClientWebSocket
+            ClientWebSocket wrapper = new ClientWebSocket
             {
                 Uri = new Uri(fullUrl),
                 OnBinaryMessage = messageCallback
