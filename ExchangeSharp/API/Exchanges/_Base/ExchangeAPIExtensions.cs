@@ -10,190 +10,13 @@ namespace Centipede
     /// <summary>Contains useful extension methods and parsing for the ExchangeAPI classes</summary>
     public static class ExchangeAPIExtensions
     {
-        /// <summary>
-        /// Get full order book bids and asks via web socket. This is efficient and will
-        /// only use the order book deltas (if supported by the exchange). This method deals
-        /// with the complexity of different exchanges sending order books that are full,
-        /// partial or otherwise.
-        /// </summary>
-        /// <param name="callback">Callback containing full order book</param>
-        /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this
-        /// parameter</param>
-        /// <param name="symbols">Order book symbols or null/empty for all of them (if supported)</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public static IWebSocket GetFullOrderBookWebSocket(this IDepthProvider api, Action<ExchangeDepth> callback,
-            int maxCount = 20, params string[] symbols)
-        {
-            if (api.WebSocketDepthType == WebSocketDepthType.None)
-            {
-                throw new NotSupportedException(api.GetType().Name + " does not support web socket order books");
-            }
-
-            // Notes:
-            // * Confirm with the Exchange's API docs whether the data in each event is the absolute quantity or differential quantity
-            // * Receiving an event that removes a price level that is not in your local order book can happen and is normal.
-            ConcurrentDictionary<string, ExchangeDepth> fullBooks =
-                new ConcurrentDictionary<string, ExchangeDepth>();
-            Dictionary<string, Queue<ExchangeDepth>> partialOrderBookQueues =
-                new Dictionary<string, Queue<ExchangeDepth>>();
-
-            void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues,
-                SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit)
-            {
-                foreach (ExchangeOrderPrice record in deltaValues.Values)
-                {
-                    if (record.Amount <= 0 || record.Price <= 0)
-                    {
-                        bookToEdit.Remove(record.Price);
-                    }
-                    else
-                    {
-                        bookToEdit[record.Price] = record;
-                    }
-                }
-            }
-
-            void updateOrderBook(ExchangeDepth fullOrderBook, ExchangeDepth freshBook)
-            {
-                lock (fullOrderBook)
-                {
-                    // update deltas as long as the full book is at or before the delta timestamp
-                    if (fullOrderBook.SequenceId <= freshBook.SequenceId)
-                    {
-                        applyDelta(freshBook.Asks, fullOrderBook.Asks);
-                        applyDelta(freshBook.Bids, fullOrderBook.Bids);
-                        fullOrderBook.SequenceId = freshBook.SequenceId;
-                    }
-                }
-            }
-
-            async Task innerCallback(ExchangeDepth newOrderBook)
-            {
-                // depending on the exchange, newOrderBook may be a complete or partial order book
-                // ideally all exchanges would send the full order book on first message, followed by delta order books
-                // but this is not the case
-
-                bool foundFullBook =
-                    fullBooks.TryGetValue(newOrderBook.MarketSymbol, out ExchangeDepth fullOrderBook);
-                switch (api.WebSocketDepthType)
-                {
-                    case WebSocketDepthType.DeltasOnly:
-                    {
-                        // Fetch an initial book the first time and apply deltas on top
-                        // send these exchanges scathing support tickets that they should send
-                        // the full book for the first web socket callback message
-                        Queue<ExchangeDepth> partialOrderBookQueue;
-                        bool requestFullOrderBook = false;
-
-                        // attempt to find the right queue to put the partial order book in to be processed later
-                        lock (partialOrderBookQueues)
-                        {
-                            if (!partialOrderBookQueues.TryGetValue(newOrderBook.MarketSymbol,
-                                out partialOrderBookQueue))
-                            {
-                                // no queue found, make a new one
-                                partialOrderBookQueues[newOrderBook.MarketSymbol] =
-                                    partialOrderBookQueue = new Queue<ExchangeDepth>();
-                                requestFullOrderBook = !foundFullBook;
-                            }
-
-                            // always enqueue the partial order book, they get dequeued down below
-                            partialOrderBookQueue.Enqueue(newOrderBook);
-                        }
-
-                        // request the entire order book if we need it
-                        if (requestFullOrderBook)
-                        {
-                            //fullOrderBook = await api.GetDepthAsync(newOrderBook.MarketSymbol); todo:更新对应代码
-                            fullOrderBook.MarketSymbol = newOrderBook.MarketSymbol;
-                            fullBooks[newOrderBook.MarketSymbol] = fullOrderBook;
-                        }
-                        else if (!foundFullBook)
-                        {
-                            // we got a partial book while the full order book was being requested
-                            // return out, the full order book loop will process this item in the queue
-                            return;
-                        }
-                        // else new partial book with full order book available, will get dequeued below
-
-                        // check if any old books for this symbol, if so process them first
-                        // lock dictionary of queues for lookup only
-                        lock (partialOrderBookQueues)
-                        {
-                            partialOrderBookQueues.TryGetValue(newOrderBook.MarketSymbol, out partialOrderBookQueue);
-                        }
-
-                        if (partialOrderBookQueue != null)
-                        {
-                            // lock the individual queue for processing, fifo queue
-                            lock (partialOrderBookQueue)
-                            {
-                                while (partialOrderBookQueue.Count != 0)
-                                {
-                                    updateOrderBook(fullOrderBook, partialOrderBookQueue.Dequeue());
-                                }
-                            }
-                        }
-                    }
-                        break;
-
-                    case WebSocketDepthType.FullBookFirstThenDeltas:
-                    {
-                        // First response from exchange will be the full order book.
-                        // Subsequent updates will be deltas, at least some exchanges have their heads on straight
-                        if (!foundFullBook)
-                        {
-                            fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
-                        }
-                        else
-                        {
-                            updateOrderBook(fullOrderBook, newOrderBook);
-                        }
-                    }
-                        break;
-
-                    case WebSocketDepthType.FullBookAlways:
-                    {
-                        // Websocket always returns full order book, WTF...?
-                        fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
-                    }
-                        break;
-                }
-
-                fullOrderBook.LastUpdatedUtc = CryptoUtility.UtcNow;
-                callback(fullOrderBook);
-            }
-
-            IWebSocket socket = api.GetDepthWebSocket(async (b) =>
-            {
-                try
-                {
-                    await innerCallback(b);
-                }
-                catch
-                {
-                }
-            }, maxCount, symbols);
-            socket.Connected += (s) =>
-            {
-                // when we re-connect, we must invalidate the order books, who knows how long we were disconnected
-                //  and how out of date the order books are
-                fullBooks.Clear();
-                lock (partialOrderBookQueues)
-                {
-                    partialOrderBookQueues.Clear();
-                }
-
-                return Task.CompletedTask;
-            };
-            return socket;
-        }
 
         /// <summary>
         /// Place a limit order by first querying the order book and then placing the order for a threshold below the bid or above the ask that would fully fulfill the amount.
         /// The order book is scanned until an amount of bids or asks that will fulfill the order is found and then the order is placed at the lowest bid or highest ask price multiplied
         /// by priceThreshold.
         /// </summary>
+        /// <param name="api"></param>
         /// <param name="symbol">Symbol to sell</param>
         /// <param name="amount">Amount to sell</param>
         /// <param name="isBuy">True for buy, false for sell</param>
@@ -305,27 +128,36 @@ namespace Centipede
             return result;
         }
 
+        #region market
+
+        #region depth
+
         /// <summary>Common order book parsing method, most exchanges use "asks" and "bids" with
         /// arrays of length 2 for price and amount (or amount and price)</summary>
         /// <param name="token">Token</param>
+        /// <param name="symbol"></param>
         /// <param name="asks">Asks key</param>
         /// <param name="bids">Bids key</param>
+        /// <param name="timestampType"></param>
         /// <param name="maxCount">Max count</param>
         /// <param name="sequence"></param>
         /// <returns>Order book</returns>
-        internal static ExchangeDepth ParseOrderBookFromJTokenArrays
+        internal static ExchangeDepth ParseDepthFromJTokenArrays
         (
             this JToken token,
+            Symbol symbol,
             string asks = "asks",
             string bids = "bids",
-            string sequence = "ts", TimestampType timestampType = TimestampType.None,
+            string sequence = "ts", 
+            TimestampType timestampType = TimestampType.None,
             int maxCount = 100
         )
         {
             var book = new ExchangeDepth
             {
                 SequenceId = token[sequence].ConvertInvariant<long>(),
-                LastUpdatedUtc = CryptoUtility.ParseTimestamp(token[sequence], timestampType)
+                LastUpdatedUtc = CryptoUtility.ParseTimestamp(token[sequence], timestampType),
+                Symbol = symbol
             };
 
             foreach (JArray array in token[asks])
@@ -369,7 +201,7 @@ namespace Centipede
         /// <param name="sequence">Sequence key</param>
         /// <param name="maxCount">Max count</param>
         /// <returns>Order book</returns>
-        internal static ExchangeDepth ParseOrderBookFromJTokenDictionaries
+        internal static ExchangeDepth ParseDepthFromJTokenDictionaries
         (
             this JToken token,
             string asks = "asks",
@@ -411,6 +243,9 @@ namespace Centipede
 
             return book;
         }
+
+
+        #endregion
 
         /// <summary>
         /// Parse a JToken into a ticker
@@ -605,5 +440,7 @@ namespace Centipede
 
             return candle;
         }
+
+        #endregion
     }
 }

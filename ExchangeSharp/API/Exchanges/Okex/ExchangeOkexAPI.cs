@@ -279,8 +279,7 @@ namespace Centipede
                 marketSymbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", marketSymbols);
             }, (_socket, symbol, sArray, token) =>
             {
-                ExchangeDepth book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token, sequence: "timestamp", maxCount: maxCount);
-                book.MarketSymbol = symbol;
+                ExchangeDepth book = token.ParseDepthFromJTokenArrays(null, sequence: "timestamp", maxCount: maxCount); //todo:改为symbol
                 callback(book);
                 return Task.CompletedTask;
             });
@@ -289,7 +288,7 @@ namespace Centipede
         public override async Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount)
         {
             var token = await MakeRequestOkexAsync(symbol.OriginSymbol, "/depth.do?symbol=$SYMBOL$");
-            return token.Item1.ParseOrderBookFromJTokenArrays(maxCount: maxCount);
+            return token.Item1.ParseDepthFromJTokenArrays(symbol, maxCount: maxCount);
         }
 
         //public override async Task GetHistoricalTradesAsync(Func<List<ExchangeTrade>, bool> callback, Symbol symbol , DateTime? startDate = null, DateTime? endDate = null)

@@ -62,11 +62,7 @@ namespace Centipede
         /// </summary>
         public long SequenceId { get; set; }
 
-        /// <summary>
-        /// The market symbol.  todo:这里改掉
-        /// This property is not serialized using the ToBinary and FromBinary methods.
-        /// </summary>
-        public string MarketSymbol { get; set; }
+        public Symbol Symbol { get; set; }
 
         /// <summary>The last updated UTC</summary>
         public DateTime LastUpdatedUtc { get; set; } = DateTime.MinValue;

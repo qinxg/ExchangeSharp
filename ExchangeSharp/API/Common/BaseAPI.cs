@@ -569,7 +569,7 @@ namespace Centipede
                 ["nonce"] = await GenerateNonceAsync()
             };
 
-            // todo： 这部分应该在币安的接口单独实现。而不是这样做。
+            // todo： 这部分应该在币安的接口单独实现。而不是这样做。接币安接口的时候处理
             if (RequestWindow.Ticks > 0)
             {
                 noncePayload["recvWindow"] = (long)RequestWindow.TotalMilliseconds;

@@ -12,7 +12,6 @@ namespace Centipede
     /// </summary>
     public class MarketCandle
     {
-
         /// <summary>
         /// The name of the market
         /// </summary>

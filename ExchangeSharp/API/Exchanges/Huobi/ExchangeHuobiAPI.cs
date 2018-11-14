@@ -346,7 +346,7 @@ namespace Centipede
             JToken obj = await MakeJsonRequestAsync<JToken>(
                 "/market/depth?symbol=" + symbol.OriginSymbol + "&type=step0", BaseUrl);
 
-            return obj["tick"].ParseOrderBookFromJTokenArrays(maxCount: maxCount);
+            return obj["tick"].ParseDepthFromJTokenArrays(symbol: symbol, maxCount: maxCount);
         }
 
 
@@ -354,6 +354,12 @@ namespace Centipede
 
         #endregion
 
+
+        #region order
+
+        
+
+        #endregion
 
 
         protected override IWebSocket OnGetTradesWebSocket(
@@ -409,7 +415,7 @@ namespace Centipede
                     trade.Id = id;
                     callback(new KeyValuePair<string, ExchangeTrade>(marketSymbol, trade));
                 }
-            }, async (_socket) =>
+            }, async (socket) =>
             {
                 if (marketSymbols == null || marketSymbols.Length == 0)
                 {
@@ -420,7 +426,7 @@ namespace Centipede
                 {
                     long id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     string channel = $"market.{marketSymbol}.trade.detail";
-                    await _socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
+                    await socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
                 }
             });
         }
@@ -485,8 +491,8 @@ namespace Centipede
                 var sArray = ch.Split('.');
                 var marketSymbol = sArray[1].ToStringInvariant();
                 ExchangeDepth book =
-                    ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token["tick"], maxCount: maxCount);
-                book.MarketSymbol = marketSymbol;
+                    token["tick"].ParseDepthFromJTokenArrays(null, maxCount: maxCount); //todo:改为symbol
+
                 callback(book);
             }, async (_socket) =>
             {
