@@ -38,25 +38,25 @@ namespace CentipedeConsole
 
         public static void RunGetOrderDetails(Dictionary<string, string> dict)
         {
-            RequireArgs(dict, "exchangeName", "orderId");
+            //RequireArgs(dict, "exchangeName", "orderId");
 
-            string exchangeName = dict["exchangeName"];
-            IExchangeAPI api = ExchangeAPI.GetExchangeAPI(exchangeName);
-            string orderId = dict["orderId"];
+            //string exchangeName = dict["exchangeName"];
+            //IExchangeAPI api = ExchangeAPI.GetExchangeAPI(exchangeName);
+            //string orderId = dict["orderId"];
 
-            Authenticate(api);
+            //Authenticate(api);
 
-            string marketSymbol = null;
-            if (dict.ContainsKey("marketSymbol"))
-            {
-                marketSymbol = dict["marketSymbol"];
-            }
+            //string marketSymbol = null;
+            //if (dict.ContainsKey("marketSymbol"))
+            //{
+            //    marketSymbol = dict["marketSymbol"];
+            //}
 
-            var orderDetails = api.GetOrderDetailsAsync(orderId, marketSymbol).Sync();
-            Console.WriteLine(orderDetails);
+            //var orderDetails = api.GetOrderDetailsAsync(orderId, marketSymbol).Sync();
+            //Console.WriteLine(orderDetails);
 
-            Console.Write("Press enter to exit..");
-            Console.ReadLine();
+            //Console.Write("Press enter to exit..");
+            //Console.ReadLine();
         }
 
         private static void Authenticate(IExchangeAPI api)

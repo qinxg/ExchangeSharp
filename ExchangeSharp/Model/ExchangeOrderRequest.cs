@@ -10,10 +10,8 @@ namespace Centipede
     [System.Serializable]
     public class ExchangeOrderRequest
     {
-        /// <summary>
-        /// Market symbol or pair for the order, i.e. btcusd
-        /// </summary>
-        public string MarketSymbol { get; set; }
+
+        public  Symbol Symbol { get; set; }
 
         /// <summary>
         /// Amount to buy or sell

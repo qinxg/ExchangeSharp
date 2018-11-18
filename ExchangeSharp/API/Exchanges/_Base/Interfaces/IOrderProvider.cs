@@ -19,20 +19,29 @@ namespace Centipede
         Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order);
 
         /// <summary>
-        /// Place bulk orders
+        /// 批量提交订单
         /// </summary>
         /// <param name="orders">Order requests</param>
         /// <returns>Order results, each result matches up with each order in index</returns>
-        Task<ExchangeOrderResult[]> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
+        Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
+
+
+        /// <summary>
+        /// 取消订单
+        /// Cancel an order, an exception is thrown if failure
+        /// </summary>
+        /// <param name="orderId">Order id of the order to cancel</param>
+        /// <param name="symbol">Market symbol of the order to cancel (not required for most exchanges)</param>
+        Task CancelOrderAsync(string orderId, Symbol symbol = null);
 
         /// <summary>
         /// 获取订单详情
         /// Get details of an order
         /// </summary>
         /// <param name="orderId">order id</param>
-        /// <param name="marketSymbol">Market Symbol</param>
+        /// <param name="symbol">Market Symbol</param>
         /// <returns>Order details</returns>
-        Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, string marketSymbol = null);
+        Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, Symbol symbol = null);
 
         /// <summary>
         /// 获取所有未完成的订单详情
@@ -52,36 +61,5 @@ namespace Centipede
         Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(string marketSymbol = null,
             DateTime? afterDate = null);
 
-        /// <summary>
-        /// 取消订单
-        /// Cancel an order, an exception is thrown if failure
-        /// </summary>
-        /// <param name="orderId">Order id of the order to cancel</param>
-        /// <param name="marketSymbol">Market symbol of the order to cancel (not required for most exchanges)</param>
-        Task CancelOrderAsync(string orderId, string marketSymbol = null);
-
-        /// <summary>
-        /// 获取可用于交易的保证金金额
-        /// Get margin amounts available to trade, symbol / amount dictionary
-        /// </summary>
-        /// <param name="includeZeroBalances">Include currencies with zero balance in return value</param>
-        /// <returns>Dictionary of symbols and amounts available to trade in margin account</returns>
-        Task<Dictionary<string, decimal>> GetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances = false);
-
-        /// <summary>
-        /// 获取未平仓的款项
-        /// Get open margin position
-        /// </summary>
-        /// <param name="marketSymbol">Market Symbol</param>
-        /// <returns>Open margin position result</returns>
-        Task<ExchangeMarginPositionResult> GetOpenPositionAsync(string marketSymbol);
-
-        /// <summary>
-        /// 平仓
-        /// Close a margin position
-        /// </summary>
-        /// <param name="marketSymbol">Market Symbol</param>
-        /// <returns>Close margin position result</returns>
-        Task<ExchangeCloseMarginPositionResult> CloseMarginPositionAsync(string marketSymbol);
     }
 }

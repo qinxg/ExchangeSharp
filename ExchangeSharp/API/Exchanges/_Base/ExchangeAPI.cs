@@ -17,8 +17,9 @@ namespace Centipede
         private static readonly Dictionary<string, IExchangeAPI> Apis = new Dictionary<string, IExchangeAPI>(StringComparer.OrdinalIgnoreCase);
         private bool _disposed;
 
-
-
+        /// <summary>
+        /// 时间戳类型
+        /// </summary>
         protected TimestampType TimestampType { get; set; } = TimestampType.UnixMilliseconds;
 
   
@@ -26,17 +27,8 @@ namespace Centipede
 
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync() => throw new NotImplementedException();
-        protected virtual Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order) => throw new NotImplementedException();
-        protected virtual Task<ExchangeOrderResult[]> OnPlaceOrdersAsync(params ExchangeOrderRequest[] order) => throw new NotImplementedException();
-        protected virtual Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string marketSymbol = null) => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
+       protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
-        protected virtual Task OnCancelOrderAsync(string orderId, string marketSymbol = null) => throw new NotImplementedException();
-        protected virtual Task<Dictionary<string, decimal>> OnGetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances) => throw new NotImplementedException();
-        protected virtual Task<ExchangeMarginPositionResult> OnGetOpenPositionAsync(string marketSymbol) => throw new NotImplementedException();
-        protected virtual Task<ExchangeCloseMarginPositionResult> OnCloseMarginPositionAsync(string marketSymbol) => throw new NotImplementedException();
-
-
 
         protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols) => throw new NotImplementedException();
@@ -50,26 +42,24 @@ namespace Centipede
         /// 利用交易对的相关信息，控制价格。使他符合标准
         /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
-        /// <param name="marketSymbol">Market Symbol</param>
+        /// <param name="symbol"></param>
         /// <param name="outputPrice">Price</param>
         /// <returns>Clamped price</returns>
-        protected decimal ClampOrderPrice(string marketSymbol, decimal outputPrice)
+        protected decimal ClampOrderPrice(Symbol symbol, decimal outputPrice)
         {
-            Symbol market =  GetExchangeMarketFromCacheAsync(marketSymbol);
-            return market == null ? outputPrice : CryptoUtility.ClampDecimal(market.MinPrice, market.MaxPrice, market.PriceStepSize, outputPrice);
+            return symbol == null ? outputPrice : CryptoUtility.ClampDecimal(symbol.MinPrice, symbol.MaxPrice, symbol.PriceStepSize, outputPrice);
         }
 
         /// <summary>
         /// 利用交易对的信息，控制数量。使他符合标准
         /// Clamp quantiy using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
-        /// <param name="marketSymbol">Market Symbol</param>
+        /// <param name="symbol"></param>
         /// <param name="outputQuantity">Quantity</param>
         /// <returns>Clamped quantity</returns>
-        protected decimal ClampOrderQuantity(string marketSymbol, decimal outputQuantity)
+        protected decimal ClampOrderQuantity(Symbol symbol, decimal outputQuantity)
         {
-            Symbol market =  GetExchangeMarketFromCacheAsync(marketSymbol);
-            return market == null ? outputQuantity : CryptoUtility.ClampDecimal(market.MinTradeSize, market.MaxTradeSize, market.QuantityStepSize, outputQuantity);
+            return symbol == null ? outputQuantity : CryptoUtility.ClampDecimal(symbol.MinTradeSize, symbol.MaxTradeSize, symbol.QuantityStepSize, outputQuantity);
         }
 
       
@@ -243,9 +233,7 @@ namespace Centipede
         public List<Symbol> Symbols { get; private set; } = new List<Symbol>();
 
         #endregion Other
-
-        #region REST API
-
+   
         #region  common
 
             /// <summary>
@@ -318,28 +306,58 @@ namespace Centipede
 
         #endregion
 
-      
+
+        #region order
+
+        /// <summary>
+        /// Place an order
+        /// </summary>
+        /// <param name="order">The order request</param>
+        /// <returns>Result</returns>
+        public abstract Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order);
+
+        /// <summary>
+        /// Place bulk orders
+        /// </summary>
+        /// <param name="orders">Order requests</param>f
+        /// <returns>Order results, each result matches up with each order in index</returns>
+        public virtual async Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
+        {
+            var result = new List<ExchangeOrderResult>();
+
+            foreach (var order in orders)
+            {
+                result.Add(await this.PlaceOrderAsync(order));
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Cancel an order, an exception is thrown if error
+        /// </summary>
+        /// <param name="orderId">Order id of the order to cancel</param>
+        /// <param name="marketSymbol">Symbol of order (most exchanges do not require this)</param>
+        public abstract  Task CancelOrderAsync(string orderId, Symbol marketSymbol = null);
 
 
 
         /// <summary>
-        /// Gets the exchange market from this exchange's SymbolsMetadata cache. This will make a network request if needed to retrieve fresh markets from the exchange using GetSymbolsMetadataAsync().
-        /// Please note that sending a symbol that is not found over and over will result in many network requests. Only send symbols that you are confident exist on the exchange.
+        /// Get order details
         /// </summary>
-        /// <param name="marketSymbol">The market symbol. Ex. ADA/BTC. This is assumed to be normalized and already correct for the exchange.</param>
-        /// <returns>The Symbol or null if it doesn't exist in the cache or there was an error</returns>
-        public Symbol GetExchangeMarketFromCacheAsync(string marketSymbol)
-        {
-            return Symbols.FirstOrDefault(m => m.OriginSymbol == marketSymbol);
-        }
-
+        /// <param name="orderId">Order id to get details for</param>
+        /// <param name="symbol">Symbol of order (most exchanges do not require this)</param>
+        /// <returns>Order details</returns>
+        public abstract Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, Symbol symbol = null);
 
 
         /// <summary>
         /// Get total amounts, symbol / amount dictionary
         /// </summary>
         /// <returns>Dictionary of symbols and amounts</returns>
-        public  async Task<Dictionary<string, decimal>> GetAmountsAsync()
+        public async Task<Dictionary<string, decimal>> GetAmountsAsync()
         {
             return await OnGetAmountsAsync();
         }
@@ -354,47 +372,7 @@ namespace Centipede
             return  await OnGetAmountsAvailableToTradeAsync();
         }
 
-        /// <summary>
-        /// Place an order
-        /// </summary>
-        /// <param name="order">The order request</param>
-        /// <returns>Result</returns>
-        public virtual async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
-        {
-            // *NOTE* do not wrap in CacheMethodCall
-            await new SynchronizationContextRemover();
-            order.MarketSymbol = NormalizeMarketSymbol(order.MarketSymbol);
-            return await OnPlaceOrderAsync(order);
-        }
-
-        /// <summary>
-        /// Place bulk orders
-        /// </summary>
-        /// <param name="orders">Order requests</param>f
-        /// <returns>Order results, each result matches up with each order in index</returns>
-        public virtual async Task<ExchangeOrderResult[]> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
-        {
-            // *NOTE* do not wrap in CacheMethodCall
-            await new SynchronizationContextRemover();
-            foreach (ExchangeOrderRequest request in orders)
-            {
-                request.MarketSymbol = NormalizeMarketSymbol(request.MarketSymbol);
-            }
-            return await OnPlaceOrdersAsync(orders);
-        }
-
-        /// <summary>
-        /// Get order details
-        /// </summary>
-        /// <param name="orderId">Order id to get details for</param>
-        /// <param name="marketSymbol">Symbol of order (most exchanges do not require this)</param>
-        /// <returns>Order details</returns>
-        public virtual async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, string marketSymbol = null)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return await OnGetOrderDetailsAsync(orderId, marketSymbol);
-        }
-
+ 
         /// <summary>
         /// Get the details of all open orders
         /// </summary>
@@ -418,53 +396,6 @@ namespace Centipede
             return await OnGetCompletedOrderDetailsAsync(marketSymbol, afterDate);
         }
 
-        /// <summary>
-        /// Cancel an order, an exception is thrown if error
-        /// </summary>
-        /// <param name="orderId">Order id of the order to cancel</param>
-        /// <param name="marketSymbol">Symbol of order (most exchanges do not require this)</param>
-        public virtual async Task CancelOrderAsync(string orderId, string marketSymbol = null)
-        {
-            // *NOTE* do not wrap in CacheMethodCall
-            await new SynchronizationContextRemover();
-            await OnCancelOrderAsync(orderId, NormalizeMarketSymbol(marketSymbol));
-        }
-
-
-        /// <summary>
-        /// Get margin amounts available to trade, symbol / amount dictionary
-        /// </summary>
-        /// <param name="includeZeroBalances">Include currencies with zero balance in return value</param>
-        /// <returns>Symbol / amount dictionary</returns>
-        public virtual async Task<Dictionary<string, decimal>> GetMarginAmountsAvailableToTradeAsync(bool includeZeroBalances = false)
-        {
-            return  await OnGetMarginAmountsAvailableToTradeAsync(includeZeroBalances);
-        }
-
-        /// <summary>
-        /// Get open margin position
-        /// </summary>
-        /// <param name="marketSymbol">Symbol</param>
-        /// <returns>Open margin position result</returns>
-        public virtual async Task<ExchangeMarginPositionResult> GetOpenPositionAsync(string marketSymbol)
-        {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
-            return  await OnGetOpenPositionAsync(marketSymbol);
-        }
-
-        /// <summary>
-        /// Close a margin position
-        /// </summary>
-        /// <param name="marketSymbol">Symbol</param>
-        /// <returns>Close margin position result</returns>
-        public virtual async Task<ExchangeCloseMarginPositionResult> CloseMarginPositionAsync(string marketSymbol)
-        {
-            // *NOTE* do not wrap in CacheMethodCall
-            await new SynchronizationContextRemover();
-            return await OnCloseMarginPositionAsync(NormalizeMarketSymbol(marketSymbol));
-        }
-
-        #endregion REST API
 
         #region Web Socket API
 

@@ -397,15 +397,14 @@ namespace Centipede
             return ParseAmounts(funds["free"], amounts);
         }
 
-        protected override async Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order)
+        public override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
-            payload["symbol"] = order.MarketSymbol;
+            payload["symbol"] = order.Symbol.OriginSymbol;
             payload["type"] = (order.IsBuy ? "buy" : "sell");
 
-            // Okex has strict rules on which prices and quantities are allowed. They have to match the rules defined in the market definition.
-            decimal outputQuantity =  ClampOrderQuantity(order.MarketSymbol, order.Amount);
-            decimal outputPrice =  ClampOrderPrice(order.MarketSymbol, order.Price);
+            decimal outputQuantity =  ClampOrderQuantity(order.Symbol, order.Amount);
+            decimal outputPrice =  ClampOrderPrice(order.Symbol, order.Price);
 
             if (order.OrderType == OrderType.Market)
             {
@@ -440,27 +439,21 @@ namespace Centipede
             return ParsePlaceOrder(obj, order);
         }
 
-        protected override async Task OnCancelOrderAsync(string orderId, string marketSymbol = null)
+        public override async Task CancelOrderAsync(string orderId, Symbol symbol = null)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
-            if (marketSymbol.Length == 0)
-            {
-                throw new InvalidOperationException("Okex cancel order request requires symbol");
-            }
-            payload["symbol"] = marketSymbol;
+
+            payload["symbol"] = symbol.OriginSymbol;
             payload["order_id"] = orderId;
             await MakeJsonRequestAsync<JToken>("/cancel_order.do", BaseUrl, payload, "POST");
         }
 
-        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string marketSymbol = null)
+        public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,Symbol symbol = null)
         {
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
-            if (marketSymbol.Length == 0)
-            {
-                throw new InvalidOperationException("Okex single order details request requires symbol");
-            }
-            payload["symbol"] = marketSymbol;
+        
+            payload["symbol"] = symbol.OriginSymbol;
             payload["order_id"] = orderId;
             JToken token = await MakeJsonRequestAsync<JToken>("/order_info.do", BaseUrl, payload, "POST");
             foreach (JToken order in token["orders"])
@@ -535,7 +528,7 @@ namespace Centipede
                 Price = order.Price,
                 IsBuy = order.IsBuy,
                 OrderId = token["order_id"].ToStringInvariant(),
-                MarketSymbol = order.MarketSymbol
+                MarketSymbol = order.Symbol.OriginSymbol
             };
             result.AveragePrice = result.Price;
             result.Result = ExchangeAPIOrderResult.Pending;

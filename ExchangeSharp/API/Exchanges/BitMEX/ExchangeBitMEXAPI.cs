@@ -467,7 +467,8 @@ namespace Centipede
             return orders;
         }
 
-        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string marketSymbol = null)
+        protected override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,
+            Symbol marketSymbol = null)
         {
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
@@ -481,14 +482,14 @@ namespace Centipede
             return orders[0];
         }
 
-        protected override async Task OnCancelOrderAsync(string orderId, string marketSymbol = null)
+        protected override async Task CancelOrderAsync(string orderId, string marketSymbol = null)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
             payload["orderID"] = orderId;
             JToken token = await MakeJsonRequestAsync<JToken>("/order", BaseUrl, payload, "DELETE");
         }
 
-        protected override async Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order)
+        protected override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
             AddOrderToPayload(order, payload);

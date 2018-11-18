@@ -99,7 +99,7 @@ namespace Centipede
                 OrderType = OrderType.Limit,
                 Price = CryptoUtility.RoundAmount((isBuy ? highPrice : lowPrice) * priceThreshold),
                 ShouldRoundAmount = true,
-                MarketSymbol = symbol
+                Symbol = null //todo symbol
             };
             ExchangeOrderResult result = await api.PlaceOrderAsync(request);
 
@@ -109,14 +109,15 @@ namespace Centipede
             for (; i < maxTries; i++)
             {
                 await System.Threading.Tasks.Task.Delay(500);
-                result = await api.GetOrderDetailsAsync(result.OrderId, symbol);
-                switch (result.Result)
-                {
-                    case ExchangeAPIOrderResult.Filled:
-                    case ExchangeAPIOrderResult.Canceled:
-                    case ExchangeAPIOrderResult.Error:
-                        break;
-                }
+                //TODO
+                //result = await api.GetOrderDetailsAsync(result.OrderId, symbol);
+                //switch (result.Result)
+                //{
+                //    case ExchangeAPIOrderResult.Filled:
+                //    case ExchangeAPIOrderResult.Canceled:
+                //    case ExchangeAPIOrderResult.Error:
+                //        break;
+                //}
             }
 
             if (i == maxTries)

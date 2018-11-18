@@ -147,13 +147,14 @@ namespace Centipede
                 actualBuyPrice += (actualBuyPrice * OrderPriceDifferentialPercentage);
                 if (ProductionMode)
                 {
-                    TradeInfo.ExchangeInfo.API.PlaceOrderAsync(new ExchangeOrderRequest
+                    TradeInfo.ExchangeInfo.API.PlaceOrderAsync(
+                    new ExchangeOrderRequest
                     {
                         Amount = count,
                         IsBuy = true,
                         Price = actualBuyPrice,
                         ShouldRoundAmount = false,
-                        MarketSymbol = TradeInfo.MarketSymbol
+                        Symbol = null //todo TradeInfo.MarketSymbol
                     }).Sync();
                 }
                 else
@@ -187,7 +188,7 @@ namespace Centipede
                         IsBuy = false,
                         Price = actualSellPrice,
                         ShouldRoundAmount = false,
-                        MarketSymbol = TradeInfo.MarketSymbol
+                        Symbol =  null //todo TradeInfo.MarketSymbol
                     }).Sync();
                 }
                 else

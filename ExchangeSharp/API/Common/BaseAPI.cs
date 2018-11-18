@@ -526,7 +526,8 @@ namespace Centipede
             {
                 throw new APIException("No result from server");
             }
-            else if (!(result is JArray) && result.Type == JTokenType.Object)
+
+            if (!(result is JArray) && result.Type == JTokenType.Object)
             {
                 if
                 (

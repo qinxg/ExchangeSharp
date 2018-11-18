@@ -422,7 +422,7 @@ namespace Centipede
             return lookup;
         }
 
-        protected override async Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order)
+        protected override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
         {
             string marketSymbol = NormalizeMarketSymbolV1(order.MarketSymbol);
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
@@ -452,7 +452,8 @@ namespace Centipede
             return ParseOrder(obj);
         }
 
-        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId, string marketSymbol = null)
+        protected override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,
+            Symbol marketSymbol = null)
         {
             if (string.IsNullOrWhiteSpace(orderId))
             {
@@ -514,7 +515,7 @@ namespace Centipede
             });
         }
 
-        protected override async Task OnCancelOrderAsync(string orderId, string marketSymbol = null)
+        protected override async Task CancelOrderAsync(string orderId, string marketSymbol = null)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
             payload["order_id"] = orderId.ConvertInvariant<long>();

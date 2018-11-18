@@ -6,7 +6,10 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;using Centipede;
+using System.Threading;
+using System.Threading.Tasks;
+using Centipede;
+using Newtonsoft.Json;
 
 namespace CentipedeConsole
 {
@@ -26,41 +29,65 @@ namespace CentipedeConsole
 
             huobi.Init(currencies, symbls);
 
-            //ticker
-            var tickers = huobi.GetTickersAsync().Result;
-            Console.WriteLine(tickers);
+            ////ticker
+            //var tickers = huobi.GetTickersAsync().Result;
+            //Console.WriteLine(tickers);
 
             var symbol = symbls.Get("eth", "usdt");
-            var ticker = huobi.GetTickerAsync(symbol).Result;
-            Console.WriteLine(ticker);
+            //var ticker = huobi.GetTickerAsync(symbol).Result;
+            //Console.WriteLine(ticker);
 
 
-            //trade
-            var trades = huobi.GetTradesAsync(symbol).Result;
-            Console.WriteLine(trades);
+            ////trade
+            //var trades = huobi.GetTradesAsync(symbol).Result;
+            //Console.WriteLine(trades);
 
 
-            //K线
-            var kline = huobi.GetCandlesAsync(symbol, 60).Result;
-            Console.WriteLine(kline);
+            ////K线
+            //var kline = huobi.GetCandlesAsync(symbol, 60).Result;
+            //Console.WriteLine(kline);
 
-            //depth
-            var depth = huobi.GetDepthAsync(symbol, 5).Result;
-            Console.WriteLine(depth);
-                
+            ////depth
+            //var depth = huobi.GetDepthAsync(symbol, 5).Result;
+            //Console.WriteLine(depth);
+
 
 
             //ws
-
-
-            var deptws = huobi.GetDepthWebSocket(d =>
+            Task.Run(() =>
             {
-                Console.WriteLine(d);
-            }, 5, symbol);
+                var depthws = huobi.GetDepthWebSocket(d =>
+                {
+                    var json = JsonConvert.SerializeObject(d);
+                    Console.WriteLine(json);
+                }, 5, symbol);
+            });
 
 
-            return CentipedeConsoleMain.ConsoleMain(args);
+            huobi.LoadAPIKeysUnsecure("f47cffdb-682ae30b-56b1c197-8a75c", "690fd255-e3d1b533-bec93d39-8b851");
+
+            var order = huobi.PlaceOrderAsync(new ExchangeOrderRequest
+            {
+                Amount = 0.001m,
+                Price = 0.001m,
+                IsBuy = true,
+                IsMargin = false,
+                OrderType = OrderType.Limit,
+                Symbol = symbol
+            }).Result;
+
+            Console.WriteLine(order);
+
+            huobi.CancelOrderAsync(order.OrderId).Wait();
+
+            var detail = huobi.GetOrderDetailsAsync(order.OrderId).Result;
+
+            Console.ReadKey();
+            //return CentipedeConsoleMain.ConsoleMain(args);
+
+            return 0;
         }
+
 
         private static void RequireArgs(Dictionary<string, string> dict, params string[] args)
         {

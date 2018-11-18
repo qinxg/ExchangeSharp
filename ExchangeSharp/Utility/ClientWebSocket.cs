@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -192,6 +193,9 @@ namespace Centipede
 
             // kick off message parser and message listener
             Task.Run(MessageTask);
+
+
+           //消息接受
             Task.Run(ReadTask);
         }
 
@@ -207,7 +211,7 @@ namespace Centipede
                         {
                             await action.Invoke(this);
                         }
-                        catch (Exception ex)
+                        catch (Exception ex)  //这里吃异常是为了方法继续执行，不影响队列
                         {
                             Logger.Info(ex.ToString());
                         }
@@ -223,16 +227,20 @@ namespace Centipede
                 _messageQueue.Add((Func<Task>) (async () =>
                 {
                     foreach (var action in actionsCopy.Where(a => a != null))
+                    {
                         while (!_disposed)
+                        {
                             try
                             {
                                 await action.Invoke(this);
                                 break;
                             }
-                            catch (Exception ex)
+                            catch (Exception ex) //这里吃异常是为了方法继续执行，不影响队列
                             {
                                 Logger.Info(ex.ToString());
                             }
+                        }
+                    }
                 }));
             }
         }
@@ -240,7 +248,10 @@ namespace Centipede
         private async Task InvokeConnected(IWebSocket socket)
         {
             var connected = Connected;
-            if (connected != null) await connected.Invoke(socket);
+            if (connected != null)
+            {
+                await connected.Invoke(socket);
+            }
         }
 
         private async Task InvokeDisconnected(IWebSocket socket)
@@ -249,12 +260,15 @@ namespace Centipede
             if (disconnected != null) await disconnected.Invoke(this);
         }
 
+        /// <summary>
+        /// 消息读取
+        /// </summary>
+        /// <returns></returns>
         private async Task ReadTask()
         {
             var receiveBuffer = new ArraySegment<byte>(new byte[ReceiveChunkSize]);
             var keepAlive = _webSocket.KeepAliveInterval;
             var stream = new MemoryStream();
-            WebSocketReceiveResult result;
             var wasConnected = false;
 
             while (!_disposed)
@@ -275,6 +289,7 @@ namespace Centipede
 
                     while (_webSocket.State == WebSocketState.Open)
                     {
+                        WebSocketReceiveResult result;
                         do
                         {
                             result = await _webSocket.ReceiveAsync(receiveBuffer, _cancellationToken);
@@ -318,11 +333,13 @@ namespace Centipede
                 {
                     // dont care
                 }
-                catch (Exception ex)
+                catch (Exception ex)  //这里吃异常是为了重新开始
                 {
                     // eat exceptions, most likely a result of a disconnect, either way we will re-create the web socket
                     Logger.Info(ex.ToString());
                 }
+
+                //异常后，就触发失去连接 + 重连
 
                 if (wasConnected) QueueActions(InvokeDisconnected);
                 try
@@ -352,6 +369,7 @@ namespace Centipede
                 if (_messageQueue.TryTake(out var message, 100))
                     try
                     {
+
                         if (message is Func<Task> action)
                         {
                             await action();
@@ -373,8 +391,10 @@ namespace Centipede
                     {
                         // dont care
                     }
-                    catch (Exception ex)
-                    {
+                    catch (Exception ex)   
+                    { 
+                        //这里吃异常是为了方法继续执行，不影响队列 。
+                        //前面都处理了，其实这里不需要在吃异常了
                         Logger.Info(ex.ToString());
                     }
 
@@ -457,6 +477,14 @@ namespace Centipede
                 new System.Net.WebSockets.ClientWebSocket();
 
             public WebSocketState State => _webSocket.State;
+
+
+            public ClientWebSocketImplementation()
+            {
+#if DEBUG
+                _webSocket.Options.Proxy = new WebProxy("127.0.0.1",1080);
+#endif
+            }
 
             public TimeSpan KeepAliveInterval
             {

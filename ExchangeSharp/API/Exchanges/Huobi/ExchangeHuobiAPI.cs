@@ -19,10 +19,12 @@ namespace Centipede
         {
             RequestContentType = "application/x-www-form-urlencoded";
             NonceStyle = NonceStyle.UnixMilliseconds;
+
+            //todo：这两个干掉
             MarketSymbolSeparator = string.Empty;
             MarketSymbolIsUppercase = false;
-            WebSocketDepthType = WebSocketDepthType.FullBookAlways;
 
+            WebSocketDepthType = WebSocketDepthType.FullBookAlways;
             TimestampType = TimestampType.UnixMilliseconds;
         }
 
@@ -379,7 +381,6 @@ namespace Centipede
             });
         }
 
-        #endregion
 
         private async Task<bool> OnReceivedContinue(JToken token, IWebSocket socket, string message)
         {
@@ -399,11 +400,71 @@ namespace Centipede
         }
 
 
+        #endregion
+
         #region order
 
+        /// <summary>
+        /// 提交订单
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
+        {
+            var accountId = await GetAccountId(order.IsMargin, order.Symbol.OriginSymbol);
 
+            var payload = await GetNoncePayloadAsync();
+            payload.Add("account-id", accountId);
+            payload.Add("symbol", order.Symbol.OriginSymbol);
+            payload.Add("type", order.IsBuy ? "buy" : "sell");
+            payload.Add("source", order.IsMargin ? "margin-api" : "api");
+
+            if (order.OrderType == OrderType.Market)
+            {
+                //市价买单时表示买多少钱，市价卖单时表示卖多少币
+
+                payload["type"] += "-market";
+                //这里到时候在设计下市价的情况下怎么做这个，应该一般比较少做
+                payload["amount"] = order.Amount;
+
+            }
+            else
+            {
+                //限价单表示下单数量
+                decimal outputQuantity = ClampOrderQuantity(order.Symbol, order.Amount);
+                decimal outputPrice = ClampOrderPrice(order.Symbol, order.Price);
+
+                order.Amount = outputQuantity;
+                order.Price = outputPrice;
+
+                payload["amount"] = outputQuantity.ToStringInvariant();
+                payload["type"] += "-limit";
+                payload["price"] = outputPrice.ToStringInvariant();
+            }
+
+            order.ExtraParameters.CopyTo(payload);
+
+            JToken result = await MakeJsonRequestAsync<JToken>("/order/orders/place", BaseUrlV1, payload, "POST");
+
+            return ParsePlaceOrder(result, order);
+        }
+
+        /// <summary>
+        /// 取消订单
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        public override async Task CancelOrderAsync(string orderId, Symbol symbol = null)
+        {
+            var payload = await GetNoncePayloadAsync();
+            await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", BaseUrlV1, payload, "POST");
+        }
 
         #endregion
+
+
+
 
 
         protected override IWebSocket OnGetTradesWebSocket(
@@ -552,7 +613,7 @@ namespace Centipede
         "balance": "16.467000000000000000"
       },
              */
-            var account_id = await GetAccountID();
+            var account_id = await GetAccountId();
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
             JToken token =
@@ -581,7 +642,7 @@ namespace Centipede
 
         protected override async Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync()
         {
-            var account_id = await GetAccountID();
+            var account_id = await GetAccountId();
 
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
@@ -612,30 +673,12 @@ namespace Centipede
             return amounts;
         }
 
-        protected override async Task<ExchangeOrderResult> OnGetOrderDetailsAsync(string orderId,
-            string marketSymbol = null)
+        public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,  Symbol symbol = null)
         {
             /*
-             {{
-              "status": "ok",
-              "data": {
-                "id": 3908501445,
-                "symbol": "naseth",
-                "account-id": 3274515,
-                "amount": "0.050000000000000000",
-                "price": "0.000001000000000000",
-                "created-at": 1525100546601,
-                "type": "buy-limit",
-                "field-amount": "0.0",
-                "field-cash-amount": "0.0",
-                "field-fees": "0.0",
-                "finished-at": 1525100816771,
-                "source": "api",
-                "state": "canceled",
-                "canceled-at": 1525100816399
-              }
-            }}
-             */
+            {"status":"ok","data":
+            {"id":3908501445,"symbol":"naseth","account-id":3274515,"amount":"0.050000000000000000","price":"0.000001000000000000","created-at":1525100546601,"type":"buy-limit","field-amount":"0.0","field-cash-amount":"0.0","field-fees":"0.0","finished-at":1525100816771,"source":"api","state":"canceled","canceled-at":1525100816399}}
+            */
             var payload = await GetNoncePayloadAsync();
             JToken data = await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}", BaseUrlV1, payload);
             return ParseOrder(data);
@@ -688,45 +731,7 @@ namespace Centipede
             return orders;
         }
 
-        protected override async Task<ExchangeOrderResult> OnPlaceOrderAsync(ExchangeOrderRequest order)
-        {
-            var account_id = await GetAccountID(order.IsMargin, order.MarketSymbol);
-
-            var payload = await GetNoncePayloadAsync();
-            payload.Add("account-id", account_id);
-            payload.Add("symbol", order.MarketSymbol);
-            payload.Add("type", order.IsBuy ? "buy" : "sell");
-            payload.Add("source", order.IsMargin ? "margin-api" : "api");
-
-            decimal outputQuantity = ClampOrderQuantity(order.MarketSymbol, order.Amount);
-            decimal outputPrice = ClampOrderPrice(order.MarketSymbol, order.Price);
-
-            payload["amount"] = outputQuantity.ToStringInvariant();
-
-            if (order.OrderType == OrderType.Market)
-            {
-                payload["type"] += "-market";
-            }
-            else
-            {
-                payload["type"] += "-limit";
-                payload["price"] = outputPrice.ToStringInvariant();
-            }
-
-            order.ExtraParameters.CopyTo(payload);
-
-            JToken obj = await MakeJsonRequestAsync<JToken>("/order/orders/place", BaseUrlV1, payload, "POST");
-            order.Amount = outputQuantity;
-            order.Price = outputPrice;
-            return ParsePlaceOrder(obj, order);
-        }
-
-        protected override async Task OnCancelOrderAsync(string orderId, string marketSymbol = null)
-        {
-            var payload = await GetNoncePayloadAsync();
-            await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", BaseUrlV1, payload, "POST");
-        }
-
+ 
 
         #endregion
 
@@ -758,7 +763,7 @@ namespace Centipede
                 Price = order.Price,
                 IsBuy = order.IsBuy,
                 OrderId = token.ToStringInvariant(),
-                MarketSymbol = order.MarketSymbol
+                MarketSymbol = order.Symbol.OriginSymbol
             };
             result.AveragePrice = result.Price;
             result.Result = ExchangeAPIOrderResult.Pending;
@@ -795,8 +800,7 @@ namespace Centipede
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
-                OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"]
-                    .ConvertInvariant<long>()),
+                OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"].ConvertInvariant<long>()),
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 Result = ParseState(token["state"].ToStringInvariant()),
             };
@@ -821,7 +825,8 @@ namespace Centipede
             return trades;
         }
 
-        private async Task<string> GetAccountID(bool isMargin = false, string subtype = "")
+        //todo:这个改到loadapi的地方处理  当加载api后则xxxx
+        private async Task<string> GetAccountId(bool isMargin = false, string subtype = "")
         {
             var accounts = await OnGetAccountsAsync();
             var key = "spot_";
@@ -830,8 +835,8 @@ namespace Centipede
                 key = "margin_" + subtype;
             }
 
-            var account_id = accounts[key];
-            return account_id;
+            var accountId = accounts[key];
+            return accountId;
         }
 
         #endregion
