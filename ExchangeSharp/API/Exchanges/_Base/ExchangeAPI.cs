@@ -197,7 +197,7 @@ namespace Centipede
         /// </summary>
         /// <param name="currencies"></param>
         /// <param name="symbols"></param>
-        public void Init(List<Currency> currencies, List<Symbol> symbols)
+        public void LoadInformation(List<Currency> currencies, List<Symbol> symbols)
         {
             this.Currencies = currencies;
             this.Symbols = symbols;

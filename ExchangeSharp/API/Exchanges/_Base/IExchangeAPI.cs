@@ -17,7 +17,7 @@ namespace Centipede
     {
 
         //todo：这里可以和key一样，改成load xxx之类的
-        void Init(List<Currency> currencies, List<Symbol> symbols);
+        void LoadInformation(List<Currency> currencies, List<Symbol> symbols);
 
         /// <summary>
         /// 可用币种

@@ -22,12 +22,12 @@ namespace CentipedeConsole
             var currencies = huobi.GetCurrenciesAsync().Result;
             Console.WriteLine(currencies);
 
-            huobi.Init(currencies, null);
+            huobi.LoadInformation(currencies, null);
 
             var symbls = huobi.GetSymbolsAsync().Result;
             Console.WriteLine(symbls);
 
-            huobi.Init(currencies, symbls);
+            huobi.LoadInformation(currencies, symbls);
 
             ////ticker
             //var tickers = huobi.GetTickersAsync().Result;
