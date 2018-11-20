@@ -26,10 +26,6 @@ namespace Centipede
         #region API Implementation
 
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
-        protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
-        protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
-
         #endregion API implementation
 
 
@@ -299,15 +295,7 @@ namespace Centipede
         public abstract Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders);
 
 
-        /// <summary>
-        /// Get order details
-        /// </summary>
-        /// <param name="orderId">Order id to get details for</param>
-        /// <param name="symbol">Symbol of order (most exchanges do not require this)</param>
-        /// <returns>Order details</returns>
-        public abstract Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId, Symbol symbol = null);
-
-
+ 
         /// <summary>
         /// Get total amounts, symbol / amount dictionary
         /// </summary>
@@ -327,13 +315,11 @@ namespace Centipede
         /// <summary>
         /// Get the details of all completed orders
         /// </summary>
-        /// <param name="marketSymbol">Symbol to get completed orders for or null for all</param>
+        /// <param name="symbol">Symbol to get completed orders for or null for all</param>
         /// <param name="afterDate">Only returns orders on or after the specified date/time</param>
         /// <returns>All completed order details for the specified symbol, or all if null symbol</returns>
-        public virtual async Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null)
-        {
-            return await OnGetCompletedOrderDetailsAsync(marketSymbol, afterDate);
-        }
+        public abstract  Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(Symbol symbol = null,
+            DateTime? afterDate = null);
 
 
         #region Web Socket API
@@ -365,27 +351,6 @@ namespace Centipede
         public abstract IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
             params Symbol[] marketSymbols);
 
-        /// <summary>
-        /// Get the details of all changed orders via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback)
-        {
-            callback.ThrowIfNull(nameof(callback), "Callback must not be null");
-            return OnGetOrderDetailsWebSocket(callback);
-        }
-
-        /// <summary>
-        /// Get the details of all completed orders via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback)
-        {
-            callback.ThrowIfNull(nameof(callback), "Callback must not be null");
-            return OnGetCompletedOrderDetailsWebSocket(callback);
-        }
 
         #endregion Web Socket API
     }

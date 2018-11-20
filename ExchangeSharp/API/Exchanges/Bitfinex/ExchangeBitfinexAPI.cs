@@ -470,7 +470,8 @@ namespace Centipede
             return await GetOrderDetailsInternalAsync("/orders", marketSymbol);
         }
 
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null)
+        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(
+            Symbol marketSymbol = null, DateTime? afterDate = null)
         {
             if (string.IsNullOrWhiteSpace(marketSymbol))
             {

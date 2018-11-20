@@ -810,35 +810,26 @@ namespace Centipede
 
 
 
-        public override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId, Symbol symbol = null)
+        public override async Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(
+            Symbol symbol = null, DateTime? afterDate = null)
         {
-            /*
-            {"status":"ok","data":
-            {"id":3908501445,"symbol":"naseth","account-id":3274515,"amount":"0.050000000000000000","price":"0.000001000000000000","created-at":1525100546601,"type":"buy-limit","field-amount":"0.0","field-cash-amount":"0.0","field-fees":"0.0","finished-at":1525100816771,"source":"api","state":"canceled","canceled-at":1525100816399}}
-            */
-            var payload = await GetNoncePayloadAsync();
-            JToken data = await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}", BaseUrlV1, payload);
-            return ParseOrder(data);
-        }
-
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(
-            string marketSymbol = null, DateTime? afterDate = null)
-        {
-            if (marketSymbol == null)
+            if (symbol == null)
             {
                 throw new APIException("symbol cannot be null");
             }
 
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             var payload = await GetNoncePayloadAsync();
-            payload.Add("symbol", marketSymbol);
+            payload.Add("symbol", symbol);
             payload.Add("states", "partial-canceled,filled,canceled");
+
             if (afterDate != null)
             {
                 payload.Add("start-date", afterDate.Value.ToString("yyyy-MM-dd"));
             }
 
             JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", BaseUrlV1, payload);
+
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
@@ -861,6 +852,7 @@ namespace Centipede
             payload.Add("size", "500");
 
             JToken data = await MakeJsonRequestAsync<JToken>("/v1/order/openOrders", BaseUrlV1, payload);
+
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
@@ -942,10 +934,9 @@ namespace Centipede
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
 
-                OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"]
-                    .ConvertInvariant<long>()),
+                OrderDate = token.ParseDatetime(new TimestampFormatter { TimestampType = TimestampType , TimestampKey = "created-at" }),
 
-                AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
+                AmountFilled = token["filled-amount"].ConvertInvariant<decimal>(),
                 Fees = token["filled-fees"].ConvertInvariant<decimal>(),
 
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),

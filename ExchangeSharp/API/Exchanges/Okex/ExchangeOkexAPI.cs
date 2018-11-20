@@ -432,6 +432,11 @@ namespace Centipede
             //return ParsePlaceOrder(obj, order);
         }
 
+        public override Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(Symbol symbol = null, DateTime? afterDate = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public override async Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders)
         {
             //Dictionary<string, object> payload = await GetNoncePayloadAsync();
@@ -441,23 +446,6 @@ namespace Centipede
             //await MakeJsonRequestAsync<JToken>("/cancel_order.do", BaseUrl, payload, "POST");
 
             return ;
-        }
-
-        public override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId,Symbol symbol = null)
-        {
-            List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
-            Dictionary<string, object> payload = await GetNoncePayloadAsync();
-        
-            payload["symbol"] = symbol.OriginSymbol;
-            payload["order_id"] = orderId;
-            JToken token = await MakeJsonRequestAsync<JToken>("/order_info.do", BaseUrl, payload, "POST");
-            foreach (JToken order in token["orders"])
-            {
-                orders.Add(ParseOrder(order));
-            }
-
-            // only return the first
-            return orders[0];
         }
 
         public override async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(Symbol symbol)

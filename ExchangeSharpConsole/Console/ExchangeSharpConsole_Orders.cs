@@ -26,7 +26,7 @@ namespace CentipedeConsole
                 startDate = DateTime.Parse(dict["startDate"]).ToUniversalTime();
             }
 
-            var completedOrders = api.GetCompletedOrderDetailsAsync(marketSymbol, startDate).Sync();
+            var completedOrders = api.GetCompletedOrderDetailsAsync( null /*marketSymbol*/, startDate).Sync();
             foreach (var completedOrder in completedOrders)
             {
                 Console.WriteLine(completedOrder);
