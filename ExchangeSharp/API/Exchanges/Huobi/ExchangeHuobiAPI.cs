@@ -34,7 +34,7 @@ namespace Centipede
             NonceStyle = NonceStyle.UnixMilliseconds;
 
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
-            TimestampType = TimestampType.UnixMilliseconds;
+            CurrentTimestampType = TimestampType.UnixMilliseconds;
 
             this.KeysLoaded += ExchangeHuobiAPI_KeysLoaded;
         }
@@ -283,7 +283,7 @@ namespace Centipede
                 result.TimestampFormatter = new TimestampFormatter
                 {
                     TimestampKey = "ts",
-                    TimestampType = TimestampType
+                    TimestampType = CurrentTimestampType
                 };
 
                 result.IdKey = "id";
@@ -414,7 +414,7 @@ namespace Centipede
                 TimestampFormatter = new TimestampFormatter
                 {
                     TimestampKey = "ts",
-                    TimestampType = TimestampType
+                    TimestampType = CurrentTimestampType
                 },
                 IdKey = "id",
                 DirectionIsBuyValue = "buy"
@@ -927,7 +927,7 @@ namespace Centipede
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
 
-                OrderDate = token.ParseDatetime(new TimestampFormatter { TimestampType = TimestampType , TimestampKey = "created-at" }),
+                OrderDate = token.ParseDatetime(new TimestampFormatter { TimestampType = CurrentTimestampType , TimestampKey = "created-at" }),
 
                 AmountFilled = token["filled-amount"].ConvertInvariant<decimal>(),
                 Fees = token["filled-fees"].ConvertInvariant<decimal>(),

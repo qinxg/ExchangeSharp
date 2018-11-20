@@ -20,8 +20,7 @@ namespace Centipede
         /// <summary>
         /// 时间戳类型
         /// </summary>
-        protected TimestampType TimestampType { get; set; } = TimestampType.UnixMilliseconds;
-
+        protected TimestampType CurrentTimestampType { get; set; } = TimestampType.UnixMilliseconds;
 
 
         /// <summary>
@@ -228,6 +227,16 @@ namespace Centipede
         /// <returns>Key value pair of symbol and tickers array</returns>
         public abstract Task<List<ExchangeTicker>> GetTickersAsync();
 
+        /// <summary>
+        /// Get all tickers via web socket
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        /// <param name="symbols"></param>
+        /// <returns>Web socket, call Dispose to close</returns>
+        public abstract IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols);
+
+
+
         #endregion
 
         #region  trade
@@ -240,6 +249,18 @@ namespace Centipede
         /// <returns>An enumerator that loops through all recent trades</returns>
         public abstract  Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol, int limit);
 
+
+
+        /// <summary>
+        /// Get information about trades via web socket
+        /// </summary>
+        /// <param name="callback">Callback (symbol and trade)</param>
+        /// <param name="symbols">Market Symbols</param>
+        /// <returns>Web socket, call Dispose to close</returns>
+        public abstract IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback, params Symbol[] symbols);
+
+
+
         #endregion
 
         #region depth
@@ -250,12 +271,22 @@ namespace Centipede
         /// <returns>Exchange order book or null if failure</returns>
         public abstract Task<ExchangeDepth> GetDepthAsync(Symbol symbol, int maxCount);
 
+        /// <summary>
+        /// Get delta order book bids and asks via web socket. Only the deltas are returned for each callback. To manage a full order book, use ExchangeAPIExtensions.GetDepthWebSocket.
+        /// </summary>
+        /// <param name="callback">Callback of symbol, order book</param>
+        /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
+        /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
+        /// <returns>Web socket, call Dispose to close</returns>
+        public abstract IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
+            params Symbol[] marketSymbols);
+
 
         #endregion
 
         #region candles
 
-          /// <summary>
+        /// <summary>
         /// Get candles (open, high, low, close)
         /// </summary>
         /// <param name="symbol"></param>
@@ -281,22 +312,12 @@ namespace Centipede
         /// <returns>Result</returns>
         public abstract Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
 
-        #endregion
 
         /// <summary>
         /// Cancel an order, an exception is thrown if error
         /// </summary>
         /// <param name="orders"></param>
         public abstract Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders);
-
-
-
-        /// <summary>
-        /// Get total amounts, symbol / amount dictionary
-        /// </summary>
-        /// <returns>Dictionary of symbols and amounts</returns>
-        public abstract Task<List<ExchangeFinance>> GetFinanceAsync();
-
 
         /// <summary>
         /// Get the details of all open orders
@@ -310,40 +331,21 @@ namespace Centipede
         /// <param name="symbol">Symbol to get completed orders for or null for all</param>
         /// <param name="afterDate">Only returns orders on or after the specified date/time</param>
         /// <returns>All completed order details for the specified symbol, or all if null symbol</returns>
-        public abstract  Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(Symbol symbol = null,
+        public abstract Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(Symbol symbol = null,
             DateTime? afterDate = null);
 
+        #endregion
 
-        #region Web Socket API
 
-        /// <summary>
-        /// Get all tickers via web socket
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        /// <param name="symbols"></param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public abstract IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols);
-
+        #region account
 
         /// <summary>
-        /// Get information about trades via web socket
+        /// Get total amounts, symbol / amount dictionary
         /// </summary>
-        /// <param name="callback">Callback (symbol and trade)</param>
-        /// <param name="symbols">Market Symbols</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public abstract IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback, params Symbol[] symbols);
+        /// <returns>Dictionary of symbols and amounts</returns>
+        public abstract Task<List<ExchangeFinance>> GetFinanceAsync();
+        
 
-        /// <summary>
-        /// Get delta order book bids and asks via web socket. Only the deltas are returned for each callback. To manage a full order book, use ExchangeAPIExtensions.GetDepthWebSocket.
-        /// </summary>
-        /// <param name="callback">Callback of symbol, order book</param>
-        /// <param name="maxCount">Max count of bids and asks - not all exchanges will honor this parameter</param>
-        /// <param name="marketSymbols">Market symbols or null/empty for all of them (if supported)</param>
-        /// <returns>Web socket, call Dispose to close</returns>
-        public abstract IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
-            params Symbol[] marketSymbols);
-
-
-        #endregion Web Socket API
+        #endregion
     }
 }

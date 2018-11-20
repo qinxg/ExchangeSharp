@@ -297,7 +297,7 @@ namespace Centipede
         //    foreach (JToken trade in trades.Item1)
         //    {
         //        // [ { "date": "1367130137", "date_ms": "1367130137000", "price": 787.71, "amount": 0.003, "tid": "230433", "type": "sell" } ]
-        //        allTrades.Add(trade.ParseTrade("amount", "price", "type", "date_ms", TimestampType.UnixMilliseconds, "tid"));
+        //        allTrades.Add(trade.ParseTrade("amount", "price", "type", "date_ms", CurrentTimestampType.UnixMilliseconds, "tid"));
         //    }
         //    callback(allTrades);
         //}
@@ -334,7 +334,7 @@ namespace Centipede
             foreach (JArray token in obj)
             {
                 //todo:这里转换方案好像有问题了，不一定能支持的了，不行就改为object
-               // candles.Add(token.ParseCandle(symbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5));
+               // candles.Add(token.ParseCandle(symbol, periodSeconds, 1, 2, 3, 4, 0, CurrentTimestampType.UnixMilliseconds, 5));
             }
             return candles;
         }
@@ -478,13 +478,13 @@ namespace Centipede
         //private ExchangeTicker ParseTicker(string symbol, JToken data)
         //{
         //    //{"date":"1518043621","ticker":{"high":"0.01878000","vol":"1911074.97335534","last":"0.01817627","low":"0.01813515","buy":"0.01817626","sell":"0.01823447"}}
-        //    return this.ParseTicker(data["ticker"], symbol, "sell", "buy", "last", "vol", null, "date", TimestampType.UnixSeconds);
+        //    return this.ParseTicker(data["ticker"], symbol, "sell", "buy", "last", "vol", null, "date", CurrentTimestampType.UnixSeconds);
         //}
 
         //private ExchangeTicker ParseTickerV2(string symbol, JToken ticker)
         //{
         //    // {"buy":"0.00001273","change":"-0.00000009","changePercentage":"-0.70%","close":"0.00001273","createdDate":1527355333053,"currencyId":535,"dayHigh":"0.00001410","dayLow":"0.00001174","high":"0.00001410","inflows":"19.52673814","last":"0.00001273","low":"0.00001174","marketFrom":635,"name":{},"open":"0.00001282","outflows":"52.53715678","productId":535,"sell":"0.00001284","symbol":"you_btc","volume":"5643177.15601228"}
-        //    return this.ParseTicker(ticker, symbol, "sell", "buy", "last", "volume", null, "createdDate", TimestampType.UnixMilliseconds);
+        //    return this.ParseTicker(ticker, symbol, "sell", "buy", "last", "volume", null, "createdDate", CurrentTimestampType.UnixMilliseconds);
         //}
 
         private Dictionary<string, decimal> ParseAmounts(JToken token, Dictionary<string, decimal> amounts)
