@@ -42,12 +42,14 @@ namespace Centipede
 
 
         /// <summary>
+        /// 计价货币数量
         /// Amount in units of the QuoteCurrency - will equal BaseCurrencyVolume if exchange doesn't break it out by price unit and quantity unit
         /// In BTC-USD, this would be USD volume
         /// </summary>
         public decimal QuoteCurrencyVolume { get; set; }
 
         /// <summary>
+        /// 基础货币数量
         /// Base currency amount (this many units total)
         /// In BTC-USD this would be BTC volume
         /// </summary>

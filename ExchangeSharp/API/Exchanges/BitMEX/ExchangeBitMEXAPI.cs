@@ -199,7 +199,7 @@ namespace Centipede
             return markets;
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        protected override IWebSocket GetTradesWebSocket(Action<ExchangeTrade> callback, params Symbol[] symbols)
         {
             /*
 {"table":"trade","action":"partial","keys":[],
@@ -230,11 +230,11 @@ namespace Centipede
                 return Task.CompletedTask;
             }, async (_socket) =>
             {
-                if (marketSymbols == null || marketSymbols.Length == 0)
+                if (symbols == null || symbols.Length == 0)
                 {
-                    marketSymbols = (await GetMarketSymbolsAsync()).ToArray();
+                    symbols = (await GetMarketSymbolsAsync()).ToArray();
                 }
-                await _socket.SendMessageAsync(new { op = "subscribe", args = marketSymbols.Select(s => "\"trade:" + this.NormalizeMarketSymbol(s) + "\"").ToArray() });
+                await _socket.SendMessageAsync(new { op = "subscribe", args = symbols.Select(s => "\"trade:" + this.NormalizeMarketSymbol(s) + "\"").ToArray() });
             });
         }
 

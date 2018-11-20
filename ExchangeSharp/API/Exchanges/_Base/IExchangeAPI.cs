@@ -15,19 +15,6 @@ namespace Centipede
         IDisposable
 
     {
-        #region Utility Methods
-
-        //TODO:干掉
-        /// <summary>
-        /// 格式化交易对编码
-        /// 把传入的编码格式化成当前交易所的编码
-        /// </summary>
-        /// <param name="marketSymbol">Symbol</param>
-        /// <returns>Normalized symbol</returns>
-        string NormalizeMarketSymbol(string marketSymbol);
-
-
-        #endregion Utility Methods
 
         //todo：这里可以和key一样，改成load xxx之类的
         void Init(List<Currency> currencies, List<Symbol> symbols);

@@ -48,7 +48,6 @@ namespace Centipede
                     throw new ArgumentException("Missing required parameter", nameof(Url));
                 }
 
-                MarketSymbol = api.NormalizeMarketSymbol(MarketSymbol);
                 string url;
                 Url = Url.Replace("[marketSymbol]", MarketSymbol);
                 List<ExchangeTrade> trades = new List<ExchangeTrade>();

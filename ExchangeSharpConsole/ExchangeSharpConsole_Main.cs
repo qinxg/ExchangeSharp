@@ -56,31 +56,41 @@ namespace CentipedeConsole
             //ws
             Task.Run(() =>
             {
-                var depthws = huobi.GetDepthWebSocket(d =>
+                huobi.GetDepthWebSocket(d =>
                 {
-                    var json = JsonConvert.SerializeObject(d);
-                    Console.WriteLine(json);
+                    //var json = JsonConvert.SerializeObject(d);
+                    //Console.WriteLine(json);
                 }, 5, symbol);
             });
 
-
-            huobi.LoadAPIKeysUnsecure("f47cffdb-682ae30b-56b1c197-8a75c", "690fd255-e3d1b533-bec93d39-8b851");
-
-            var order = huobi.PlaceOrderAsync(new ExchangeOrderRequest
+            Task.Run(() =>
             {
-                Amount = 0.001m,
-                Price = 0.001m,
-                IsBuy = true,
-                IsMargin = false,
-                OrderType = OrderType.Limit,
-                Symbol = symbol
-            }).Result;
+                huobi.GetTickerWebSocket(d =>
+                    {
+                        var json = JsonConvert.SerializeObject(d);
+                        Console.WriteLine(json);
+                    }, symbol
+                );
+            });
 
-            Console.WriteLine(order);
 
-            huobi.CancelOrderAsync(order.OrderId).Wait();
+            //huobi.LoadAPIKeysUnsecure("f47cffdb-682ae30b-56b1c197-8a75c", "690fd255-e3d1b533-bec93d39-8b851");
 
-            var detail = huobi.GetOrderDetailsAsync(order.OrderId).Result;
+            //var order = huobi.PlaceOrderAsync(new ExchangeOrderRequest
+            //{
+            //    Amount = 0.001m,
+            //    Price = 0.001m,
+            //    IsBuy = true,
+            //    IsMargin = false,
+            //    OrderType = OrderType.Limit,
+            //    Symbol = symbol
+            //}).Result;
+
+            //Console.WriteLine(order);
+
+            //huobi.CancelOrderAsync(order.OrderId).Wait();
+
+            //var detail = huobi.GetOrderDetailsAsync(order.OrderId).Result;
 
             Console.ReadKey();
             //return CentipedeConsoleMain.ConsoleMain(args);

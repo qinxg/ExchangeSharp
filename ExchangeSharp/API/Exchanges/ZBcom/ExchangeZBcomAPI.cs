@@ -118,7 +118,7 @@ namespace Centipede
             return tickers;
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        protected override IWebSocket GetTradesWebSocket(Action<ExchangeTrade> callback, params Symbol[] symbols)
         {
             return ConnectWebSocket(string.Empty, (_socket, msg) =>
             {
@@ -139,7 +139,7 @@ namespace Centipede
 
             }, async (_socket) =>
             {
-                foreach (var marketSymbol in marketSymbols)
+                foreach (var marketSymbol in symbols)
                 {
                     string normalizedSymbol = NormalizeSymbolWebsocket(marketSymbol);
                     await _socket.SendMessageAsync(new { @event = "addChannel", channel = normalizedSymbol + "_trades" });

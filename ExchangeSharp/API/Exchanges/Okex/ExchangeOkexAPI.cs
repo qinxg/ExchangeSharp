@@ -77,7 +77,6 @@ namespace Centipede
 
         private async Task<Tuple<JToken, string>> MakeRequestOkexAsync(string marketSymbol, string subUrl, string baseUrl = null)
         {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
             JToken obj = await MakeJsonRequestAsync<JToken>(subUrl.Replace("$SYMBOL$", marketSymbol ?? string.Empty), baseUrl);
             return new Tuple<JToken, string>(obj, marketSymbol);
         }
@@ -172,7 +171,7 @@ namespace Centipede
             throw new NotImplementedException();
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        public override IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback, params Symbol[] symbols)
         {
             /*
             {[
@@ -217,18 +216,20 @@ namespace Centipede
             ]}
             */
 
-            return ConnectWebSocketOkex(async (_socket) =>
-            {
-                marketSymbols = await AddMarketSymbolsToChannel(_socket, "ok_sub_spot_{0}_deals", marketSymbols);
-            }, (_socket, symbol, sArray, token) =>
-            {
-                List<ExchangeTrade> trades = ParseTradesWebSocket(token);
-                foreach (var trade in trades)
-                {
-                    callback(new KeyValuePair<string, ExchangeTrade>(symbol, trade));
-                }
-                return Task.CompletedTask;
-            });
+            //return ConnectWebSocketOkex(async (_socket) =>
+            //{
+            //    symbols = await AddMarketSymbolsToChannel(_socket, "ok_sub_spot_{0}_deals", symbols);
+            //}, (_socket, symbol, sArray, token) =>
+            //{
+            //    List<ExchangeTrade> trades = ParseTradesWebSocket(token);
+            //    foreach (var trade in trades)
+            //    {
+            //        callback(new KeyValuePair<string, ExchangeTrade>(symbol, trade));
+            //    }
+            //    return Task.CompletedTask;
+            //});
+
+            return null;
         }
 
         public override IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params Symbol[] symbols)
@@ -276,7 +277,7 @@ namespace Centipede
 
             return ConnectWebSocketOkex(async (_socket) =>
             {
-               //todo marketSymbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", marketSymbols);
+               //todo symbols = await AddMarketSymbolsToChannel(_socket, $"ok_sub_spot_{{0}}_depth_{maxCount}", symbols);
             }, (_socket, symbol, sArray, token) =>
             {
                 ExchangeDepth book = token.ParseDepthFromJTokenArrays(null, sequence: "timestamp", maxCount: maxCount); //todo:改为symbol
@@ -481,6 +482,12 @@ namespace Centipede
 
             return orders;
         }
+
+        public override IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Private Functions
@@ -667,21 +674,23 @@ namespace Centipede
 
         private async Task<string[]> AddMarketSymbolsToChannel(IWebSocket socket, string channelFormat, string[] marketSymbols, bool useJustFirstSymbol = false)
         {
-            if (marketSymbols == null || marketSymbols.Length == 0)
-            {
-                marketSymbols = null; //todo (await GetMarketSymbolsAsync()).ToArray();
-            }
-            foreach (string marketSymbol in marketSymbols)
-            {
-                string normalizedSymbol = NormalizeMarketSymbol(marketSymbol);
-                if (useJustFirstSymbol)
-                {
-                    normalizedSymbol = normalizedSymbol.Substring(0, normalizedSymbol.IndexOf(MarketSymbolSeparator[0]));
-                }
-                string channel = string.Format(channelFormat, normalizedSymbol);
-                await socket.SendMessageAsync(new { @event = "addChannel", channel });
-            }
-            return marketSymbols;
+            //if (marketSymbols == null || marketSymbols.Length == 0)
+            //{
+            //    marketSymbols = null; //todo (await GetMarketSymbolsAsync()).ToArray();
+            //}
+            //foreach (string marketSymbol in marketSymbols)
+            //{
+            //    string normalizedSymbol = NormalizeMarketSymbol(marketSymbol);
+            //    if (useJustFirstSymbol)
+            //    {
+            //        normalizedSymbol = normalizedSymbol.Substring(0, normalizedSymbol.IndexOf(MarketSymbolSeparator[0]));
+            //    }
+            //    string channel = string.Format(channelFormat, normalizedSymbol);
+            //    await socket.SendMessageAsync(new { @event = "addChannel", channel });
+            //}
+            //return marketSymbols;
+
+            return null;
         }
 
         #endregion

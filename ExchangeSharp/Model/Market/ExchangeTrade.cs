@@ -18,6 +18,9 @@ namespace Centipede
         /// </summary>
         public DateTime Timestamp { get; set; }
 
+
+        public Symbol Symbol { get; set; }
+
         /// <summary>
         /// Trade id
         /// </summary>

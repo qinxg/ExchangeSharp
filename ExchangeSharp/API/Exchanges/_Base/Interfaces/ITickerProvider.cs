@@ -25,14 +25,12 @@ namespace Centipede
 
 
         /// <summary>
-        /// 所有行情数据
-        /// Get all tickers via web socket
+        /// 所有指定交易对行情数据
         /// </summary>
         /// <param name="callback">Callback</param>
         /// <param name="symbols">Symbols. If no symbols are specified, this will get the tickers for all symbols. NOTE: Some exchanges don't allow you to specify which symbols to return.</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> callback,
-            params string[] symbols);
+        IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols);
 
     }
 }

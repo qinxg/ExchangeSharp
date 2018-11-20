@@ -237,7 +237,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        protected override IWebSocket GetTradesWebSocket(Action<ExchangeTrade> callback, params Symbol[] symbols)
         {
             Dictionary<int, string> channelIdToSymbol = new Dictionary<int, string>();
             return ConnectWebSocket("/2", (_socket, msg) => //use websocket V2 (beta, but millisecond timestamp)
@@ -279,7 +279,7 @@ namespace Centipede
                 return Task.CompletedTask;
             }, async (_socket) =>
             {
-                foreach (var marketSymbol in marketSymbols)
+                foreach (var marketSymbol in symbols)
                 {
                     await _socket.SendMessageAsync(new { @event = "subscribe", channel = "trades", symbol = marketSymbol });
                 }

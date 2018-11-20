@@ -10,7 +10,7 @@ namespace Centipede
     public interface ITradeProvider
     {
         /// <summary>
-        /// 最后交易情况
+        /// 交易数据
         /// Get the latest trades
         /// </summary>
         /// <param name="symbol"></param>
@@ -24,11 +24,9 @@ namespace Centipede
         /// Get information about trades via web socket
         /// </summary>
         /// <param name="callback">Callback (symbol and trade)</param>
-        /// <param name="marketSymbols">Market symbols</param>
+        /// <param name="symbols">Market symbols</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        IWebSocket GetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback,
-            params string[] marketSymbols);
-
+        IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback, params Symbol[] symbols);
 
     }
 }

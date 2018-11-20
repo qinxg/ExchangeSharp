@@ -224,7 +224,7 @@ namespace Centipede
             });
         }
 
-        protected override IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
+        protected override IWebSocket GetTradesWebSocket(Action<ExchangeTrade> callback, params Symbol[] symbols)
         {
             /*
             {
@@ -242,11 +242,11 @@ namespace Centipede
             }
             */
 
-            if (marketSymbols == null || marketSymbols.Length == 0)
+            if (symbols == null || symbols.Length == 0)
             {
-                marketSymbols = GetMarketSymbolsAsync().Sync().ToArray();
+                symbols = GetMarketSymbolsAsync().Sync().ToArray();
             }
-            string url = GetWebSocketStreamUrlForSymbols("@trade", marketSymbols);
+            string url = GetWebSocketStreamUrlForSymbols("@trade", symbols);
             return ConnectWebSocket(url, (_socket, msg) =>
             {
                 JToken token = JToken.Parse(msg.ToStringFromUTF8());

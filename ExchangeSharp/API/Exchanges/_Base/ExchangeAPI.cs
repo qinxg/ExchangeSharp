@@ -27,11 +27,8 @@ namespace Centipede
 
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync() => throw new NotImplementedException();
-       protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
+        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
-
-        protected virtual IWebSocket OnGetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> tickers, params string[] marketSymbols) => throw new NotImplementedException();
-        protected virtual IWebSocket OnGetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
 
@@ -195,29 +192,6 @@ namespace Centipede
             }
         }
 
-
-        /// <summary>
-        /// Normalize an exchange specific symbol. The symbol should already be in the correct order,
-        /// this method just deals with casing and putting in the right separator.
-        /// </summary>
-        /// <param name="marketSymbol">Symbol</param>
-        /// <returns>Normalized symbol</returns>
-        public virtual string NormalizeMarketSymbol(string marketSymbol)
-        {
-            marketSymbol = (marketSymbol ?? string.Empty).Trim();
-            marketSymbol = marketSymbol.Replace("-", MarketSymbolSeparator)
-                .Replace("/", MarketSymbolSeparator)
-                .Replace("_", MarketSymbolSeparator)
-                .Replace(" ", MarketSymbolSeparator)
-                .Replace(":", MarketSymbolSeparator);
-            if (MarketSymbolIsUppercase)
-            {
-                return marketSymbol.ToUpperInvariant();
-            }
-            return marketSymbol.ToLowerInvariant();
-        }
-
-
         /// <summary>
         /// 初始化，设置币种和币对信息
         /// </summary>
@@ -306,7 +280,6 @@ namespace Centipede
 
         #endregion
 
-
         #region order
 
         /// <summary>
@@ -380,7 +353,6 @@ namespace Centipede
         /// <returns>All open order details</returns>
         public virtual async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(string marketSymbol = null)
         {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
             return await OnGetOpenOrderDetailsAsync(marketSymbol);
         }
 
@@ -392,7 +364,6 @@ namespace Centipede
         /// <returns>All completed order details for the specified symbol, or all if null symbol</returns>
         public virtual async Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null)
         {
-            marketSymbol = NormalizeMarketSymbol(marketSymbol);
             return await OnGetCompletedOrderDetailsAsync(marketSymbol, afterDate);
         }
 
@@ -405,23 +376,16 @@ namespace Centipede
         /// <param name="callback">Callback</param>
         /// <param name="symbols"></param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetTickersWebSocket(Action<IReadOnlyCollection<KeyValuePair<string, ExchangeTicker>>> callback, params string[] symbols)
-        {
-            callback.ThrowIfNull(nameof(callback), "Callback must not be null");
-            return OnGetTickersWebSocket(callback, symbols);
-        }
+        public abstract IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols);
+
 
         /// <summary>
         /// Get information about trades via web socket
         /// </summary>
         /// <param name="callback">Callback (symbol and trade)</param>
-        /// <param name="marketSymbols">Market Symbols</param>
+        /// <param name="symbols">Market Symbols</param>
         /// <returns>Web socket, call Dispose to close</returns>
-        public virtual IWebSocket GetTradesWebSocket(Action<KeyValuePair<string, ExchangeTrade>> callback, params string[] marketSymbols)
-        {
-            callback.ThrowIfNull(nameof(callback), "Callback must not be null");
-            return OnGetTradesWebSocket(callback, marketSymbols);
-        }
+        public abstract IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback, params Symbol[] symbols);
 
         /// <summary>
         /// Get delta order book bids and asks via web socket. Only the deltas are returned for each callback. To manage a full order book, use ExchangeAPIExtensions.GetDepthWebSocket.

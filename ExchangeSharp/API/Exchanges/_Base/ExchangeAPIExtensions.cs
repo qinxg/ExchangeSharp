@@ -338,11 +338,14 @@ namespace Centipede
         /// <param name="idKey">Id key</param>
         /// <param name="typeKeyIsBuyValue">Type key buy value</param>
         /// <returns>Trade</returns>
-        internal static ExchangeTrade ParseTrade(this JToken token, object amountKey, object priceKey, object typeKey,
+        internal static ExchangeTrade ParseTrade(this JToken token, Symbol symbol, object amountKey, object priceKey,
+            object typeKey,
             object timestampKey, TimestampType timestampType, object idKey = null, string typeKeyIsBuyValue = "buy")
         {
             ExchangeTrade trade = new ExchangeTrade
             {
+                Symbol = symbol,
+
                 Amount = token[amountKey].ConvertInvariant<decimal>(),
                 Price = token[priceKey].ConvertInvariant<decimal>(),
                 IsBuy = (token[typeKey].ToStringInvariant().EqualsWithOption(typeKeyIsBuyValue)),
