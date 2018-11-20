@@ -35,9 +35,6 @@ The following cryptocurrency exchanges are supported:
 | Yobit            | x         | x           |           |
 | ZB.com           | wip       |             | R         |
 
-The following cryptocurrency services are supported:
-- Cryptowatch (partial)
-
 ### Notes
 ExchangeSharp uses 'marketSymbol' to refer to markets, or pairs of currencies.
 
