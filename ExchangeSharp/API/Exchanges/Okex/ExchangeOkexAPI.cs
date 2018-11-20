@@ -460,12 +460,12 @@ namespace Centipede
             return orders[0];
         }
 
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol)
+        public override async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(Symbol symbol)
         {
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
 
-            payload["symbol"] = marketSymbol;
+            payload["symbol"] = symbol.OriginSymbol;
             // if order_id is -1, then return all unfilled orders, otherwise return the order specified
             payload["order_id"] = -1;
             JToken token = await MakeJsonRequestAsync<JToken>("/order_info.do", BaseUrl, payload, "POST");
@@ -531,7 +531,6 @@ namespace Centipede
                 OrderId = token["order_id"].ToStringInvariant(),
                 Symbol = order.Symbol.OriginSymbol
             };
-            result.AveragePrice = result.Price;
             result.Result = ExchangeAPIOrderResult.Pending;
 
             return result;
@@ -583,7 +582,6 @@ namespace Centipede
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 AmountFilled = token["deal_amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
-                AveragePrice = token["avg_price"].ConvertInvariant<decimal>(),
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["create_date"].ConvertInvariant<long>()),
                 OrderId = token["order_id"].ToStringInvariant(),
