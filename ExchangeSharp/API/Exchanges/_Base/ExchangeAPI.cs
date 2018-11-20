@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Centipede
@@ -23,9 +21,12 @@ namespace Centipede
         protected TimestampType CurrentTimestampType { get; set; } = TimestampType.UnixMilliseconds;
 
 
+        #region 控制下单价格   
+
+        //未来移植到交易模块里面去
+
         /// <summary>
         /// 利用交易对的相关信息，控制价格。使他符合标准
-        /// Clamp price using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="outputPrice">Price</param>
@@ -37,7 +38,6 @@ namespace Centipede
 
         /// <summary>
         /// 利用交易对的信息，控制数量。使他符合标准
-        /// Clamp quantiy using market info. If necessary, a network request will be made to retrieve symbol metadata.
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="outputQuantity">Quantity</param>
@@ -46,6 +46,8 @@ namespace Centipede
         {
             return symbol == null ? outputQuantity : CryptoUtility.ClampDecimal(symbol.MinTradeSize, symbol.MaxTradeSize, symbol.QuantityStepSize, outputQuantity);
         }
+
+        #endregion
 
       
         /// <summary>
@@ -75,12 +77,6 @@ namespace Centipede
                         continue;
 
                     Apis[api.Name] = null;
-                }
-
-                // in case derived class is accessed first, check for existance of key
-                if (!ExchangeGlobalCurrencyReplacements.ContainsKey(type))
-                {
-                    ExchangeGlobalCurrencyReplacements[type] = new KeyValuePair<string, string>[0];
                 }
             }
         }
@@ -335,7 +331,6 @@ namespace Centipede
             DateTime? afterDate = null);
 
         #endregion
-
 
         #region account
 

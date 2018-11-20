@@ -35,7 +35,8 @@ namespace Centipede
         ///     fulfill the order.
         /// </param>
         /// <returns>Order result</returns>
-        public static async Task<List<ExchangeOrderResult>> PlaceSafeMarketOrderAsync(this ExchangeAPI api, string symbol,
+        public static async Task<List<ExchangeOrderResult>> PlaceSafeMarketOrderAsync(
+            this ExchangeAPI api, string symbol,
             decimal amount, bool isBuy, int orderBookCount = 100, decimal priceThreshold = 0.9m,
             decimal thresholdToAbort = 0.75m, bool abortIfOrderBookTooSmall = false)
         {
@@ -220,10 +221,6 @@ namespace Centipede
 
         #endregion
 
-
-
-       
-
         /// <summary>
         ///     Parse a JToken into a ticker
         /// </summary>
@@ -331,8 +328,8 @@ namespace Centipede
         /// <param name="last">Last volume value</param>
         /// <param name="baseCurrencyVolume">Receive base currency volume</param>
         /// <param name="quoteCurrencyVolume">Receive quote currency volume</param>
-        internal static void ParseVolumes(this JToken token,
-            VolumeFormatter formatter, decimal last, out decimal baseCurrencyVolume, out decimal quoteCurrencyVolume)
+        internal static void ParseVolumes(this JToken token,VolumeFormatter formatter, decimal last, 
+            out decimal baseCurrencyVolume, out decimal quoteCurrencyVolume)
         {
             // parse out volumes, handle cases where one or both do not exist
             if (formatter.BaseVolumeKey == null)

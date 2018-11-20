@@ -233,7 +233,6 @@ namespace Centipede
             _requestMaker = new APIRequestMaker(this);
 
             var nameAttribute = (ExchangeMetaAttribute) GetType().GetCustomAttribute(typeof(ExchangeMetaAttribute), true);
-
             if (nameAttribute != null)
             {
                 Name = nameAttribute.Name;
@@ -248,8 +247,6 @@ namespace Centipede
         {
             await new SynchronizationContextRemover();
             
-
-            //这句话是什么意思？
             if (NonceOffset.Ticks == 0)
             {
                 await OnGetNonceOffset();
@@ -348,7 +345,7 @@ namespace Centipede
                             throw new InvalidOperationException("Invalid nonce style: " + NonceStyle);
                     }
 
-                    // 检查是否重复
+                    // 检查是否重复，有些场景给的随机数不能重复
                     decimal convertedNonce = nonce.ConvertInvariant<decimal>();
                     if (_lastNonce != convertedNonce || NonceStyle == NonceStyle.ExpiresUnixSeconds || NonceStyle == NonceStyle.ExpiresUnixMilliseconds)
                     {
@@ -574,7 +571,7 @@ namespace Centipede
                 ["nonce"] = await GenerateNonceAsync()
             };
 
-            // todo： 这部分应该在币安的接口单独实现。而不是这样做。接币安接口的时候处理
+            // 这部分应该在币安的接口单独实现。而不是这样做。接币安接口的时候处理
             if (RequestWindow.Ticks > 0)
             {
                 noncePayload["recvWindow"] = (long)RequestWindow.TotalMilliseconds;
@@ -604,10 +601,8 @@ namespace Centipede
     }
 
 
-    //todo:看要不要干掉直接赋值到name更合适
     /// <summary>
-    /// Normally a BaseAPI class attempts to get the Name from the class name.
-    /// If there is a problem, apply this attribute to a BaseAPI subclass to populate the Name property with the attribute name.
+    /// 交易所的元数据属性
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class ExchangeMetaAttribute : Attribute
