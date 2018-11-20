@@ -28,8 +28,8 @@ namespace Centipede
         public void Update()
         {
             //todo
-            //Ticker = ExchangeInfo.API.GetTickerAsync(MarketSymbol).Sync();
-            //RecentTrades = ExchangeInfo.API.GetTradesAsync(MarketSymbol).Sync().ToArray();
+            //Ticker = ExchangeInfo.API.GetTickerAsync(Symbol).Sync();
+            //RecentTrades = ExchangeInfo.API.GetTradesAsync(Symbol).Sync().ToArray();
             //if (RecentTrades.Length == 0)
             //{
             //    Trade = new Trade();
@@ -38,7 +38,7 @@ namespace Centipede
             //{
             //    Trade = new Trade { Amount = (float)RecentTrades[RecentTrades.Length - 1].Amount, Price = (float)RecentTrades[RecentTrades.Length - 1].Price, Ticks = (long)CryptoUtility.UnixTimestampFromDateTimeMilliseconds(RecentTrades[RecentTrades.Length - 1].Timestamp) };
             //}
-            //Orders = ExchangeInfo.API.GetDepthAsync(MarketSymbol).Sync();
+            //Orders = ExchangeInfo.API.GetDepthAsync(Symbol).Sync();
         }
 
         /// <summary>

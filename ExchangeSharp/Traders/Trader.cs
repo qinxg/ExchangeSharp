@@ -154,7 +154,7 @@ namespace Centipede
                         IsBuy = true,
                         Price = actualBuyPrice,
                         ShouldRoundAmount = false,
-                        Symbol = null //todo TradeInfo.MarketSymbol
+                        Symbol = null //todo TradeInfo.Symbol
                     }).Sync();
                 }
                 else
@@ -188,7 +188,7 @@ namespace Centipede
                         IsBuy = false,
                         Price = actualSellPrice,
                         ShouldRoundAmount = false,
-                        Symbol =  null //todo TradeInfo.MarketSymbol
+                        Symbol =  null //todo TradeInfo.Symbol
                     }).Sync();
                 }
                 else

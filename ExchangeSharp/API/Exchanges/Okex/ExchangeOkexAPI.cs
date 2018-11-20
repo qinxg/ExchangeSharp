@@ -443,7 +443,7 @@ namespace Centipede
             return ;
         }
 
-        public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,Symbol symbol = null)
+        public override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId,Symbol symbol = null)
         {
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
@@ -529,7 +529,7 @@ namespace Centipede
                 Price = order.Price,
                 IsBuy = order.IsBuy,
                 OrderId = token["order_id"].ToStringInvariant(),
-                MarketSymbol = order.Symbol.OriginSymbol
+                Symbol = order.Symbol.OriginSymbol
             };
             result.AveragePrice = result.Price;
             result.Result = ExchangeAPIOrderResult.Pending;
@@ -587,7 +587,7 @@ namespace Centipede
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["create_date"].ConvertInvariant<long>()),
                 OrderId = token["order_id"].ToStringInvariant(),
-                MarketSymbol = token["symbol"].ToStringInvariant(),
+                Symbol = token["symbol"].ToStringInvariant(),
                 Result = ParseOrderStatus(token["status"].ConvertInvariant<int>()),
             };
 

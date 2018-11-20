@@ -26,7 +26,6 @@ namespace Centipede
         #region API Implementation
 
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
-        protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetCompletedOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
@@ -306,7 +305,7 @@ namespace Centipede
         /// <param name="orderId">Order id to get details for</param>
         /// <param name="symbol">Symbol of order (most exchanges do not require this)</param>
         /// <returns>Order details</returns>
-        public abstract Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId, Symbol symbol = null);
+        public abstract Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId, Symbol symbol = null);
 
 
         /// <summary>
@@ -319,18 +318,11 @@ namespace Centipede
         }
 
 
- 
-
- 
         /// <summary>
         /// Get the details of all open orders
         /// </summary>
-        /// <param name="marketSymbol">Symbol to get open orders for or null for all</param>
         /// <returns>All open order details</returns>
-        public virtual async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(string marketSymbol = null)
-        {
-            return await OnGetOpenOrderDetailsAsync(marketSymbol);
-        }
+        public abstract Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(Symbol symbol = null);
 
         /// <summary>
         /// Get the details of all completed orders

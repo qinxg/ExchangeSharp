@@ -83,7 +83,7 @@ namespace CentipedeConsole
 
             //huobi.CancelOrdersAsync(order.OrderId).Wait();
 
-            //var detail = huobi.GetOrderDetailsAsync(order.OrderId).Result;
+            //var detail = huobi.GetCanceledOrdersAsync(order.OrderId).Result;
 
             Console.ReadKey();
             //return CentipedeConsoleMain.ConsoleMain(args);

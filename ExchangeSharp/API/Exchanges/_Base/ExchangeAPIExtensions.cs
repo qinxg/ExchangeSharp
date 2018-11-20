@@ -94,7 +94,7 @@ namespace Centipede
             for (; i < maxTries; i++)
                 await Task.Delay(500);
             //TODO
-            //result = await api.GetOrderDetailsAsync(result.OrderId, symbol);
+            //result = await api.GetCanceledOrdersAsync(result.OrderId, symbol);
             //switch (result.Result)
             //{
             //    case ExchangeAPIOrderResult.Filled:

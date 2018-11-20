@@ -52,7 +52,7 @@ namespace CentipedeConsole
             //    marketSymbol = dict["marketSymbol"];
             //}
 
-            //var orderDetails = api.GetOrderDetailsAsync(orderId, marketSymbol).Sync();
+            //var orderDetails = api.GetCanceledOrdersAsync(orderId, marketSymbol).Sync();
             //Console.WriteLine(orderDetails);
 
             //Console.Write("Press enter to exit..");

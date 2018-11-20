@@ -467,7 +467,7 @@ namespace Centipede
             return orders;
         }
 
-        protected override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,
+        protected override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId,
             Symbol marketSymbol = null)
         {
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
@@ -575,7 +575,7 @@ namespace Centipede
                 IsBuy = token["side"].ToStringInvariant().EqualsWithOption("Buy"),
                 OrderDate = token["transactTime"].ConvertInvariant<DateTime>(),
                 OrderId = token["orderID"].ToStringInvariant(),
-                MarketSymbol = token["symbol"].ToStringInvariant()
+                Symbolmbol"].ToStringInvariant()
             };
 
             // http://www.onixs.biz/fix-dictionary/5.0.SP2/tagNum_39.html

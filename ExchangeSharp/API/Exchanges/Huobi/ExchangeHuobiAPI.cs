@@ -809,7 +809,7 @@ namespace Centipede
 
 
 
-        public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,  Symbol symbol = null)
+        public override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId,  Symbol symbol = null)
         {
             /*
             {"status":"ok","data":
@@ -846,19 +846,21 @@ namespace Centipede
             return orders;
         }
 
-        protected override async Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(
-            string marketSymbol = null)
+        public override async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(Symbol symbol = null)
         {
-            if (marketSymbol == null)
-            {
-                throw new APIException("symbol cannot be null");
-            }
+
 
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             var payload = await GetNoncePayloadAsync();
-            payload.Add("symbol", marketSymbol);
-            payload.Add("states", "pre-submitted,submitting,submitted,partial-filled");
-            JToken data = await MakeJsonRequestAsync<JToken>("/order/orders", BaseUrlV1, payload);
+
+            if (symbol != null)
+            {
+                payload.Add("symbol", symbol.OriginSymbol);
+                payload.Add("account-id", Accounts[AccountTypeEnum.Spot]);
+            }
+
+            payload.Add("size", "500");
+            JToken data = await MakeJsonRequestAsync<JToken>("/v1/order/openOrders", BaseUrlV1, payload);
             foreach (var prop in data)
             {
                 orders.Add(ParseOrder(prop));
@@ -867,7 +869,7 @@ namespace Centipede
             return orders;
         }
 
- 
+
 
         #endregion
 
@@ -884,28 +886,32 @@ namespace Centipede
             return result["data"] ?? result;
         }
 
+        /// <summary>
+        /// 下单对象转换为订单结果对象
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
         private ExchangeOrderResult ParsePlaceOrder(JToken token, ExchangeOrderRequest order)
         {
-            /*
-              {
-                  "status": "ok",
-                  "data": "59378"
-                }
-            */
             ExchangeOrderResult result = new ExchangeOrderResult
             {
                 Amount = order.Amount,
                 Price = order.Price,
                 IsBuy = order.IsBuy,
                 OrderId = token.ToStringInvariant(),
-                MarketSymbol = order.Symbol.OriginSymbol
+                Symbol = order.Symbol,
+                Result = ExchangeAPIOrderResult.Pending
             };
-            result.AveragePrice = result.Price;
-            result.Result = ExchangeAPIOrderResult.Pending;
 
             return result;
         }
 
+        /// <summary>
+        /// 转换状态
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         private ExchangeAPIOrderResult ParseState(string state)
         {
             switch (state)
@@ -931,7 +937,7 @@ namespace Centipede
             ExchangeOrderResult result = new ExchangeOrderResult()
             {
                 OrderId = token["id"].ToStringInvariant(),
-                MarketSymbol = token["symbol"].ToStringInvariant(),
+                Symbol =  token["symbol"].ToStringInvariant(),
                 Amount = token["amount"].ConvertInvariant<decimal>(),
                 AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),

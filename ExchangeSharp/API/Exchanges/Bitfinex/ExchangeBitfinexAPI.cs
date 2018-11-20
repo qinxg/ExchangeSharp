@@ -452,7 +452,7 @@ namespace Centipede
             return ParseOrder(obj);
         }
 
-        protected override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,
+        protected override async Task<ExchangeOrderResult> GetCanceledOrdersAsync(string orderId,
             Symbol marketSymbol = null)
         {
             if (string.IsNullOrWhiteSpace(orderId))
@@ -777,7 +777,7 @@ namespace Centipede
                 OrderId = order["id"].ToStringInvariant(),
                 Result = (amountFilled == amount ? ExchangeAPIOrderResult.Filled : (amountFilled == 0 ? ExchangeAPIOrderResult.Pending : ExchangeAPIOrderResult.FilledPartially)),
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeSeconds(order["timestamp"].ConvertInvariant<double>()),
-                MarketSymbol = order["symbol"].ToStringInvariant(),
+                Symbol.ToStringInvariant(),
                 IsBuy = order["side"].ToStringInvariant() == "buy"
             };
         }
@@ -812,8 +812,7 @@ namespace Centipede
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(order[8].ConvertInvariant<long>()),
                 OrderId = order[0].ToStringInvariant(),
                 Result = ExchangeAPIOrderResult.Filled,
-                MarketSymbol = order[1].ToStringInvariant()
-            };
+                SymbolSymbolSymbolSymbol         };
         }
 
         private IEnumerable<ExchangeOrderResult> ParseOrderV2(Dictionary<string, List<JToken>> trades)
@@ -840,8 +839,7 @@ namespace Centipede
                 ExchangeOrderResult order = new ExchangeOrderResult { Result = ExchangeAPIOrderResult.Filled };
                 foreach (JToken trade in kv.Value)
                 {
-                    ExchangeOrderResult append = new ExchangeOrderResult { MarketSymbol = kv.Key, OrderId = trade[3].ToStringInvariant() };
-                    append.Amount = append.AmountFilled = Math.Abs(trade[4].ConvertInvariant<decimal>());
+                    ExchangeOrderResult append = new ExchangeOrderResult { Symbol = kv.Symbol = traSymbolngInvaSymbol                    append.Amount = append.AmountFilled = Math.Abs(trade[4].ConvertInvariant<decimal>());
                     append.Price = trade[7].ConvertInvariant<decimal>();
                     append.AveragePrice = trade[5].ConvertInvariant<decimal>();
                     append.IsBuy = trade[4].ConvertInvariant<decimal>() >= 0m;
@@ -877,11 +875,9 @@ namespace Centipede
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeSeconds(trade["timestamp"].ConvertInvariant<double>()),
                 OrderId = trade["order_id"].ToStringInvariant(),
                 Result = ExchangeAPIOrderResult.Filled,
-                MarketSymbol = symbol
-            };
-        }
-
-        private ExchangeTicker ParseTickerWebSocket(string symbol, JToken token)
+                Symbol = symbol
+ Symbol;
+        }Symbolprivate ExchSymbolarseTickerWebSocket(string symbol, JToken token)
         {
             return this.ParseTicker(token, symbol, 3, 1, 7, 8);
         }
