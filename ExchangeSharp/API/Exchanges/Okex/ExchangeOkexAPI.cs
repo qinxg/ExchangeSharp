@@ -22,8 +22,6 @@ namespace Centipede
         public ExchangeOkexAPI()
         {
             RequestContentType = "application/x-www-form-urlencoded";
-            MarketSymbolSeparator = "_";
-            MarketSymbolIsUppercase = false;
             WebSocketDepthType = WebSocketDepthType.FullBookFirstThenDeltas;
         }
 
@@ -335,7 +333,8 @@ namespace Centipede
 
             foreach (JArray token in obj)
             {
-                candles.Add(token.ParseCandle(symbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5));
+                //todo:这里转换方案好像有问题了，不一定能支持的了，不行就改为object
+               // candles.Add(token.ParseCandle(symbol, periodSeconds, 1, 2, 3, 4, 0, TimestampType.UnixMilliseconds, 5));
             }
             return candles;
         }
@@ -645,7 +644,7 @@ namespace Centipede
                 else
                 {
                     var sArray = channel.Split('_');
-                    string marketSymbol = sArray[symbolArrayIndex] + MarketSymbolSeparator + sArray[symbolArrayIndex + 1];
+                    string marketSymbol = null; // todo sArray[symbolArrayIndex] + MarketSymbolSeparator + sArray[symbolArrayIndex + 1];
                     await callback(_socket, marketSymbol, sArray, token["data"]);
                 }
             }, async (_socket) =>
@@ -691,6 +690,12 @@ namespace Centipede
             //return marketSymbols;
 
             return null;
+        }
+
+
+        public override IWebSocket GetCandlesWebSocket(Action<MarketCandle> callback, int periodSeconds, Symbol[] symbols)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

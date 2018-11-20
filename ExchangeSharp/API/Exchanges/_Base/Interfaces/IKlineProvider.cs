@@ -21,8 +21,9 @@ namespace Centipede
         /// <param name="endDate">Optional end date to get candles for</param>
         /// <param name="limit">Max results, can be used instead of startDate and endDate if desired</param>
         /// <returns>Candles</returns>
-        Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
-            DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
+        Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds, DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
 
+
+        IWebSocket GetCandlesWebSocket(Action<MarketCandle> callback, int periodSeconds, Symbol[] symbols);
     }
 }

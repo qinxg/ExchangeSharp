@@ -26,18 +26,6 @@ namespace Centipede
         protected static readonly Dictionary<Type, KeyValuePair<string, string>[]> ExchangeGlobalCurrencyReplacements = new Dictionary<Type, KeyValuePair<string, string>[]>();
 
         /// <summary>
-        /// 币对的分隔符。如果不是连字符，则在构造函数中设置。
-        /// Separator for exchange symbol. If not a hyphen, set in constructor.
-        /// </summary>
-        public string MarketSymbolSeparator { get; protected set; } = "-";
-
-        /// <summary>
-        /// 符号是否颠倒。大多数exchange都执行ETH-BTC，如果您的exchange执行bc - eth，则在构造函数中将其设置为true。
-        /// Whether the symbol is reversed. Most exchanges do ETH-BTC, if your exchange does BTC-ETH, set to true in constructor.
-        /// </summary>
-        public bool MarketSymbolIsReversed { get; protected set; }
-
-        /// <summary>
         /// 币对符号是否是大写
         /// Whether the symbol is uppercase. Most exchanges are true, but if your exchange is lowercase, set to false in constructor.
         /// </summary>

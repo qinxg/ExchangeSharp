@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Centipede.API.Exchanges.Formatter;
 
 namespace Centipede
 {
@@ -19,10 +20,6 @@ namespace Centipede
         {
             RequestContentType = "application/x-www-form-urlencoded";
             NonceStyle = NonceStyle.UnixMilliseconds;
-
-            //todo：这两个干掉
-            MarketSymbolSeparator = string.Empty;
-            MarketSymbolIsUppercase = false;
 
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
             TimestampType = TimestampType.UnixMilliseconds;
@@ -94,6 +91,58 @@ namespace Centipede
             }
 
             return url.Uri;
+        }
+
+        #endregion
+
+        #region websocket通用
+
+                /// <summary>
+        /// 响应websocket返回的msg信息
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="msg"></param>
+        /// <param name="symbols"></param>
+        /// <param name="dataKey"></param>
+        /// <returns></returns>
+        private async Task<Tuple<JToken, Symbol>> ProcessWebsocketMessage( IWebSocket socket, byte[] msg, Symbol[] symbols,string dataKey ="tick")
+        {
+            var str = msg.ToStringFromUTF8Gzip();
+            JToken token = JToken.Parse(str);
+
+            if (token["status"] != null)
+            {
+                //todo:订阅失败
+                return null;
+            }
+
+            if (token["ping"] != null)
+            {
+                await socket.SendMessageAsync(str.Replace("ping", "pong"));
+                return null;
+            }
+
+            var val = token["ch"].ToStringInvariant();
+
+            if (symbols == null)
+                symbols = this.Symbols.ToArray();
+
+            var symbol = GetSysmbol(val, symbols);
+
+            if (symbol == null) //订阅错误
+                return null;
+
+            JToken data = token[dataKey];
+
+            return new Tuple<JToken, Symbol>(data, symbol);
+        }
+
+        private Symbol GetSysmbol(string ch, Symbol[] symbols)
+        {
+            var sArray = ch.Split('.');
+            var originSymbol = sArray[1].ToStringInvariant();
+            var symbol = symbols.FirstOrDefault(p => p.OriginSymbol == originSymbol);
+            return symbol;
         }
 
         #endregion
@@ -182,50 +231,77 @@ namespace Centipede
         
         #region ticker
 
+        private TickerFormatter GetTickerFormatter(FormatterTypeEnum type)
+        {
+            /* ALL
+             *  {"open":0.008545,"close":0.008656,"low":0.008088,"high":0.009388,"amount":88056.1860,
+             *  "count":16077,"vol":771.7975953754,"symbol":"ltcbtc"}
+             */
+
+            /*single
+             *{"id":1499225271,"ts":1499225271000,"close":1885.0000,"open":1960.0000,"high":1985.0000,"low":1856.0000,
+             * "amount":81486.2926,"count":42122,"vol":157052744.85708200,"ask":[1885.0000,21.8804],"bid":[1884.0000,1.6702]}
+             */
+
+            /*websocket
+             *"amount":12224.2922,"open":9790.52,"close":10195.00,"high":10300.00,"ts":1494496390000,
+             * "id":1494496390,"count":15195,"low":9657.00,"vol":121906001.754751
+             */
+
+            var result = new TickerFormatter
+            {
+                LastKey = "close",
+                VolumeFormatter = new VolumeFormatter
+                {
+                    BaseVolumeKey = "amount",
+                    QuoteVolumeKey = "vol"
+                }
+            };
+
+            if (type != FormatterTypeEnum.All)
+            {
+                result.TimestampFormatter = new TimestampFormatter
+                {
+                    TimestampKey = "ts",
+                    TimestampType = TimestampType
+                };
+
+                result.IdKey = "id";
+
+                if (type == FormatterTypeEnum.Signle)
+                {
+                    result.AskBidFormatter = new AskBidFormatter
+                    {
+                        AskKey = "ask",
+                        BidKey = "bid"
+                    };
+                }
+            }
+
+            return result;
+        }
+
+
         public override async Task<ExchangeTicker> GetTickerAsync(Symbol symbol)
         {
-            /*
-             {{
-              "status": "ok",
-              "ch": "market.naseth.detail.merged",
-              "ts": 1525136582460,
-              "tick": {
-                "amount": 1614089.3164448638,
-                "open": 0.014552,
-                "close": 0.013308,
-                "high": 0.015145,
-                "id": 6442118070,
-                "count": 74643,
-                "low": 0.013297,
-                "version": 6442118070,
-                "ask": [
-                  0.013324,
-                  0.0016
-                ],
-                "vol": 22839.223396720725,
-                "bid": [
-                  0.013297,
-                  3192.2322
-                ]
-              }
-            }}
-             */
+            var formatter = this.GetTickerFormatter(FormatterTypeEnum.Signle);
 
             JToken ticker = await MakeJsonRequestAsync<JToken>("/market/detail/merged?symbol=" + symbol.OriginSymbol);
             var data = ticker["tick"];
-            return data.ParseTicker(symbol, "ask", "bid", "close", "amount", "vol", "ts", TimestampType, idKey: "id");
+            return data.ParseTicker(symbol, formatter);
         }
 
         public override async Task<List<ExchangeTicker>> GetTickersAsync()
-        {
-            List<ExchangeTicker> tickers = new List<ExchangeTicker>();
+        { 
 
+            List<ExchangeTicker> tickers = new List<ExchangeTicker>();
             JToken obj = await MakeJsonRequestAsync<JToken>("/market/tickers", BaseUrl);
+            var formatter = this.GetTickerFormatter(FormatterTypeEnum.All);
 
             foreach (JToken child in obj)
             {
                 var symbol = this.Symbols.FirstOrDefault(p => p.OriginSymbol == child["symbol"].ToStringInvariant());
-                tickers.Add(child.ParseTicker(symbol, null, null, "close", "amount", "vol"));
+                tickers.Add(child.ParseTicker(symbol, formatter));
             }
 
             return tickers;
@@ -234,27 +310,14 @@ namespace Centipede
 
         public override IWebSocket GetTickerWebSocket(Action<ExchangeTicker> callback, params Symbol[] symbols)
         {
+            var formatter = this.GetTickerFormatter(FormatterTypeEnum.Websocket);
+
             return ConnectWebSocket(string.Empty, async (socket, msg) =>
             {
-                /* {"sub":"market.btcusdt.detail","status":"ok","id":"id12",
-                 "tick":{"amount":12224.2922,"open":9790.52,"close":10195.00,"high":10300.00,"ts":1494496390000,"id":1494496390,"count":15195,"low":9657.00,"vol":121906001.754751}}
-                 */
-                var str = msg.ToStringFromUTF8Gzip();
-                JToken token = JToken.Parse(str);
+                var data = await ProcessWebsocketMessage(socket, msg, symbols);
+                var ticker = data.Item1.ParseTicker(data.Item2, formatter);
 
-
-                if (!await OnReceivedContinue(token, socket, str))
-                    return;
-
-                var val = token["ch"].ToStringInvariant();
-                var symbol = GetSysmbol(val, symbols); 
-
-                if (symbol == null) //订阅错误
-                    return;
-
-                var ticker = token["tick"].ParseTicker(symbol, null, null, "close", "amount", "vol", "ts", TimestampType, idKey: "id");
                 callback(ticker);
-
             }, async (socket) =>
             {
                 foreach (var symbol in symbols)
@@ -262,63 +325,82 @@ namespace Centipede
                     var id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     var channel = $"market.{symbol.OriginSymbol}.detail";
                     await socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
-                    /*
-                     * {"req":"market.$symbol.detail","id":"id generated by client"}
-                     */
+                    /* {"sub":"market.$symbol.detail","id":"id generated by client"}*/
                 }
             });
         }
 
         #endregion
 
-        private async Task<bool> OnReceivedContinue(JToken token, IWebSocket socket, string message)
-        {
-            if (token["status"] != null)
-            {
-                //todo:订阅失败
-                return false;
-            }
-
-            if (token["ping"] != null)
-            {
-                await socket.SendMessageAsync(message.Replace("ping", "pong"));
-                return false;
-            }
-
-            return true;
-        }
-
-        private Symbol GetSysmbol(string ch, Symbol[] symbols)
-        {
-            var sArray = ch.Split('.');
-            var originSymbol = sArray[1].ToStringInvariant();
-            var symbol = symbols.FirstOrDefault(p => p.OriginSymbol == originSymbol);
-            return symbol;
-        }
-
         #region  trades
 
 
         public override async Task<List<ExchangeTrade>> GetTradesAsync(Symbol symbol, int limit = 20)
         {
-            /*
-             * {"status":"ok","ch":"market.ethusdt.trade.detail","ts":1542104543483,
-             * "tick":{"id":27952707649,"ts":1542104541926,
-             *  "data":[{"amount":0.100000000000000000,"ts":1542104541926,"id":2795270764916609236638,"price":210.900000000000000000,"direction":"buy"},{"amount":0.327700000000000000,"ts":1542104541926,"id":2795270764916609248055,"price":210.900000000000000000,"direction":"buy"}]}}
-             */
+           
 
-            JToken result = await MakeJsonRequestAsync<JToken>($"/market/history/trade?symbol={symbol.OriginSymbol}&size={limit}", BaseUrl);
-            var trades = ParseTradesData(result,symbol);
-            return trades;
+            var formatter = GetTradeFormatter(FormatterTypeEnum.Signle);
+
+            JToken result =
+                await MakeJsonRequestAsync<JToken>($"/market/history/trade?symbol={symbol.OriginSymbol}&size={limit}",
+                    BaseUrl);
+
+            if (result is JArray data)
+            {
+                var trades =
+                    data.Select(p => p.ParseTrade(symbol, formatter))
+                        .ToList();
+                return trades;
+            }
+
+            return null;
         }
 
-
         public override IWebSocket GetTradesWebSocket(Action<List<ExchangeTrade>> callback,
-          params Symbol[] symbols)
+            params Symbol[] symbols)
         {
+            var formatter = GetTradeFormatter(FormatterTypeEnum.Websocket);
+
             return ConnectWebSocket(string.Empty, async (socket, msg) =>
             {
-                /*
+                var result = await ProcessWebsocketMessage(socket, msg, symbols);
+
+                if (result.Item1["data"] is JArray data)
+                {
+                    var trades =
+                        data.Select(p => p.ParseTrade(result.Item2, formatter))
+                            .ToList();
+                    callback(trades);
+                }
+
+            }, async (socket) =>
+            {
+                foreach (Symbol symbol in symbols)
+                {
+                    long id = System.Threading.Interlocked.Increment(ref _webSocketId);
+                    string channel = $"market.{symbol.OriginSymbol}.trade.detail";
+                    await socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
+                }
+            });
+        }
+
+        private TradeFormatter GetTradeFormatter(FormatterTypeEnum type)
+        {
+            return new TradeFormatter
+            {
+                AmountKey = "amount",
+                PriceKey = "price",
+                DirectionKey = "direction",
+                TimestampFormatter = new TimestampFormatter
+                {
+                    TimestampKey = "ts",
+                    TimestampType =  TimestampType
+                },
+                IdKey = "id",
+                DirectionIsBuyValue = "buy"
+            };
+
+            /* websocket
                     {"id":"id1","status":"ok","subbed":"market.btcusdt.trade.detail","ts":1527574853489}
                     {{
                       "ch": "market.btcusdt.trade.detail",
@@ -338,42 +420,12 @@ namespace Centipede
                       }
                     }}
                  */
-                var str = msg.ToStringFromUTF8Gzip();
-                JToken token = JToken.Parse(str);
 
-                if (!await OnReceivedContinue(token, socket, str))
-                    return;
-
-                var val = token["ch"].ToStringInvariant();
-                var symbol = GetSysmbol(val, symbols);
-
-                var tick = token["tick"];
-
-                var data = tick["data"];
-                var trades = ParseTradesData(data, symbol);
-                callback(trades);
-
-            }, async (socket) =>
-            {
-                foreach (Symbol symbol in symbols)
-                {
-                    long id = System.Threading.Interlocked.Increment(ref _webSocketId);
-                    string channel = $"market.{symbol.OriginSymbol}.trade.detail";
-                    await socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
-                }
-            });
-        }
-
-        private List<ExchangeTrade> ParseTradesData(JToken token, Symbol symbol)
-        {
-            var trades = new List<ExchangeTrade>();
-
-            foreach (var t in token)
-            {
-                trades.Add(t.ParseTrade(symbol, "amount", "price", "direction", "ts", TimestampType, "id"));
-            }
-
-            return trades;
+            /*
+            * {"status":"ok","ch":"market.ethusdt.trade.detail","ts":1542104543483,
+            * "tick":{"id":27952707649,"ts":1542104541926,
+            *  "data":[{"amount":0.100000000000000000,"ts":1542104541926,"id":2795270764916609236638,"price":210.900000000000000000,"direction":"buy"},{"amount":0.327700000000000000,"ts":1542104541926,"id":2795270764916609248055,"price":210.900000000000000000,"direction":"buy"}]}}
+            */
         }
 
         #endregion
@@ -401,6 +453,9 @@ namespace Centipede
               },
              */
 
+
+            var formatter = GetCandleFormatter(FormatterTypeEnum.Signle);
+
             List<MarketCandle> candles = new List<MarketCandle>();
             string url = "/market/history/kline?symbol=" + symbol.OriginSymbol;
 
@@ -416,13 +471,90 @@ namespace Centipede
             JToken allCandles = await MakeJsonRequestAsync<JToken>(url, BaseUrl, null);
             foreach (var token in allCandles)
             {
-                candles.Add(token.ParseCandle(symbol, periodSeconds, "open", "high", "low", "close", "id",
-                    TimestampType.UnixSeconds, null, "vol"));  // K线的时间戳是到秒的
+                candles.Add(token.ParseCandle(symbol, periodSeconds, formatter));  
             }
 
             //注意先插下k线的顺序
             candles.Reverse();
             return candles;
+        }
+
+        public override IWebSocket GetCandlesWebSocket(Action<MarketCandle> callback, int periodSeconds,
+            Symbol[] symbols)
+        {
+            var formatter = GetCandleFormatter(FormatterTypeEnum.Websocket);
+
+            return ConnectWebSocket(string.Empty, async (socket, msg) =>
+            {
+
+                var data = await ProcessWebsocketMessage(socket, msg, symbols);
+
+                var candles = data.Item1.ParseCandle(data.Item2, periodSeconds, formatter);
+
+                callback(candles); //todo:检查下顺序
+
+            }, async (socket) =>
+            {
+                if (symbols == null || symbols.Length == 0)
+                {
+                    symbols = Symbols.ToArray();
+                }
+
+                foreach (var symbol in symbols)
+                {   
+                    //"sub": "market.btcusdt.kline.1min",
+                    var id = System.Threading.Interlocked.Increment(ref _webSocketId);
+                    var channel =
+                        $"market.{symbol.OriginSymbol}.depth.{CryptoUtility.SecondsToPeriodStringLong(periodSeconds)}";
+                    await socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
+                }
+            });
+        }
+
+
+
+        private CandleFormatter GetCandleFormatter(FormatterTypeEnum type)
+        {
+
+            /*websocket
+             "ch":"market.btcusdt.kline.1min","ts":1489474082831,
+             "tick":{"id":1489464480,"amount":0.0,"count":0,"open":7962.62,"close":7962.62,"low":7962.62,"high":7962.62,"vol":0.0}
+             */
+
+            /* single
+            {
+              "status": "ok",
+              "ch": "market.btcusdt.kline.1day",
+              "ts": 1499223904680,
+              “data”: [
+            {
+                "id": 1499184000,
+                "amount": 37593.0266,
+                "count": 0,
+                "open": 1935.2000,
+                "close": 1879.0000,
+                "low": 1856.0000,
+                "high": 1940.0000,
+                "vol": 71031537.97866500
+              },
+             */
+            return new CandleFormatter
+            {
+                OpenKey = "open",
+                HighKey = "high",
+                LowKey = "low",
+                CloseKey = "close",
+                TimestampFormatter = new TimestampFormatter
+                {
+                    TimestampType = TimestampType.UnixSeconds, // K线的时间戳是到秒的
+                    TimestampKey = "id",
+                },
+                VolumeFormatter = new VolumeFormatter
+                {
+                    BaseVolumeKey = null,
+                    QuoteVolumeKey = "vol"
+                }
+            };
         }
 
         #endregion
@@ -460,7 +592,8 @@ namespace Centipede
             return obj["tick"].ParseDepthFromJTokenArrays(symbol, maxCount: maxCount);
         }
 
-        public override IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20, params Symbol[] symbols)
+        public override IWebSocket GetDepthWebSocket(Action<ExchangeDepth> callback, int maxCount = 20,
+            params Symbol[] symbols)
         {
             return ConnectWebSocket(string.Empty, async (socket, msg) =>
             {
@@ -470,43 +603,23 @@ namespace Centipede
                     "asks":[[8275.07,0.1961],[8337.1,0.5803]],
                     "ts":1526749254016,"version":7664175145}}
                  */
-                var str = msg.ToStringFromUTF8Gzip();
-                JToken token = JToken.Parse(str);
-
-                if (!await OnReceivedContinue(token, socket, str))
-                    return;
-
-                var ch = token["ch"].ToStringInvariant();
-                var sArray = ch.Split('.');
-                var originSymbol =  sArray[1].ToStringInvariant();
-                var symbol = symbols.FirstOrDefault(p => p.OriginSymbol == originSymbol);
-
-                if (symbol == null) //订阅错误
-                    return;
-
-                var depth = token["tick"].ParseDepthFromJTokenArrays(symbol, maxCount: maxCount);
+                var result = await ProcessWebsocketMessage(socket, msg, symbols);
+                var depth = result.Item1.ParseDepthFromJTokenArrays(result.Item2, maxCount: maxCount);
                 callback(depth);
 
             }, async (socket) =>
             {
-                if (symbols == null || symbols.Length == 0)
-                {
-                    symbols = Symbols.ToArray();
-                }
-
                 foreach (var symbol in symbols)
                 {
                     var id = System.Threading.Interlocked.Increment(ref _webSocketId);
                     var channel = $"market.{symbol.OriginSymbol}.depth.step0";
-                    await socket.SendMessageAsync(new { sub = channel, id = "id" + id.ToStringInvariant() });
+                    await socket.SendMessageAsync(new {sub = channel, id = "id" + id.ToStringInvariant()});
                     /*
                      * {"id":"id1","status":"ok","subbed":"market.btcusdt.depth.step0","ts":1526749164133}
                      */
                 }
             });
         }
-
-      
 
         #endregion
 
@@ -570,9 +683,6 @@ namespace Centipede
         }
 
         #endregion
-
-
-      
 
         #region Private APIs
 
@@ -778,11 +888,10 @@ namespace Centipede
         {
             if (result == null || (result["status"] != null && result["status"].ToStringInvariant() != "ok"))
             {
-                throw new APIException((result["err-msg"] != null
+                throw new APIException((result?["err-msg"] != null
                     ? result["err-msg"].ToStringInvariant()
                     : "Unknown Error"));
             }
-
             return result["data"] ?? result;
         }
 
@@ -850,8 +959,6 @@ namespace Centipede
 
             return result;
         }
-
-
 
         //todo:这个改到loadapi的地方处理  当加载api后则xxxx
         private async Task<string> GetAccountId(bool isMargin = false, string subtype = "")

@@ -278,6 +278,9 @@ namespace Centipede
         public abstract Task<List<MarketCandle>> GetCandlesAsync(Symbol symbol, int periodSeconds,
             DateTime? startDate = null, DateTime? endDate = null, int? limit = null);
 
+
+        public abstract IWebSocket GetCandlesWebSocket(Action<MarketCandle> callback, int periodSeconds, Symbol[] symbols);
+
         #endregion
 
         #region order
