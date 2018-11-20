@@ -14,9 +14,9 @@ namespace Centipede
     public sealed class ExchangeTrade
     {
         /// <summary>
-        /// Timestamp
+        /// DateTime
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime DateTime { get; set; }
 
 
         public Symbol Symbol { get; set; }
@@ -42,21 +42,12 @@ namespace Centipede
         public bool IsBuy { get; set; }
 
         /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns>String</returns>
-        public override string ToString()
-        {
-            return $"{Timestamp:s},{Price},{Amount},{(IsBuy ? "Buy" : "Sell")}";
-        }
-
-        /// <summary>
         /// Write to binary writer
         /// </summary>
         /// <param name="writer">Binary writer</param>
         public void ToBinary(BinaryWriter writer)
         {
-            writer.Write(Timestamp.ToUniversalTime().Ticks);
+            writer.Write(DateTime.ToUniversalTime().Ticks);
             writer.Write(Id);
             writer.Write((double)Price);
             writer.Write((double)Amount);
@@ -69,7 +60,7 @@ namespace Centipede
         /// <param name="reader">Binary reader</param>
         public void FromBinary(BinaryReader reader)
         {
-            Timestamp = new DateTime(reader.ReadInt64(), DateTimeKind.Utc);
+            DateTime = new DateTime(reader.ReadInt64(), DateTimeKind.Utc);
             Id = reader.ReadString();
             Price = (decimal)reader.ReadDouble();
             Amount = (decimal)reader.ReadDouble();

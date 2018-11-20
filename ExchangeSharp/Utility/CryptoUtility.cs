@@ -558,7 +558,7 @@ namespace Centipede
         /// <summary>
         /// Convert a timestamp to DateTime. If value is null, CryptoUtility.UtcNow is returned.
         /// </summary>
-        /// <param name="value">Timestamp object (JToken, string, double, etc.)</param>
+        /// <param name="value">DateTime object (JToken, string, double, etc.)</param>
         /// <param name="type">Type of timestamp</param>
         /// <returns>DateTime</returns>
         public static DateTime ParseTimestamp(object value, TimestampType type)

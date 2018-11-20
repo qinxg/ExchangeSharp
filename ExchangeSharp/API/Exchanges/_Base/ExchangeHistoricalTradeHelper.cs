@@ -85,8 +85,8 @@ namespace Centipede
                     foreach (JToken token in obj)
                     {
                         trade = ParseFunction(token);
-                        if (!previousTrades.Contains(trade.Id) && trade.Timestamp >= StartDate.Value &&
-                            trade.Timestamp <= EndDate.Value)
+                        if (!previousTrades.Contains(trade.Id) && trade.DateTime >= StartDate.Value &&
+                            trade.DateTime <= EndDate.Value)
                         {
                             trades.Add(trade);
                         }
@@ -121,11 +121,11 @@ namespace Centipede
                         // sort trades in descending order and callback
                         if (DirectionIsBackwards)
                         {
-                            trades.Sort((t1, t2) => t2.Timestamp.CompareTo(t1.Timestamp));
+                            trades.Sort((t1, t2) => t2.DateTime.CompareTo(t1.DateTime));
                         }
                         else
                         {
-                            trades.Sort((t1, t2) => t1.Timestamp.CompareTo(t2.Timestamp));
+                            trades.Sort((t1, t2) => t1.DateTime.CompareTo(t2.DateTime));
                         }
                         if (!Callback(trades))
                         {
@@ -138,11 +138,11 @@ namespace Centipede
                             // set end date to the date of the earliest trade of the block, use for next request
                             if (MillisecondGranularity)
                             {
-                                endDateMoving = trade.Timestamp.AddMilliseconds(-1.0);
+                                endDateMoving = trade.DateTime.AddMilliseconds(-1.0);
                             }
                             else
                             {
-                                endDateMoving = trade.Timestamp.AddSeconds(-1.0);
+                                endDateMoving = trade.DateTime.AddSeconds(-1.0);
                             }
                             startDateMoving = endDateMoving.Subtract(BlockTime);
                         }
@@ -151,11 +151,11 @@ namespace Centipede
                             // set start date to the date of the latest trade of the block, use for next request
                             if (MillisecondGranularity)
                             {
-                                startDateMoving = trade.Timestamp.AddMilliseconds(1.0);
+                                startDateMoving = trade.DateTime.AddMilliseconds(1.0);
                             }
                             else
                             {
-                                startDateMoving = trade.Timestamp.AddSeconds(1.0);
+                                startDateMoving = trade.DateTime.AddSeconds(1.0);
                             }
                             endDateMoving = startDateMoving.Add(BlockTime);
                         }

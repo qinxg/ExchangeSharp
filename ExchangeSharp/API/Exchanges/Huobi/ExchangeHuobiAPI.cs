@@ -70,7 +70,7 @@ namespace Centipede
                    API 访问密钥（AccessKeyId） 您申请的 APIKEY 中的AccessKey。
                    签名方法（SignatureMethod） 用户计算签名的基于哈希的协议，此处使用 HmacSHA256。
                    签名版本（SignatureVersion） 签名协议的版本，此处使用2。
-                   时间戳（Timestamp） 您发出请求的时间 (UTC 时区) (UTC 时区) (UTC 时区) 。在查询请求中包含此值有助于防止第三方截取您的请求。如：2017-05-11T16:22:06。再次强调是 (UTC 时区) 。
+                   时间戳（DateTime） 您发出请求的时间 (UTC 时区) (UTC 时区) (UTC 时区) 。在查询请求中包含此值有助于防止第三方截取您的请求。如：2017-05-11T16:22:06。再次强调是 (UTC 时区) 。
                    必选和可选参数 每个方法都有一组用于定义 API 调用的必需参数和可选参数。可以在每个方法的说明中查看这些参数及其含义。 请一定注意：对于GET请求，每个方法自带的参数都需要进行签名运算； 对于POST请求，每个方法自带的参数不进行签名认证，即POST请求中需要进行签名运算的只有AccessKeyId、SignatureMethod、SignatureVersion、Timestamp四个参数，其它参数放在body中。
                    签名 签名计算得出的值，用于确保签名有效和未被篡改。
                  */
@@ -79,7 +79,7 @@ namespace Centipede
                 // must sort case sensitive
                 var dict = new SortedDictionary<string, object>(StringComparer.Ordinal)
                 {
-                    ["Timestamp"] =
+                    ["DateTime"] =
                         CryptoUtility.UnixTimeStampToDateTimeMilliseconds(payload["nonce"].ConvertInvariant<long>())
                             .ToString("s"),
                     //这里的逻辑是生成一个随机数，然后把这个随机数转成正常的日期。然后转成UTC时间 带T的那种 。有点脱了裤子放屁的感觉。
@@ -849,8 +849,6 @@ namespace Centipede
 
         public override async Task<IEnumerable<ExchangeOrderResult>> GetOpenOrderDetailsAsync(Symbol symbol = null)
         {
-
-
             List<ExchangeOrderResult> orders = new List<ExchangeOrderResult>();
             var payload = await GetNoncePayloadAsync();
 
@@ -861,6 +859,7 @@ namespace Centipede
             }
 
             payload.Add("size", "500");
+
             JToken data = await MakeJsonRequestAsync<JToken>("/v1/order/openOrders", BaseUrlV1, payload);
             foreach (var prop in data)
             {
@@ -941,10 +940,14 @@ namespace Centipede
                 OrderId = token["id"].ToStringInvariant(),
                 Symbol = this.Symbols.Get(token["symbol"].ToStringInvariant()),
                 Amount = token["amount"].ConvertInvariant<decimal>(),
-                AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
                 Price = token["price"].ConvertInvariant<decimal>(),
+
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["created-at"]
                     .ConvertInvariant<long>()),
+
+                AmountFilled = token["field-amount"].ConvertInvariant<decimal>(),
+                Fees = token["filled-fees"].ConvertInvariant<decimal>(),
+
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 Result = ParseState(token["state"].ToStringInvariant()),
             };

@@ -32,17 +32,17 @@ namespace Centipede
                 {
                     foreach (ExchangeTrade trade in trades)
                     {
-                        if (trade.Timestamp.Year != lastYear || trade.Timestamp.Month != lastMonth)
+                        if (trade.DateTime.Year != lastYear || trade.DateTime.Month != lastMonth)
                         {
                             if (writer != null)
                             {
                                 writer.Close();
                             }
-                            lastYear = trade.Timestamp.Year;
-                            lastMonth = trade.Timestamp.Month;
-                            writer = new StreamWriter(basePath + trade.Timestamp.Year + "-" + trade.Timestamp.Month.ToString("00") + ".csv");
+                            lastYear = trade.DateTime.Year;
+                            lastMonth = trade.DateTime.Month;
+                            writer = new StreamWriter(basePath + trade.DateTime.Year + "-" + trade.DateTime.Month.ToString("00") + ".csv");
                         }
-                        writer.WriteLine("{0},{1},{2}", CryptoUtility.UnixTimestampFromDateTimeSeconds(trade.Timestamp), trade.Price, trade.Amount);
+                        writer.WriteLine("{0},{1},{2}", CryptoUtility.UnixTimestampFromDateTimeSeconds(trade.DateTime), trade.Price, trade.Amount);
                         if (++count % 100 == 0)
                         {
                             callback?.Invoke(count);

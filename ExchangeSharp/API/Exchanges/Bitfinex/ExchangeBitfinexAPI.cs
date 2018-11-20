@@ -292,7 +292,7 @@ namespace Centipede
             return new ExchangeTrade
             {
                 Id = token[0].ConvertInvariant<int>(),
-                Timestamp = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token[1].ConvertInvariant<long>()),
+                DateTimeCryptoUtility.UnixTimeStampToDateTimeMilliseconds(token[1].ConvertInvariant<long>()),
                 Amount = Math.Abs(amount),
                 IsBuy = amount > 0,
                 Price = token[3].ConvertInvariant<decimal>()
@@ -341,10 +341,9 @@ namespace Centipede
                 }
                 foreach (decimal[] tradeChunkPiece in tradeChunk)
                 {
-                    trades.Add(new ExchangeTrade { Amount = Math.Abs(tradeChunkPiece[2]), IsBuy = tradeChunkPiece[2] > 0m, Price = tradeChunkPiece[3], Timestamp = CryptoUtility.UnixTimeStampToDateTimeMilliseconds((double)tradeChunkPiece[1]), Id = (long)tradeChunkPiece[0] });
+                    trades.Add(new ExchangeTrade { Amount = Math.Abs(tradeChunkPiece[2]), IsBuy = tradeChunkPiece[2] > 0m, Price = tradeChunkPiece[3], DDDDateTimeptoUtility.UnixTimeStampToDateTimeMilliseconds((double)tradeChunkPiece[1]), Id = (long)tradeChunkPiece[0] });
                 }
-                trades.Sort((t1, t2) => t1.Timestamp.CompareTo(t2.Timestamp));
-                if (!callback(trades))
+                trades.Sort((t1, t2) => t1.DaDaDaDateTimeo(t2.DatDatDatDateTime         if (!callback(trades))
                 {
                     break;
                 }

@@ -81,11 +81,6 @@ namespace Centipede
         /// Margin trading enabled for this market
         /// </summary>
         public bool MarginEnabled { get; set; }
-
-        public override string ToString()
-        {
-            return $"{OriginSymbol}, {BaseCurrency}-{QuoteCurrency}";
-        }
     }
 
 

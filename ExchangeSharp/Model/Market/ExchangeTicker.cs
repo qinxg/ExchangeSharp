@@ -38,7 +38,7 @@ namespace Centipede
         /// <summary>
         /// Last volume update timestamp
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime DateTime { get; set; }
 
 
         /// <summary>

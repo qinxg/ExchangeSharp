@@ -89,7 +89,7 @@ namespace Centipede
                     // make API calls first, if they fail we will try again later
                     //todo  Tickers = new KeyValuePair<string, ExchangeTicker>[1] { new KeyValuePair<string, ExchangeTicker>(Symbol, API.GetTickerAsync(Symbol).Sync()) };
                     //Depth = API.GetDepthAsync(Symbol).Sync();
-                    //Trades = API.GetTradesAsync(Symbol).Sync().OrderBy(t => t.Timestamp).ToArray();
+                    //Trades = API.GetTradesAsync(Symbol).Sync().OrderBy(t => t.DateTime).ToArray();
 
                     // all API calls succeeded, we can write to files
 

@@ -28,7 +28,7 @@ namespace CentipedeConsole
             //{
             //    foreach (ExchangeTrade trade in trades)
             //    {
-            //        Console.WriteLine("Trade at timestamp {0}: {1}/{2}/{3}", trade.Timestamp.ToLocalTime(), trade.Id, trade.Price, trade.Amount);
+            //        Console.WriteLine("Trade at timestamp {0}: {1}/{2}/{3}", trade.DateTime.ToLocalTime(), trade.Id, trade.Price, trade.Amount);
             //    }
             //    return true;
             //}, marketSymbol, startDate, endDate).Sync();

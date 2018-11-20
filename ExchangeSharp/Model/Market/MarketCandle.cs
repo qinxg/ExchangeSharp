@@ -18,9 +18,9 @@ namespace Centipede
         public Symbol Symbol { get; set; }
 
         /// <summary>
-        /// Timestamp, the open time of the candle
+        /// DateTime, the open time of the candle
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime DateTime { get; set; }
 
         /// <summary>
         /// The period in seconds
@@ -62,14 +62,5 @@ namespace Centipede
         /// </summary>
         public decimal WeightedAverage { get; set; }
 
-        /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns>String</returns>
-        public override string ToString()
-        {
-            return
-                $"{Timestamp}/{PeriodSeconds}: {OpenPrice}, {HighPrice}, {LowPrice}, {ClosePrice}, {BaseCurrencyVolume}, {QuoteCurrencyVolume}, {WeightedAverage}";
-        }
     }
 }

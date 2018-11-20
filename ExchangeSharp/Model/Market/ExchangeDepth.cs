@@ -77,14 +77,6 @@ namespace Centipede
         /// </summary>
         public SortedDictionary<decimal, ExchangeOrderPrice> Bids { get; } = new SortedDictionary<decimal, ExchangeOrderPrice>(new DescendingComparer<decimal>());
 
-        /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns>String</returns>
-        public override string ToString()
-        {
-            return $"Asks: {Asks.Count}, Bids: {Bids.Count}";
-        }
 
         /// <summary>
         /// Write to a binary writer

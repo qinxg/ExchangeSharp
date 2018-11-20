@@ -242,7 +242,7 @@ namespace Centipede
                 out var baseCurrencyVolume,
                 out var quoteCurrencyVolume);
 
-            token.ParseTimestamp(formatter.TimestampFormatter, out DateTime timestamp);
+            DateTime date = token.ParseDatetime(formatter.TimestampFormatter);
 
             decimal? ask = null;
             decimal? bid = null;
@@ -258,7 +258,7 @@ namespace Centipede
                 Last = last,
                 BaseCurrencyVolume = baseCurrencyVolume,
                 QuoteCurrencyVolume = quoteCurrencyVolume,
-                Timestamp = timestamp
+                DateTime = date
             };
 
             return ticker;
@@ -285,11 +285,13 @@ namespace Centipede
             }
         }
 
-        public static void ParseTimestamp(this JToken token, TimestampFormatter formatter, out DateTime date)
+        public static DateTime ParseDatetime(this JToken token, TimestampFormatter formatter)
         {
-            date = formatter?.TimestampKey == null
+            DateTime date = formatter?.TimestampKey == null
                 ? CryptoUtility.UtcNow
                 : CryptoUtility.ParseTimestamp(token[formatter.TimestampKey], formatter.TimestampType);
+
+            return date;
         }
 
 
@@ -303,7 +305,7 @@ namespace Centipede
         internal static ExchangeTrade ParseTrade(this JToken token, Symbol symbol, TradeFormatter formatter)
         {
 
-            token.ParseTimestamp(formatter.TimestampFormatter, out DateTime date);
+            DateTime date = token.ParseDatetime(formatter.TimestampFormatter);
 
             var trade = new ExchangeTrade
             {
@@ -311,11 +313,11 @@ namespace Centipede
                 Amount = token[formatter.AmountKey].ConvertInvariant<decimal>(),
                 Price = token[formatter.PriceKey].ConvertInvariant<decimal>(),
                 IsBuy = token[formatter.DirectionKey].ToStringInvariant().EqualsWithOption(formatter.DirectionIsBuyValue),
-                Timestamp = date
+                DateTime = date
             };
 
             trade.Id = formatter.IdKey == null
-                ? trade.Timestamp.Ticks.ToString()
+                ? trade.DateTime.Ticks.ToString()
                 : token[formatter.IdKey].ToStringInvariant();
 
             return trade;
@@ -366,7 +368,7 @@ namespace Centipede
         /// <returns>MarketCandle</returns>
         internal static MarketCandle ParseCandle(this JToken token, Symbol symbol, int periodSeconds, CandleFormatter formatter)
         {
-            token.ParseTimestamp(formatter.TimestampFormatter, out DateTime ts);
+            DateTime date = token.ParseDatetime(formatter.TimestampFormatter);
 
             var candle = new MarketCandle
             {
@@ -376,7 +378,7 @@ namespace Centipede
                 LowPrice = token[formatter.LowKey].ConvertInvariant<decimal>(),
                 OpenPrice = token[formatter.OpenKey].ConvertInvariant<decimal>(),
                 PeriodSeconds = periodSeconds,
-                Timestamp = ts
+                DateTime = date
             };
 
             token.ParseVolumes(formatter.VolumeFormatter, candle.ClosePrice,

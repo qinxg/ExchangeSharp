@@ -605,7 +605,7 @@ namespace Centipede
                     Id = t[0].ToStringInvariant(),
                     Price = t[1].ConvertInvariant<decimal>(),
                     Amount = t[2].ConvertInvariant<decimal>(),
-                    Timestamp = dt,  //todo: 这里处理方式有问题
+                    DateTime = dt,  //todo: 这里处理方式有问题
                     IsBuy = t[4].ToStringInvariant().EqualsWithOption("bid"),
                 };
                 trades.Add(trade);
