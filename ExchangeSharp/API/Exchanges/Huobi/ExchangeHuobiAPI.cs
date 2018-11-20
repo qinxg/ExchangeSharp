@@ -7,14 +7,26 @@ using Centipede.API.Exchanges.Formatter;
 
 namespace Centipede
 {
+
+    enum AccountTypeEnum
+    {
+        Spot = 0,
+        Margin = 1,
+        Otc = 2,
+        Point = 3
+    }
+
+
     [ExchangeMeta("Huobi")]
-    public sealed partial class ExchangeHuobiAPI : ExchangeAPI
+    public sealed  class ExchangeHuobiAPI : ExchangeAPI
     {
         public override string BaseUrl { get; set; } = "https://api.huobipro.com";
         public string BaseUrlV1 { get; set; } = "https://api.huobipro.com/v1";
         public override string BaseUrlWebSocket { get; set; } = "wss://api.huobipro.com/ws";
-
         private long _webSocketId = 0;
+
+
+        private Dictionary<AccountTypeEnum, string > Accounts { get; set; }
 
         public ExchangeHuobiAPI()
         {
@@ -23,6 +35,13 @@ namespace Centipede
 
             WebSocketDepthType = WebSocketDepthType.FullBookAlways;
             TimestampType = TimestampType.UnixMilliseconds;
+
+            this.KeysLoaded += ExchangeHuobiAPI_KeysLoaded;
+        }
+
+        private async void ExchangeHuobiAPI_KeysLoaded()
+        {
+            await this.LoadAccountsAsync();
         }
 
         #region HTTP请求处理 
@@ -632,7 +651,7 @@ namespace Centipede
         /// <returns></returns>
         public override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
         {
-            var accountId = await GetAccountId(order.IsMargin, order.Symbol.OriginSymbol);
+            var accountId = Accounts[AccountTypeEnum.Spot];
 
             var payload = await GetNoncePayloadAsync();
             payload.Add("account-id", accountId);
@@ -643,11 +662,9 @@ namespace Centipede
             if (order.OrderType == OrderType.Market)
             {
                 //市价买单时表示买多少钱，市价卖单时表示卖多少币
-
                 payload["type"] += "-market";
                 //这里到时候在设计下市价的情况下怎么做这个，应该一般比较少做
                 payload["amount"] = order.Amount;
-
             }
             else
             {
@@ -686,46 +703,40 @@ namespace Centipede
 
         #region Private APIs
 
-        private async Task<Dictionary<string, string>> OnGetAccountsAsync()
+        private async Task LoadAccountsAsync()
         {
-            /*
-            {[
-  {
-    "id": 3274515,
-    "type": "spot",
-    "subtype": "",
-    "state": "working"
-  },
-  {
-    "id": 4267855,
-    "type": "margin",
-    "subtype": "btcusdt",
-    "state": "working"
-  },
-  {
-    "id": 3544747,
-    "type": "margin",
-    "subtype": "ethusdt",
-    "state": "working"
-  },
-  {
-    "id": 3274640,
-    "type": "otc",
-    "subtype": "",
-    "state": "working"
-  }
-]}
- */
-            Dictionary<string, string> accounts = new Dictionary<string, string>();
+            Accounts.Clear();
+
             var payload = await GetNoncePayloadAsync();
             JToken data = await MakeJsonRequestAsync<JToken>("/account/accounts", BaseUrlV1, payload);
             foreach (var acc in data)
             {
-                string key = acc["type"].ToStringInvariant() + "_" + acc["subtype"].ToStringInvariant();
-                accounts.Add(key, acc["id"].ToStringInvariant());
-            }
+                string key = acc["type"].ToStringInvariant();
+                AccountTypeEnum type;
 
-            return accounts;
+                switch (key)
+                {
+                    case "spot":
+                        type = AccountTypeEnum.Spot;
+                        break;
+                    case "margin":
+                        type = AccountTypeEnum.Margin;
+                        break;
+
+                    case "otc":
+                        type = AccountTypeEnum.Otc;
+                        break;
+
+                    case "point":
+                        type = AccountTypeEnum.Point;
+                        break;
+                    default:
+                        type = AccountTypeEnum.Spot;
+                        break;
+                }
+
+                Accounts.Add(type, acc["id"].ToStringInvariant());
+            }
         }
 
 
@@ -760,7 +771,7 @@ namespace Centipede
         "balance": "16.467000000000000000"
       },
              */
-            var account_id = await GetAccountId();
+            var account_id = Accounts[AccountTypeEnum.Spot];
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
             JToken token =
@@ -789,7 +800,7 @@ namespace Centipede
 
         protected override async Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync()
         {
-            var account_id = await GetAccountId();
+            var account_id = Accounts[AccountTypeEnum.Spot];
 
             Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
             var payload = await GetNoncePayloadAsync();
@@ -958,20 +969,6 @@ namespace Centipede
             }
 
             return result;
-        }
-
-        //todo:这个改到loadapi的地方处理  当加载api后则xxxx
-        private async Task<string> GetAccountId(bool isMargin = false, string subtype = "")
-        {
-            var accounts = await OnGetAccountsAsync();
-            var key = "spot_";
-            if (isMargin)
-            {
-                key = "margin_" + subtype;
-            }
-
-            var accountId = accounts[key];
-            return accountId;
         }
 
         #endregion

@@ -566,5 +566,9 @@ namespace Centipede
         /// <param name="message">Message to send, can be string, byte[] or object (which get serialized to json)</param>
         /// <returns>True if success, false if error</returns>
         Task<bool> SendMessageAsync(object message);
+
+
+
+       
     }
 }

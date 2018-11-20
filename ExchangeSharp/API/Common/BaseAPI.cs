@@ -94,6 +94,8 @@ namespace Centipede
     /// </summary>
     public abstract class BaseAPI : IAPIRequestHandler, INamed
     {
+        protected event KeyLoadDelegate KeysLoaded;
+
         /// <summary>
         /// User agent for requests
         /// </summary>
@@ -379,6 +381,7 @@ namespace Centipede
             {
                 Passphrase = strings[2];
             }
+            KeysLoaded?.Invoke();
         }
 
         /// <summary>
@@ -392,6 +395,7 @@ namespace Centipede
             PublicApiKey = publicApiKey.ToSecureString();
             PrivateApiKey = privateApiKey.ToSecureString();
             Passphrase = passPhrase?.ToSecureString();
+            KeysLoaded?.Invoke();
         }
 
         /// <summary>
@@ -626,4 +630,6 @@ namespace Centipede
         /// </summary>
         public string Name { get; private set; }
     }
+
+    public delegate void KeyLoadDelegate();
 }

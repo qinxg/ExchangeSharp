@@ -319,7 +319,6 @@ namespace Centipede
         public abstract  Task CancelOrderAsync(string orderId, Symbol marketSymbol = null);
 
 
-
         /// <summary>
         /// Get order details
         /// </summary>

@@ -1,17 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.WebSockets;
 using System.Security;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
+using System.Threading.Tasks;
 namespace Centipede
 {
     /// <summary>
@@ -75,6 +65,7 @@ namespace Centipede
         /// </summary>
         void LoadAPIKeysUnsecure(string publicApiKey, string privateApiKey, string passPhrase = null);
 
+
         /// <summary>
         /// 产生随机数 见：https://www.cnblogs.com/bestzrz/archive/2011/09/03/2164620.html
         /// </summary>
@@ -93,5 +84,8 @@ namespace Centipede
         Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null);
 
         #endregion Methods
+
+
+        
     }
 }
