@@ -7,7 +7,7 @@ namespace Centipede
     /// <summary>
     /// K线信息
     /// </summary>
-    public interface IKlineProvider
+    public interface ICandlesProvider
     {
         /// <summary>
         /// K线数据， 开，最高，最低，收盘   （数据由旧到新返回）
