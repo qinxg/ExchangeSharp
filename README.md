@@ -1,5 +1,3 @@
-<img src='logo.png' width='600' />
-
 ## Overview
 ExchangeSharp is a C# console app and framework for trading and communicating with various exchange API end points for cryptocurrency assets. Many exchanges are supported, along with web sockets, withdraws and more!
 
@@ -126,25 +124,3 @@ You can also set request cache policy if you want to tweak how the http caching 
 ### How to contribute
 Please read the [contributing guideline](CONTRIBUTING.md) before submitting a pull request.
 
-### Consulting
-I'm happy to make customizations to the software for you and keep in private repo, email exchangesharp@digitalruby.com.
-
-### Donations Gratefully Accepted
-Believe it or not, donations are quite rare. I've posted publicly the total donation amounts below. If ExchangeSharp has helped you in anyway, please consider donating.
-
-[![Donate with Bitcoin](https://en.cryptobadges.io/badge/small/1GBz8ithHvTqeRZxkmpHx5kQ9wBXuSH8AG)](https://en.cryptobadges.io/donate/1GBz8ithHvTqeRZxkmpHx5kQ9wBXuSH8AG)
-
-[![Donate with Litecoin](https://en.cryptobadges.io/badge/small/LWxRMaVFeXLmaq5munDJxADYYLv2szYi9i)](https://en.cryptobadges.io/donate/LWxRMaVFeXLmaq5munDJxADYYLv2szYi9i)
-
-[![Donate with Ethereum](https://en.cryptobadges.io/badge/small/0x77d3D990859a8c3e3486b5Ad63Da223f7F3778dc)](https://en.cryptobadges.io/donate/0x77d3D990859a8c3e3486b5Ad63Da223f7F3778dc)
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=L67Q4KQN5DHLY)
-
-Donation totals:
-0.02350084 BTC, 0.25 LTC
-
-Thanks for visiting!
-
-Jeff Johnson  
-jeff@digitalruby.com  
-http://www.digitalruby.com  
