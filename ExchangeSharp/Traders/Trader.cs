@@ -69,7 +69,7 @@ namespace Centipede
         {
             if (ProductionMode)
             {
-                var dict = TradeInfo.ExchangeInfo.API.GetAmountsAvailableToTradeAsync().Sync();
+                var dict = new Dictionary<string,decimal>();  //todo TradeInfo.ExchangeInfo.API.GetAmountsAvailableToTradeAsync().Sync();
                 string[] tradeSymbols = TradeInfo.MarketSymbol.Split('_');
                 dict.TryGetValue(tradeSymbols[1], out decimal itemCount);
                 dict.TryGetValue(tradeSymbols[0], out decimal cashFlow);
@@ -147,7 +147,7 @@ namespace Centipede
                 actualBuyPrice += (actualBuyPrice * OrderPriceDifferentialPercentage);
                 if (ProductionMode)
                 {
-                    TradeInfo.ExchangeInfo.API.PlaceOrderAsync(
+                    TradeInfo.ExchangeInfo.API.PlaceOrdersAsync(
                     new ExchangeOrderRequest
                     {
                         Amount = count,
@@ -182,7 +182,7 @@ namespace Centipede
                 actualSellPrice -= (actualSellPrice * OrderPriceDifferentialPercentage);
                 if (ProductionMode)
                 {
-                    TradeInfo.ExchangeInfo.API.PlaceOrderAsync(new ExchangeOrderRequest
+                    TradeInfo.ExchangeInfo.API.PlaceOrdersAsync(new ExchangeOrderRequest
                     {
                         Amount = count,
                         IsBuy = false,

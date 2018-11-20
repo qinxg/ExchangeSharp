@@ -422,7 +422,7 @@ namespace Centipede
             return lookup;
         }
 
-        protected override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
+        protected override async Task<ExchangeOrderResult> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
         {
             string marketSymbol = NormalizeMarketSymbolV1(order.MarketSymbol);
             Dictionary<string, object> payload = await GetNoncePayloadAsync();

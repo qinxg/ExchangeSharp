@@ -647,56 +647,65 @@ namespace Centipede
         /// <summary>
         /// 提交订单
         /// </summary>
-        /// <param name="order"></param>
+        /// <param name="orders"></param>
         /// <returns></returns>
-        public override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
+        public override async Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
         {
             var accountId = Accounts[AccountTypeEnum.Spot];
 
-            var payload = await GetNoncePayloadAsync();
-            payload.Add("account-id", accountId);
-            payload.Add("symbol", order.Symbol.OriginSymbol);
-            payload.Add("type", order.IsBuy ? "buy" : "sell");
-            payload.Add("source", order.IsMargin ? "margin-api" : "api");
+            var result = new List<ExchangeOrderResult>();
 
-            if (order.OrderType == OrderType.Market)
+            foreach (var order in orders)
             {
-                //市价买单时表示买多少钱，市价卖单时表示卖多少币
-                payload["type"] += "-market";
-                //这里到时候在设计下市价的情况下怎么做这个，应该一般比较少做
-                payload["amount"] = order.Amount;
+
+                var payload = await GetNoncePayloadAsync();
+                payload.Add("account-id", accountId);
+                payload.Add("symbol", order.Symbol.OriginSymbol);
+                payload.Add("type", order.IsBuy ? "buy" : "sell");
+                payload.Add("source", order.IsMargin ? "margin-api" : "api");
+
+                if (order.OrderType == OrderType.Market)
+                {
+                    //市价买单时表示买多少钱，市价卖单时表示卖多少币
+                    payload["type"] += "-market";
+                    //这里到时候在设计下市价的情况下怎么做这个，应该一般比较少做
+                    payload["amount"] = order.Amount;
+                }
+                else
+                {
+                    //限价单表示下单数量
+                    decimal outputQuantity = ClampOrderQuantity(order.Symbol, order.Amount);
+                    decimal outputPrice = ClampOrderPrice(order.Symbol, order.Price);
+
+                    order.Amount = outputQuantity;
+                    order.Price = outputPrice;
+
+                    payload["amount"] = outputQuantity.ToStringInvariant();
+                    payload["type"] += "-limit";
+                    payload["price"] = outputPrice.ToStringInvariant();
+                }
+
+                order.ExtraParameters.CopyTo(payload);
+
+                JToken data = await MakeJsonRequestAsync<JToken>("/order/orders/place", BaseUrlV1, payload, "POST");
+
+                result.Add(ParsePlaceOrder(data, order));
             }
-            else
-            {
-                //限价单表示下单数量
-                decimal outputQuantity = ClampOrderQuantity(order.Symbol, order.Amount);
-                decimal outputPrice = ClampOrderPrice(order.Symbol, order.Price);
 
-                order.Amount = outputQuantity;
-                order.Price = outputPrice;
-
-                payload["amount"] = outputQuantity.ToStringInvariant();
-                payload["type"] += "-limit";
-                payload["price"] = outputPrice.ToStringInvariant();
-            }
-
-            order.ExtraParameters.CopyTo(payload);
-
-            JToken result = await MakeJsonRequestAsync<JToken>("/order/orders/place", BaseUrlV1, payload, "POST");
-
-            return ParsePlaceOrder(result, order);
+            return result;
         }
 
         /// <summary>
         /// 取消订单
         /// </summary>
-        /// <param name="orderId"></param>
-        /// <param name="symbol"></param>
+        /// <param name="orders"></param>
         /// <returns></returns>
-        public override async Task CancelOrderAsync(string orderId, Symbol symbol = null)
+        public override async Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders)
         {
             var payload = await GetNoncePayloadAsync();
-            await MakeJsonRequestAsync<JToken>($"/order/orders/{orderId}/submitcancel", BaseUrlV1, payload, "POST");
+            var oids = string.Join(",", orders.SelectMany(p => p.OrderIds));
+            payload.Add("order-ids", oids);
+            await MakeJsonRequestAsync<JToken>("/v1/order/orders/batchcancel", BaseUrlV1, payload, "POST");
         }
 
         #endregion
@@ -798,38 +807,7 @@ namespace Centipede
             return amounts;
         }
 
-        protected override async Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync()
-        {
-            var account_id = Accounts[AccountTypeEnum.Spot];
 
-            Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
-            var payload = await GetNoncePayloadAsync();
-            JToken token =
-                await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
-            var list = token["list"];
-            foreach (var item in list)
-            {
-                var balance = item["balance"].ConvertInvariant<decimal>();
-                if (balance == 0m)
-                    continue;
-                var type = item["type"].ToStringInvariant();
-                if (type != "trade")
-                    continue;
-
-                var currency = item["currency"].ToStringInvariant();
-
-                if (amounts.ContainsKey(currency))
-                {
-                    amounts[currency] += balance;
-                }
-                else
-                {
-                    amounts[currency] = balance;
-                }
-            }
-
-            return amounts;
-        }
 
         public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,  Symbol symbol = null)
         {

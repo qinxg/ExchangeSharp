@@ -69,7 +69,7 @@ namespace CentipedeConsole
 
             //huobi.LoadAPIKeysUnsecure("f47cffdb-682ae30b-56b1c197-8a75c", "690fd255-e3d1b533-bec93d39-8b851");
 
-            //var order = huobi.PlaceOrderAsync(new ExchangeOrderRequest
+            //var order = huobi.PlaceOrdersAsync(new ExchangeOrderRequest
             //{
             //    Amount = 0.001m,
             //    Price = 0.001m,
@@ -81,7 +81,7 @@ namespace CentipedeConsole
 
             //Console.WriteLine(order);
 
-            //huobi.CancelOrderAsync(order.OrderId).Wait();
+            //huobi.CancelOrdersAsync(order.OrderId).Wait();
 
             //var detail = huobi.GetOrderDetailsAsync(order.OrderId).Result;
 

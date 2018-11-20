@@ -386,66 +386,61 @@ namespace Centipede
             return amounts;
         }
 
-        protected override async Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync()
-        {
-            Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
-            var payload = await GetNoncePayloadAsync();
-            JToken token = await MakeJsonRequestAsync<JToken>("/userinfo.do", BaseUrl, payload, "POST");
-            var funds = token["info"]["funds"];
-            var free = funds["free"];
 
-            return ParseAmounts(funds["free"], amounts);
+        public override async Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
+        {
+
+            return null; //todo
+
+            //Dictionary<string, object> payload = await GetNoncePayloadAsync();
+            //payload["symbol"] = order.Symbol.OriginSymbol;
+            //payload["type"] = (order.IsBuy ? "buy" : "sell");
+
+            //decimal outputQuantity =  ClampOrderQuantity(order.Symbol, order.Amount);
+            //decimal outputPrice =  ClampOrderPrice(order.Symbol, order.Price);
+
+            //if (order.OrderType == OrderType.Market)
+            //{
+            //    // TODO: Fix later once Okex fixes this on their end
+            //    throw new NotSupportedException("Okex confuses price with amount while sending a market order, so market orders are disabled for now");
+
+            //    /*
+            //    payload["type"] += "_market";
+            //    if (order.IsBuy)
+            //    {
+            //        // for market buy orders, the price is to total amount you want to buy, 
+            //        // and it must be higher than the current price of 0.01 BTC (minimum buying unit), 0.1 LTC or 0.01 ETH
+            //        payload["price"] = outputQuantity;
+            //    }
+            //    else
+            //    {
+            //        // For market buy roders, the amount is not required
+            //        payload["amount"] = outputQuantity;
+            //    }
+            //    */
+            //}
+            //else
+            //{
+            //    payload["price"] = outputPrice;
+            //    payload["amount"] = outputQuantity;
+            //}
+            //order.ExtraParameters.CopyTo(payload);
+
+            //JToken obj = await MakeJsonRequestAsync<JToken>("/trade.do", BaseUrl, payload, "POST");
+            //order.Amount = outputQuantity;
+            //order.Price = outputPrice;
+            //return ParsePlaceOrder(obj, order);
         }
 
-        public override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
+        public override async Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders)
         {
-            Dictionary<string, object> payload = await GetNoncePayloadAsync();
-            payload["symbol"] = order.Symbol.OriginSymbol;
-            payload["type"] = (order.IsBuy ? "buy" : "sell");
+            //Dictionary<string, object> payload = await GetNoncePayloadAsync();
 
-            decimal outputQuantity =  ClampOrderQuantity(order.Symbol, order.Amount);
-            decimal outputPrice =  ClampOrderPrice(order.Symbol, order.Price);
+            //payload["symbol"] = symbol.OriginSymbol;
+            //payload["order_id"] = orderId;
+            //await MakeJsonRequestAsync<JToken>("/cancel_order.do", BaseUrl, payload, "POST");
 
-            if (order.OrderType == OrderType.Market)
-            {
-                // TODO: Fix later once Okex fixes this on their end
-                throw new NotSupportedException("Okex confuses price with amount while sending a market order, so market orders are disabled for now");
-
-                /*
-                payload["type"] += "_market";
-                if (order.IsBuy)
-                {
-                    // for market buy orders, the price is to total amount you want to buy, 
-                    // and it must be higher than the current price of 0.01 BTC (minimum buying unit), 0.1 LTC or 0.01 ETH
-                    payload["price"] = outputQuantity;
-                }
-                else
-                {
-                    // For market buy roders, the amount is not required
-                    payload["amount"] = outputQuantity;
-                }
-                */
-            }
-            else
-            {
-                payload["price"] = outputPrice;
-                payload["amount"] = outputQuantity;
-            }
-            order.ExtraParameters.CopyTo(payload);
-
-            JToken obj = await MakeJsonRequestAsync<JToken>("/trade.do", BaseUrl, payload, "POST");
-            order.Amount = outputQuantity;
-            order.Price = outputPrice;
-            return ParsePlaceOrder(obj, order);
-        }
-
-        public override async Task CancelOrderAsync(string orderId, Symbol symbol = null)
-        {
-            Dictionary<string, object> payload = await GetNoncePayloadAsync();
-
-            payload["symbol"] = symbol.OriginSymbol;
-            payload["order_id"] = orderId;
-            await MakeJsonRequestAsync<JToken>("/cancel_order.do", BaseUrl, payload, "POST");
+            return ;
         }
 
         public override async Task<ExchangeOrderResult> GetOrderDetailsAsync(string orderId,Symbol symbol = null)

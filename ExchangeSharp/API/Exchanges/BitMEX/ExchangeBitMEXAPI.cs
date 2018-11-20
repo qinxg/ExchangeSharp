@@ -489,7 +489,7 @@ namespace Centipede
             JToken token = await MakeJsonRequestAsync<JToken>("/order", BaseUrl, payload, "DELETE");
         }
 
-        protected override async Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order)
+        protected override async Task<ExchangeOrderResult> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
         {
             Dictionary<string, object> payload = await GetNoncePayloadAsync();
             AddOrderToPayload(order, payload);

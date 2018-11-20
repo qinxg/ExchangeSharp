@@ -103,9 +103,9 @@ namespace Centipede
                     }
                     else
                     {
-                        System.IO.StringReader sr = new System.IO.StringReader(CentipedeResources.NLog_config);
-                        System.Xml.XmlReader xr = System.Xml.XmlReader.Create(sr);
-                        LogManager.Configuration = new XmlLoggingConfiguration(xr, Directory.GetCurrentDirectory());
+                        //System.IO.StringReader sr = new System.IO.StringReader(CentipedeResources.NLog_config);
+                        //System.Xml.XmlReader xr = System.Xml.XmlReader.Create(sr);
+                        //LogManager.Configuration = new XmlLoggingConfiguration(xr, Directory.GetCurrentDirectory());
                         factory = LogManager.LogFactory;
                     }
                 }

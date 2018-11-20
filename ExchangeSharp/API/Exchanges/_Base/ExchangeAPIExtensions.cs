@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
@@ -34,7 +35,7 @@ namespace Centipede
         ///     fulfill the order.
         /// </param>
         /// <returns>Order result</returns>
-        public static async Task<ExchangeOrderResult> PlaceSafeMarketOrderAsync(this ExchangeAPI api, string symbol,
+        public static async Task<List<ExchangeOrderResult>> PlaceSafeMarketOrderAsync(this ExchangeAPI api, string symbol,
             decimal amount, bool isBuy, int orderBookCount = 100, decimal priceThreshold = 0.9m,
             decimal thresholdToAbort = 0.75m, bool abortIfOrderBookTooSmall = false)
         {
@@ -85,7 +86,7 @@ namespace Centipede
                 ShouldRoundAmount = true,
                 Symbol = null //todo symbol
             };
-            var result = await api.PlaceOrderAsync(request);
+            var result = await api.PlaceOrdersAsync(request);
 
             // wait about 10 seconds until the order is fulfilled
             var i = 0;

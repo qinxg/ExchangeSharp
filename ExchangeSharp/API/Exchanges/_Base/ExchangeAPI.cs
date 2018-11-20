@@ -26,7 +26,6 @@ namespace Centipede
         #region API Implementation
 
         protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
-        protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAvailableToTradeAsync() => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetOpenOrderDetailsAsync(string marketSymbol = null) => throw new NotImplementedException();
         protected virtual Task<IEnumerable<ExchangeOrderResult>> OnGetCompletedOrderDetailsAsync(string marketSymbol = null, DateTime? afterDate = null) => throw new NotImplementedException();
         protected virtual IWebSocket OnGetOrderDetailsWebSocket(Action<ExchangeOrderResult> callback) => throw new NotImplementedException();
@@ -288,35 +287,17 @@ namespace Centipede
         /// <summary>
         /// Place an order
         /// </summary>
-        /// <param name="order">The order request</param>
+        /// <param name="orders"></param>
         /// <returns>Result</returns>
-        public abstract Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order);
-
-        /// <summary>
-        /// Place bulk orders
-        /// </summary>
-        /// <param name="orders">Order requests</param>f
-        /// <returns>Order results, each result matches up with each order in index</returns>
-        public virtual async Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders)
-        {
-            var result = new List<ExchangeOrderResult>();
-
-            foreach (var order in orders)
-            {
-                result.Add(await this.PlaceOrderAsync(order));
-            }
-
-            return result;
-        }
+        public abstract Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
 
         #endregion
 
         /// <summary>
         /// Cancel an order, an exception is thrown if error
         /// </summary>
-        /// <param name="orderId">Order id of the order to cancel</param>
-        /// <param name="marketSymbol">Symbol of order (most exchanges do not require this)</param>
-        public abstract  Task CancelOrderAsync(string orderId, Symbol marketSymbol = null);
+        /// <param name="orders"></param>
+        public abstract Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders);
 
 
         /// <summary>
@@ -338,14 +319,7 @@ namespace Centipede
         }
 
 
-        /// <summary>
-        /// Get amounts available to trade, symbol / amount dictionary
-        /// </summary>
-        /// <returns>Symbol / amount dictionary</returns>
-        public virtual async Task<Dictionary<string, decimal>> GetAmountsAvailableToTradeAsync()
-        {
-            return  await OnGetAmountsAvailableToTradeAsync();
-        }
+ 
 
  
         /// <summary>

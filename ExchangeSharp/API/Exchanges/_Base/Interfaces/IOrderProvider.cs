@@ -4,6 +4,16 @@ using System.Threading.Tasks;
 
 namespace Centipede
 {
+
+
+    public class ExchangeOrderCancelRequest
+    {
+        public  Symbol Symbol { get; set; }
+
+        public  string[] OrderIds { get; set; }
+    }
+
+
     /// <summary>
     /// 订单
     /// </summary>
@@ -11,18 +21,9 @@ namespace Centipede
     {
 
         /// <summary>
-        /// 提交订单
-        /// Place an order
-        /// </summary>
-        /// <param name="order">Order request</param>
-        /// <returns>Order result and message string if any</returns>
-        Task<ExchangeOrderResult> PlaceOrderAsync(ExchangeOrderRequest order);
-
-        /// <summary>
-        /// 批量提交订单
+        /// 批量提交订单 （只有okex是真正支持的）
         /// </summary>
         /// <param name="orders">Order requests</param>
-        /// <returns>Order results, each result matches up with each order in index</returns>
         Task<List<ExchangeOrderResult>> PlaceOrdersAsync(params ExchangeOrderRequest[] orders);
 
 
@@ -30,9 +31,8 @@ namespace Centipede
         /// 取消订单
         /// Cancel an order, an exception is thrown if failure
         /// </summary>
-        /// <param name="orderId">Order id of the order to cancel</param>
-        /// <param name="symbol">Market symbol of the order to cancel (not required for most exchanges)</param>
-        Task CancelOrderAsync(string orderId, Symbol symbol = null);
+        /// <param name="orders"></param>
+        Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders);
 
         /// <summary>
         /// 获取订单详情
