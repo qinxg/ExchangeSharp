@@ -96,5 +96,12 @@ namespace Centipede
             return symbols.FirstOrDefault(p =>
                 p.BaseCurrency.NormCurrency == baseCurrency && p.QuoteCurrency.NormCurrency == quote);
         }
+
+        public static Symbol Get(this List<Symbol> symbols, string originSymbol)
+        {
+            return symbols.FirstOrDefault(p =>
+                p.OriginSymbol == originSymbol);
+        }
+
     }
 }

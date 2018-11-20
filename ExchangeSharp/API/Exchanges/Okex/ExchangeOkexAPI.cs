@@ -529,7 +529,7 @@ namespace Centipede
                 Price = order.Price,
                 IsBuy = order.IsBuy,
                 OrderId = token["order_id"].ToStringInvariant(),
-                Symbol = order.Symbol.OriginSymbol
+                //Symbol = order.Symbol.OriginSymbol
             };
             result.Result = ExchangeAPIOrderResult.Pending;
 
@@ -585,7 +585,7 @@ namespace Centipede
                 IsBuy = token["type"].ToStringInvariant().StartsWith("buy"),
                 OrderDate = CryptoUtility.UnixTimeStampToDateTimeMilliseconds(token["create_date"].ConvertInvariant<long>()),
                 OrderId = token["order_id"].ToStringInvariant(),
-                Symbol = token["symbol"].ToStringInvariant(),
+                //Symbol = token["symbol"].ToStringInvariant(),
                 Result = ParseOrderStatus(token["status"].ConvertInvariant<int>()),
             };
 
