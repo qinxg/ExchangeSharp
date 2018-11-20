@@ -5,14 +5,6 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Centipede")]
-[assembly: AssemblyDescription("Centipede is a C# API for working with various cryptocurrency exchanges. Web sockets are also supported for some exchanges.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Digital Ruby, LLC")]
-[assembly: AssemblyProduct("Centipede")]
-[assembly: AssemblyCopyright("Copyright © Digital Ruby, LLC 2017")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
