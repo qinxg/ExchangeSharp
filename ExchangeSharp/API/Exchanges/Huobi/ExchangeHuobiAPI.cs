@@ -709,106 +709,6 @@ namespace Centipede
             await MakeJsonRequestAsync<JToken>("/v1/order/orders/batchcancel", BaseUrlV1, payload, "POST");
         }
 
-        #endregion
-
-        #region Private APIs
-
-        private async Task LoadAccountsAsync()
-        {
-            Accounts.Clear();
-
-            var payload = await GetNoncePayloadAsync();
-            JToken data = await MakeJsonRequestAsync<JToken>("/account/accounts", BaseUrlV1, payload);
-            foreach (var acc in data)
-            {
-                string key = acc["type"].ToStringInvariant();
-                AccountTypeEnum type;
-
-                switch (key)
-                {
-                    case "spot":
-                        type = AccountTypeEnum.Spot;
-                        break;
-                    case "margin":
-                        type = AccountTypeEnum.Margin;
-                        break;
-
-                    case "otc":
-                        type = AccountTypeEnum.Otc;
-                        break;
-
-                    case "point":
-                        type = AccountTypeEnum.Point;
-                        break;
-                    default:
-                        type = AccountTypeEnum.Spot;
-                        break;
-                }
-
-                Accounts.Add(type, acc["id"].ToStringInvariant());
-            }
-        }
-
-
-        protected override async Task<Dictionary<string, decimal>> OnGetAmountsAsync()
-        {
-            /*
-             
-  "status": "ok",
-  "data": {
-    "id": 3274515,
-    "type": "spot",
-    "state": "working",
-    "list": [
-      {
-        "currency": "usdt",
-        "type": "trade",
-        "balance": "0.000045000000000000"
-      },
-      {
-        "currency": "eth",
-        "type": "frozen",
-        "balance": "0.000000000000000000"
-      },
-      {
-        "currency": "eth",
-        "type": "trade",
-        "balance": "0.044362165000000000"
-      },
-      {
-        "currency": "eos",
-        "type": "trade",
-        "balance": "16.467000000000000000"
-      },
-             */
-            var account_id = Accounts[AccountTypeEnum.Spot];
-            Dictionary<string, decimal> amounts = new Dictionary<string, decimal>();
-            var payload = await GetNoncePayloadAsync();
-            JToken token =
-                await MakeJsonRequestAsync<JToken>($"/account/accounts/{account_id}/balance", BaseUrlV1, payload);
-            var list = token["list"];
-            foreach (var item in list)
-            {
-                var balance = item["balance"].ConvertInvariant<decimal>();
-                if (balance == 0m)
-                    continue;
-
-                var currency = item["currency"].ToStringInvariant();
-
-                if (amounts.ContainsKey(currency))
-                {
-                    amounts[currency] += balance;
-                }
-                else
-                {
-                    amounts[currency] = balance;
-                }
-            }
-
-            return amounts;
-        }
-
-
 
         public override async Task<IEnumerable<ExchangeOrderResult>> GetCompletedOrderDetailsAsync(
             Symbol symbol = null, DateTime? afterDate = null)
@@ -862,9 +762,102 @@ namespace Centipede
         }
 
 
-
         #endregion
 
+        #region account
+        public override async Task<List<ExchangeFinance>> GetFinanceAsync()
+        {
+            /*"data": {"list": [
+                  {
+                    "currency": "usdt",
+                    "type": "trade",
+                    "balance": "0.000045000000000000"
+                  },
+                  {
+                    "currency": "eth",
+                    "type": "frozen",
+                    "balance": "0.000000000000000000"
+                  }, */
+
+            var accountId = Accounts[AccountTypeEnum.Spot];
+
+            var payload = await GetNoncePayloadAsync();
+            JToken token =
+                await MakeJsonRequestAsync<JToken>($"/account/accounts/{accountId}/balance", BaseUrlV1, payload);
+
+            var list = token["list"];
+            var result = new List<ExchangeFinance>();
+
+            foreach (var item in list)
+            {
+                var currency =
+                    this.Currencies.FirstOrDefault(p => p.OriginCurrency == item["currency"].ToStringInvariant());
+
+                var finance = result.FirstOrDefault(p => p.Currency == currency);
+
+                if (finance == null)
+                {
+                    finance = new ExchangeFinance
+                    {
+                        Currency = currency
+                    };
+
+                    result.Add(finance);
+                }
+
+
+                if (item["type"].ToStringInvariant() == "frozen")
+                {
+                    finance.Hold = item["balance"].ConvertInvariant<decimal>();
+                }
+                else
+                {
+                    finance.Available = item["balance"].ConvertInvariant<decimal>();
+                }
+
+                finance.Balance = finance.Available + finance.Hold;
+            }
+
+            return result;
+        }
+
+        private async Task LoadAccountsAsync()
+        {
+            Accounts.Clear();
+
+            var payload = await GetNoncePayloadAsync();
+            JToken data = await MakeJsonRequestAsync<JToken>("/account/accounts", BaseUrlV1, payload);
+            foreach (var acc in data)
+            {
+                string key = acc["type"].ToStringInvariant();
+                AccountTypeEnum type;
+
+                switch (key)
+                {
+                    case "spot":
+                        type = AccountTypeEnum.Spot;
+                        break;
+                    case "margin":
+                        type = AccountTypeEnum.Margin;
+                        break;
+
+                    case "otc":
+                        type = AccountTypeEnum.Otc;
+                        break;
+
+                    case "point":
+                        type = AccountTypeEnum.Point;
+                        break;
+                    default:
+                        type = AccountTypeEnum.Spot;
+                        break;
+                }
+
+                Accounts.Add(type, acc["id"].ToStringInvariant());
+            }
+        }
+
+        #endregion
         #region Private Functions
 
         protected override JToken CheckJsonResponse(JToken result)

@@ -22,11 +22,6 @@ namespace Centipede
         /// </summary>
         protected TimestampType TimestampType { get; set; } = TimestampType.UnixMilliseconds;
 
-  
-        #region API Implementation
-
-        protected virtual Task<Dictionary<string, decimal>> OnGetAmountsAsync() => throw new NotImplementedException();
-        #endregion API implementation
 
 
         /// <summary>
@@ -295,15 +290,12 @@ namespace Centipede
         public abstract Task CancelOrdersAsync(params ExchangeOrderCancelRequest[] orders);
 
 
- 
+
         /// <summary>
         /// Get total amounts, symbol / amount dictionary
         /// </summary>
         /// <returns>Dictionary of symbols and amounts</returns>
-        public async Task<Dictionary<string, decimal>> GetAmountsAsync()
-        {
-            return await OnGetAmountsAsync();
-        }
+        public abstract Task<List<ExchangeFinance>> GetFinanceAsync();
 
 
         /// <summary>

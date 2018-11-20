@@ -342,7 +342,7 @@ namespace Centipede
         #endregion
 
         #region Private APIs
-        protected override async Task<Dictionary<string, decimal>> OnGetAmountsAsync()
+        public override async Task<List<ExchangeFinance>> GetFinanceAsync()
         {
             /*
              {
@@ -383,7 +383,8 @@ namespace Centipede
             {
                 ParseAmounts(fund.Value, amounts);
             }
-            return amounts;
+           // return amounts;
+            return null;
         }
 
 

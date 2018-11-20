@@ -10,10 +10,8 @@ namespace Centipede
     {
 
         /// <summary>
-        /// 获取货币数量
-        /// Get total amounts, symbol / amount dictionary
+        /// 资产情况
         /// </summary>
-        /// <returns>Dictionary of symbols and amounts</returns>
-        Task<Dictionary<string, decimal>> GetAmountsAsync();
+        Task<List<ExchangeFinance>> GetFinanceAsync();
     }
 }
